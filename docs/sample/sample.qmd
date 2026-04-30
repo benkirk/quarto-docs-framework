@@ -30,7 +30,7 @@ Numbered list:
 2. Step two
 3. Step three
 
-## Wall of Text.
+## Wall of Text. {.smaller}
 
 We use this slide to see how wrapping works with a lot of text.
 
