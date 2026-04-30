@@ -1,0 +1,45 @@
+name: Check Conda-based Builds
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, staging]
+    paths-ignore:
+      - 'README.md'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    name: Build Samples
+    # Skip on [skip ci] / [ci skip] / [no ci] in commit message or PR title
+    if: >-
+      !contains(github.event.head_commit.message, '[skip ci]')
+      && !contains(github.event.head_commit.message, '[ci skip]')
+      && !contains(github.event.head_commit.message, '[no ci]')
+      && !contains(github.event.pull_request.title, '[skip ci]')
+      && !contains(github.event.pull_request.title, '[ci skip]')
+      && !contains(github.event.pull_request.title, '[no ci]')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: ./conda-env/
+          environment-file: conda-env.yaml
+
+      - name: Build Sample PPTX
+        run: |
+          make -C docs/sample
+
+      - name: Cleanup
+        if: always()
+        run: |
+          true
