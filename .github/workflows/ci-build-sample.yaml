@@ -13,12 +13,13 @@ concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
-# No `defaults.run.shell` override here on purpose: setup-miniconda's
-# default `bash -el {0}` is a login shell, which sources the activation
-# hook the action installs into ~/.bash_profile. That hook runs
-# `conda activate ./conda-env/` automatically at the start of every
-# `run:` step, so subsequent steps inherit the activated env without
-# explicit sourcing.
+# Login shell so setup-miniconda's activation hook in ~/.bash_profile
+# fires at the start of every `run:` step. Without this, GHA defaults
+# to `bash -e {0}` (non-login) and `conda activate ./conda-env/` never
+# happens -- subsequent steps see system python instead of the env.
+defaults:
+  run:
+    shell: bash -el {0}
 
 jobs:
   pytest:
