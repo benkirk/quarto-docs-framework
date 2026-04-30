@@ -13,4 +13,5 @@ dependencies:
   - ipykernel
   - pip:
       - pipdeptree
+      - python-pptx
       - bash_kernel
