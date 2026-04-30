@@ -48,6 +48,10 @@ jobs:
         with:
           activate-environment: ./conda-env/
           environment-file: conda-env.yaml
+          # Miniforge + mamba so the env solve uses libmamba (~minutes
+          # instead of >15 with the classic conda solver on this stack).
+          miniforge-version: latest
+          use-mamba: true
 
       # setup-miniconda installs everything in conda-env.yaml (incl.
       # bash_kernel) but doesn't run `python -m bash_kernel.install` —
