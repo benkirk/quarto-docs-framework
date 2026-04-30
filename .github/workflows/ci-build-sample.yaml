@@ -13,6 +13,20 @@ concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
+env:
+  # Auto-source etc/config_env.sh on every `run:` shell. config_env.sh
+  # ensures conda is initialized, runs `make conda-env` (a no-op when
+  # the env is already present and up-to-date), then activates ./conda-env/.
+  # `uses:` steps don't spawn a shell, so Checkout / setup-miniconda are
+  # unaffected — sourcing only kicks in for `run:` steps below.
+  BASH_ENV: ${{ github.workspace }}/etc/config_env.sh
+
+defaults:
+  run:
+    # Non-login bash so $BASH_ENV is honored. (setup-miniconda's default
+    # shell is `bash -el {0}` — a login shell — which ignores BASH_ENV.)
+    shell: bash -eo pipefail {0}
+
 jobs:
   pytest:
     name: Build Samples
@@ -35,11 +49,21 @@ jobs:
           activate-environment: ./conda-env/
           environment-file: conda-env.yaml
 
-      - name: Build Sample PPTX
+      # setup-miniconda installs everything in conda-env.yaml (incl.
+      # bash_kernel) but doesn't run `python -m bash_kernel.install` —
+      # that's the Makefile's post-create step. Do it explicitly so
+      # executable {bash} chunks have a kernel to dispatch to.
+      - name: Register bash Jupyter kernel
+        run: python -m bash_kernel.install --sys-prefix
+
+      - name: Sanity-check activation
         run: |
-          make -C docs/sample
+          which python quarto mpicxx 2>/dev/null || true
+          conda info --envs
+
+      - name: Build Sample PPTX
+        run: make -C docs/sample
 
       - name: Cleanup
         if: always()
-        run: |
-          true
+        run: true
