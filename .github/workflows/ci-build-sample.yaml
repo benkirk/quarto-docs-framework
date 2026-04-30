@@ -13,18 +13,11 @@ concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
-env:
-  # Auto-source etc/config_env.sh on every `run:` shell. config_env.sh
-  # ensures conda is initialized, runs `make conda-env` (a no-op when
-  # the env is already present and up-to-date), then activates ./conda-env/.
-  # `uses:` steps don't spawn a shell, so Checkout / setup-miniconda are
-  # unaffected — sourcing only kicks in for `run:` steps below.
-  BASH_ENV: ${{ github.workspace }}/etc/config_env.sh
-
 defaults:
   run:
-    # Non-login bash so $BASH_ENV is honored. (setup-miniconda's default
-    # shell is `bash -el {0}` — a login shell — which ignores BASH_ENV.)
+    # Non-login bash so $BASH_ENV (set after setup-miniconda below) is
+    # honored. setup-miniconda's default `bash -el {0}` is a login shell
+    # which ignores BASH_ENV.
     shell: bash -eo pipefail {0}
 
 jobs:
@@ -52,6 +45,15 @@ jobs:
           # instead of >15 with the classic conda solver on this stack).
           miniforge-version: latest
           use-mamba: true
+
+      # Defer BASH_ENV until AFTER setup-miniconda. If set at workflow
+      # scope, BASH_ENV propagates into setup-miniconda's child bash
+      # invocations -- those would source config_env.sh, which itself
+      # runs `make conda-env`, recursively re-creating the env that
+      # setup-miniconda is in the middle of building. $GITHUB_ENV only
+      # affects subsequent steps, so this is safe.
+      - name: Enable BASH_ENV auto-sourcing for subsequent steps
+        run: echo "BASH_ENV=${GITHUB_WORKSPACE}/etc/config_env.sh" >> "$GITHUB_ENV"
 
       # setup-miniconda installs everything in conda-env.yaml (incl.
       # bash_kernel) but doesn't run `python -m bash_kernel.install` —
