@@ -2,17 +2,20 @@ name: quarto_docs
 channels:
   - conda-forge
 dependencies:
-  - bash_kernel
-  - gh
-  - ipykernel
-  - jupyter_client
-  - make
-  - nbclient
-  - nbformat
-  - pip
+  # Binaries / runtime — must come from conda.
   - python
-  - python-pptx
-  - pyyaml
   - quarto
+  - gh
+  - make
+  - pip
+  # Pure-python deps install much faster as wheels via pip than via the
+  # conda solver, and don't add to the solve graph.
   - pip:
+      - bash_kernel
+      - ipykernel
+      - jupyter_client
+      - nbclient
+      - nbformat
       - pipdeptree
+      - python-pptx
+      - pyyaml
