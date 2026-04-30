@@ -64,6 +64,19 @@ jobs:
       - name: Build Sample PPTX
         run: make -C docs/sample
 
+      - name: Build Sample HTML
+        run: make -C docs/sample sample.html
+
+      - name: Upload sample.html artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-html
+          path: |
+            docs/sample/sample.html
+            docs/sample/sample_files/
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Cleanup
         if: always()
         run: true
