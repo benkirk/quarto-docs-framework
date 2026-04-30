@@ -1,0 +1,49 @@
+<!-- -*- mode: markdown -*- -->
+
+---
+title: "Quarto for HPC Documentation"
+subtitle: "Sample Commands & Output"
+author: "NCAR/CISL Consulting Services"
+date: last-modified
+engine: jupyter
+jupyter: bash
+---
+
+# Sample Shell Commands & Output
+
+## Capturing live shell output
+
+The fenced block below is **executed at render time** on the build host.
+Both the command and its captured stdout land on the slide:
+
+```{bash}
+#| echo: true
+which mpicxx && mpicxx --version
+```
+
+::: {.notes}
+This runs when `quarto render` runs, not when the slide is shown. Output
+is baked into the .pptx. Engine is `jupyter` with the `bash` kernel
+(see frontmatter); `bash_kernel` is installed by `make conda-env`.
+:::
+
+## `qstat`
+
+```{bash}
+#| echo: true
+qstat -aw | head -n 10
+```
+
+## `module avail`
+
+```{bash}
+#| echo: true
+module avail 2>&1 | cat
+```
+
+## `module load`
+
+```{bash}
+#| echo: true
+which mpicxx && module load gcc && which mpicxx
+```
