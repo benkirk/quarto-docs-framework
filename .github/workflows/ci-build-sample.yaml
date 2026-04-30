@@ -64,6 +64,14 @@ jobs:
       - name: Build Sample PPTX
         run: make -C docs/sample
 
+      - name: Upload sample.pptx artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-pptx
+          path: docs/sample/sample.pptx
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Build Sample HTML
         run: make -C docs/sample sample.html
 
