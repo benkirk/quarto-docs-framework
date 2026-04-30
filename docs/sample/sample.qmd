@@ -20,7 +20,7 @@ Bulleted list:
 
 - First point
 - Second point with `code`.  This point needs to be expounded upon very very verbosely to force a line wrap so we can see how spacing woks for wrapped bullets.
-  - Especialy when there are multiple
+  - Especialy when there are multiple. And one also needs to be expounded upon very very verbosely to force a line wrap so we can see how spacing woks for wrapped sub-bullets.
   - Sub-bullets
 - Third point
 
@@ -59,7 +59,7 @@ renders these natively as OMML equations.
 | Casper   | DAV     |             36 |
 | Gust     | HPC     |            128 |
 
-: Sample HPC resources {#tbl-resources}
+: Sample HPC resources
 
 Column alignment is set with `:---`, `:---:`, and `---:` in the separator
 row.
@@ -166,3 +166,39 @@ slide.
   directory.
 - Drop images under `images/` and reference them as
   `![](images/foo.png)`.
+
+# Backup
+
+## Project config: `_quarto.yml`
+
+:::: {.columns}
+::: {.column width="55%"}
+```{.yaml}
+{{< include _quarto.yml >}}
+```
+:::
+::: {.column width="45%"}
+**What it does**
+
+- Picked up automatically from the deck directory at render time.
+- `format: pptx` + `reference-doc:` selects the NCAR-branded template.
+- `slide-level: 2` makes `##` start a new slide; `#` is a section
+  divider.
+- `diagram.mermaid.theme:` themes auto-rendered mermaid diagrams.
+
+**How it's shared**
+
+- This file is a symlink to `../common/_quarto.yml`, so every deck
+  inherits the same defaults.
+- A deck that needs overrides can replace the symlink with its own
+  real `_quarto.yml`.
+:::
+::::
+
+::: {.notes}
+The fenced block above uses Quarto's `{{< include _quarto.yml >}}`
+shortcode — it pastes the file contents at render time, so the slide
+stays in sync with whatever `_quarto.yml` actually looks like. Use the
+same pattern for any small config or script you want to display
+verbatim alongside commentary.
+:::

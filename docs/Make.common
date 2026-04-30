@@ -6,6 +6,7 @@
 
 PRESENTATIONS_ROOT := $(dir $(lastword $(MAKEFILE_LIST)))
 EMBED_POPPINS      := $(PRESENTATIONS_ROOT)common/utils/embed_poppins.py
+ENABLE_AUTOFIT     := $(PRESENTATIONS_ROOT)common/utils/enable_autofit.py
 SHARED_QUARTO_YML  := $(PRESENTATIONS_ROOT)common/_quarto.yml
 
 QFILE ?= $(OUT).qmd
@@ -23,6 +24,7 @@ _quarto.yml:
 
 $(OUT).pptx: $(QFILE) _quarto.yml
 	quarto render $(QFILE) --to pptx -o $@
+	python3 $(ENABLE_AUTOFIT) $@
 	python3 $(EMBED_POPPINS) $@
 
 $(OUT).html: $(QFILE) _quarto.yml
