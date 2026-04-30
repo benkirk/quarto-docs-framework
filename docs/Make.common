@@ -36,7 +36,7 @@ clean:
 	rm -rf $(OUT)_files
 
 distclean:
-        git clean --exclude=.env -xdf .
+	git clean --exclude=.env -xdf .
 
 # Local Variables:
 # mode: makefile

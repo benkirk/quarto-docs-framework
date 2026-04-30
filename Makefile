@@ -49,6 +49,7 @@ distclean: ## Clean everything including conda-env/
 	$(config_env) && \
 	conda env create --file $< --prefix $@ && \
 	conda activate ./$@ && \
+	python -m bash_kernel.install --sys-prefix && \
 	conda list && \
 	pipdeptree --all 2>/dev/null || true
 
