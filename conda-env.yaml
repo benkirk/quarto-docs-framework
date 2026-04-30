@@ -1,0 +1,10 @@
+name: quarto_docs
+channels:
+  - conda-forge
+dependencies:
+  - python
+  # docs/presentation deps:
+  - quarto
+  - pip
+  - pip:
+      - pipdeptree
