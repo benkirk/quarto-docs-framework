@@ -54,6 +54,15 @@ jobs:
       - name: Register bash Jupyter kernel
         run: python -m bash_kernel.install --sys-prefix
 
+      # mpicxx is referenced by sample.qmd's executable {bash} chunk
+      # ("which mpicxx && mpicxx --version"). Without it the chunk fails
+      # the build instead of just printing into the slide. APT install
+      # is fast (~20s on ubuntu-latest).
+      - name: Install OpenMPI (for sample.qmd's mpicxx demo)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libopenmpi-dev openmpi-bin
+
       - name: Sanity-check activation
         run: |
           which python quarto mpicxx 2>/dev/null || true
