@@ -13,12 +13,12 @@ concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    # Non-login bash so $BASH_ENV (set after setup-miniconda below) is
-    # honored. setup-miniconda's default `bash -el {0}` is a login shell
-    # which ignores BASH_ENV.
-    shell: bash -eo pipefail {0}
+# No `defaults.run.shell` override here on purpose: setup-miniconda's
+# default `bash -el {0}` is a login shell, which sources the activation
+# hook the action installs into ~/.bash_profile. That hook runs
+# `conda activate ./conda-env/` automatically at the start of every
+# `run:` step, so subsequent steps inherit the activated env without
+# explicit sourcing.
 
 jobs:
   pytest:
@@ -46,15 +46,6 @@ jobs:
           miniforge-version: latest
           use-mamba: true
 
-      # # Defer BASH_ENV until AFTER setup-miniconda. If set at workflow
-      # # scope, BASH_ENV propagates into setup-miniconda's child bash
-      # # invocations -- those would source config_env.sh, which itself
-      # # runs `make conda-env`, recursively re-creating the env that
-      # # setup-miniconda is in the middle of building. $GITHUB_ENV only
-      # # affects subsequent steps, so this is safe.
-      # - name: Enable BASH_ENV auto-sourcing for subsequent steps
-      #   run: echo "BASH_ENV=${GITHUB_WORKSPACE}/etc/config_env.sh" >> "$GITHUB_ENV"
-
       # setup-miniconda installs everything in conda-env.yaml (incl.
       # bash_kernel) but doesn't run `python -m bash_kernel.install` —
       # that's the Makefile's post-create step. Do it explicitly so
@@ -68,8 +59,8 @@ jobs:
           conda info --envs
 
       - name: Build Sample PPTX
-        which quarto
-        run: make -C docs/sample
+        run: |
+          make -C docs/sample
 
       - name: Upload sample.pptx artifact
         uses: actions/upload-artifact@v4
@@ -80,7 +71,8 @@ jobs:
           retention-days: 14
 
       - name: Build Sample HTML
-        run: make -C docs/sample sample.html
+        run: |
+          make -C docs/sample sample.html
 
       - name: Upload sample.html artifact
         uses: actions/upload-artifact@v4
