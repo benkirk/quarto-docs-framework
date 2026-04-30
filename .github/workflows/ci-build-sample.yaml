@@ -46,14 +46,14 @@ jobs:
           miniforge-version: latest
           use-mamba: true
 
-      # Defer BASH_ENV until AFTER setup-miniconda. If set at workflow
-      # scope, BASH_ENV propagates into setup-miniconda's child bash
-      # invocations -- those would source config_env.sh, which itself
-      # runs `make conda-env`, recursively re-creating the env that
-      # setup-miniconda is in the middle of building. $GITHUB_ENV only
-      # affects subsequent steps, so this is safe.
-      - name: Enable BASH_ENV auto-sourcing for subsequent steps
-        run: echo "BASH_ENV=${GITHUB_WORKSPACE}/etc/config_env.sh" >> "$GITHUB_ENV"
+      # # Defer BASH_ENV until AFTER setup-miniconda. If set at workflow
+      # # scope, BASH_ENV propagates into setup-miniconda's child bash
+      # # invocations -- those would source config_env.sh, which itself
+      # # runs `make conda-env`, recursively re-creating the env that
+      # # setup-miniconda is in the middle of building. $GITHUB_ENV only
+      # # affects subsequent steps, so this is safe.
+      # - name: Enable BASH_ENV auto-sourcing for subsequent steps
+      #   run: echo "BASH_ENV=${GITHUB_WORKSPACE}/etc/config_env.sh" >> "$GITHUB_ENV"
 
       # setup-miniconda installs everything in conda-env.yaml (incl.
       # bash_kernel) but doesn't run `python -m bash_kernel.install` —
@@ -68,6 +68,7 @@ jobs:
           conda info --envs
 
       - name: Build Sample PPTX
+        which quarto
         run: make -C docs/sample
 
       - name: Upload sample.pptx artifact
