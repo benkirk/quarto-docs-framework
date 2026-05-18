@@ -1,0 +1,51 @@
+<!-- -*- mode: markdown -*- -->
+
+---
+title: "NSF NCAR HPC Resources"
+subtitle: "Allocations & Utilization"
+author: "NCAR/CISL Consulting Services"
+date: last-modified
+engine: jupyter
+jupyter: bash
+---
+
+# Derecho Usage History
+
+## Resource Usage: 1/1/2025 - Present
+
+![](plots/cpu_and_gpu_usage_usage_history_multiyear.png){height=80%}
+
+::: {.notes}
+This is the absolute utilization calculated as realized CPU/GPU hours
+consumed normalized by theoretical, 24x7 uptime. Importantly, we do
+not adjust for maintenance periods in the denominator of this
+calculation.
+:::
+
+## User & Project Usage: 1/1/2025 - Present
+
+![](plots/cpu_users_and_projects_usage_history_multiyear.png){height=80%}
+
+::: {.notes}
+Shows the number of unique users and projects appearing in batch
+scheduler logs for the relevant period.  Does not capture login-only
+or data-access-only users that have not used the scheduler.
+:::
+
+
+## Usage by Facility
+
+:::: {.columns}
+::: {.column width="50%"}
+![](plots/pie_facility_cpu_lastyear.png){width=100%}
+
+:::
+::: {.column width="50%"}
+![](plots/pie_facility_gpu_lastyear.png){width=100%}
+:::
+::::
+
+::: {.notes}
+- CSL: CESM Simulation Laboratory
+- WNA: Wyoming/NCAR Alliance
+:::
