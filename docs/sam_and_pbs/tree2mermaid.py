@@ -20,6 +20,10 @@ output.
   with --percent-level.
 - Interior `<code>grp` vertices and their self-leaves get distinct
   styling so the project-tree model reads at a glance.
+- --stack renders exactly two levels, with each child of the root drawn
+  as a subgraph whose own children stack vertically (invisible `~~~`
+  links force the column).  Use it when a flat two-tier fan-out is too
+  wide for a slide.
 - --qmd wraps the graph in a ```{mermaid} fence, ready for
   `{{< include _file.qmd >}}` from a slide.
 """
@@ -49,20 +53,22 @@ def format_share(share, as_percent):
 
 
 def emit(shares, children, root, depth, max_children, include,
-         percent_levels, out):
-    grp_nodes, leaf_nodes, elision_nodes = [], [], []
+         percent_levels, stack, out):
+    grp_nodes, leaf_nodes, elision_nodes, stack_nodes = [], [], [], []
 
-    def walk(name, level):
-        kids = children.get(name, [])
-        if not kids or level >= depth:
-            return
+    def cap(kids):
+        """Order children by share and apply --max-children / --include."""
         ordered = sorted(kids, key=lambda k: -shares[k])
         if max_children and len(ordered) > max_children:
             keep = ordered[:max_children]
             keep += [k for k in ordered[max_children:] if k in include]
-            elided = len(ordered) - len(keep)
-        else:
-            keep, elided = ordered, 0
+            return keep, len(ordered) - len(keep)
+        return ordered, 0
+
+    def walk(name, level):
+        if level >= depth:
+            return
+        keep, elided = cap(children.get(name, []))
         for kid in keep:
             label = format_share(shares[kid], level + 1 in percent_levels)
             out.append('    %s --> %s["%s<br/>%s"]'
@@ -77,19 +83,57 @@ def emit(shares, children, root, depth, max_children, include,
             out.append('    %s --> %s(["(+%d more)"])' % (name, node, elided))
             elision_nodes.append(node)
 
+    def walk_stacked():
+        """Two-level rendering: each child of the root is a subgraph whose
+        own children stack vertically (invisible ~~~ links force the
+        column).  Subgraph titles stay on one line -- a <br/> second line
+        gets clipped by the subgraph border."""
+        keep, elided = cap(children.get(root, []))
+        for kid in keep:
+            label = format_share(shares[kid], 1 in percent_levels)
+            stack_nodes.append(kid)
+            out.append('    subgraph %s["%s&nbsp;&nbsp;(%s)"]' % (kid, kid, label))
+            out.append("        direction TB")
+            col = []
+            gkeep, gelided = cap(children.get(kid, []))
+            for gkid in gkeep:
+                glabel = format_share(shares[gkid], 2 in percent_levels)
+                out.append('        %s["%s<br/>%s"]' % (gkid, gkid, glabel))
+                col.append(gkid)
+            if gelided:
+                node = "%s_more" % kid
+                out.append('        %s(["(+%d more)"])' % (node, gelided))
+                elision_nodes.append(node)
+                col.append(node)
+            if len(col) > 1:
+                out.append("        " + " ~~~ ".join(col))
+            out.append("    end")
+            out.append("    %s --> %s" % (root, kid))
+        if elided:
+            node = "%s_more" % root
+            out.append('    %s --> %s(["(+%d more)"])' % (root, node, elided))
+            elision_nodes.append(node)
+
+    if stack:
+        out.append('%%{init: {"flowchart": '
+                   '{"rankSpacing": 26, "nodeSpacing": 24}}}%%')
     out.append("graph TD")
     out.append('    %s["%s<br/>%s"]'
                % (root, root, format_share(shares[root], 0 in percent_levels)))
     if root.endswith("grp"):
         grp_nodes.append(root)
-    walk(root, 0)
+    if stack:
+        walk_stacked()
+    else:
+        walk(root, 0)
 
     out.append("    classDef grp fill:#cfe2f3,stroke:#1f4e79,stroke-width:2px")
     out.append("    classDef selfleaf fill:#fff2cc,stroke:#bf9000")
     out.append("    classDef elided fill:#f3f3f3,stroke:#999999,"
                "stroke-dasharray:4 3,color:#666666")
+    out.append("    classDef tier fill:#f7f9fc,stroke:#8ea9c1")
     for cls, nodes in (("grp", grp_nodes), ("selfleaf", leaf_nodes),
-                       ("elided", elision_nodes)):
+                       ("elided", elision_nodes), ("tier", stack_nodes)):
         if nodes:
             out.append("    class %s %s" % (",".join(nodes), cls))
 
@@ -113,6 +157,11 @@ def main(argv):
                         help="format shares at this depth below the root "
                              "(children of the root = 1) as percentage*100 "
                              "(repeatable)")
+    parser.add_argument("--stack", action="store_true",
+                        help="render exactly two levels, children of the "
+                             "root as subgraphs with vertically stacked "
+                             "contents (narrow layout for wide fan-outs); "
+                             "--depth is ignored")
     parser.add_argument("--qmd", action="store_true",
                         help="wrap output in a ```{mermaid} fence")
     parser.add_argument("--fig-width", type=float, default=0,
@@ -127,7 +176,7 @@ def main(argv):
 
     out = []
     emit(shares, children, args.root, args.depth, args.max_children,
-         set(args.include), set(args.percent_level), out)
+         set(args.include), set(args.percent_level), args.stack, out)
     if args.qmd:
         out.insert(0, "```{mermaid}")
         if args.fig_width:

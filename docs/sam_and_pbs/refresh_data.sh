@@ -40,8 +40,8 @@ sqlite3 -header -column "${tmpdb}" "
 rm -f "${tmpdb}"
 
 ./tree2mermaid.py data/derecho.tree derecho \
-    --depth 2 --max-children 4 --include ASD --include WNA \
-    --percent-level 2 --qmd --fig-width 10 > _tree_overview.qmd
+    --stack --max-children 4 --include ASD --include WNA \
+    --percent-level 2 --qmd --fig-width 9.5 > _tree_overview.qmd
 ./tree2mermaid.py data/derecho.tree CESM0002grp \
     --max-children 4 --include CESM0002 --include CESM0028grp \
     --qmd --fig-width 5.5 > _tree_cesm.qmd

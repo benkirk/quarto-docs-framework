@@ -1,32 +1,56 @@
 ```{mermaid}
-%%| fig-width: 10
+%%| fig-width: 9.5
+%%{init: {"flowchart": {"rankSpacing": 26, "nodeSpacing": 24}}}%%
 graph TD
     derecho["derecho<br/>100"]
-    derecho --> CISL["CISL<br/>100"]
-    CISL --> S_Staff["S_Staff<br/>70%"]
-    derecho --> CSL["CSL<br/>100"]
-    CSL --> C_CSL["C_CSL<br/>100%"]
-    derecho --> NCAR["NCAR<br/>100"]
-    NCAR --> N_NSC["N_NSC<br/>50%"]
-    NCAR --> N_Divisional["N_Divisional<br/>33%"]
-    NCAR --> N_DirectorReserve["N_DirectorReserve<br/>7%"]
-    NCAR --> N_ExternalProject["N_ExternalProject<br/>5%"]
-    NCAR --> NCAR_more(["(+1 more)"])
-    derecho --> UNIV["UNIV<br/>100"]
-    UNIV --> U_CHAP["U_CHAP<br/>70%"]
-    UNIV --> U_Small["U_Small<br/>10%"]
-    UNIV --> U_SmallNoNSFaward["U_SmallNoNSFaward<br/>10%"]
-    UNIV --> U_Classroom["U_Classroom<br/>3%"]
-    UNIV --> UNIV_more(["(+4 more)"])
-    derecho --> WNA["WNA<br/>100"]
-    WNA --> W_WRAP["W_WRAP<br/>55%"]
-    WNA --> W_LCAP["W_LCAP<br/>20%"]
-    WNA --> W_Small["W_Small<br/>20%"]
-    WNA --> W_Education["W_Education<br/>5%"]
-    derecho --> ASD["ASD<br/>95"]
-    ASD --> A_ASDNCAR["A_ASDNCAR<br/>50%"]
+    subgraph CISL["CISL&nbsp;&nbsp;(100)"]
+        direction TB
+        S_Staff["S_Staff<br/>70%"]
+    end
+    derecho --> CISL
+    subgraph CSL["CSL&nbsp;&nbsp;(100)"]
+        direction TB
+        C_CSL["C_CSL<br/>100%"]
+    end
+    derecho --> CSL
+    subgraph NCAR["NCAR&nbsp;&nbsp;(100)"]
+        direction TB
+        N_NSC["N_NSC<br/>50%"]
+        N_Divisional["N_Divisional<br/>33%"]
+        N_DirectorReserve["N_DirectorReserve<br/>7%"]
+        N_ExternalProject["N_ExternalProject<br/>5%"]
+        NCAR_more(["(+1 more)"])
+        N_NSC ~~~ N_Divisional ~~~ N_DirectorReserve ~~~ N_ExternalProject ~~~ NCAR_more
+    end
+    derecho --> NCAR
+    subgraph UNIV["UNIV&nbsp;&nbsp;(100)"]
+        direction TB
+        U_CHAP["U_CHAP<br/>70%"]
+        U_Small["U_Small<br/>10%"]
+        U_SmallNoNSFaward["U_SmallNoNSFaward<br/>10%"]
+        U_Classroom["U_Classroom<br/>3%"]
+        UNIV_more(["(+4 more)"])
+        U_CHAP ~~~ U_Small ~~~ U_SmallNoNSFaward ~~~ U_Classroom ~~~ UNIV_more
+    end
+    derecho --> UNIV
+    subgraph WNA["WNA&nbsp;&nbsp;(100)"]
+        direction TB
+        W_WRAP["W_WRAP<br/>55%"]
+        W_LCAP["W_LCAP<br/>20%"]
+        W_Small["W_Small<br/>20%"]
+        W_Education["W_Education<br/>5%"]
+        W_WRAP ~~~ W_LCAP ~~~ W_Small ~~~ W_Education
+    end
+    derecho --> WNA
+    subgraph ASD["ASD&nbsp;&nbsp;(95)"]
+        direction TB
+        A_ASDNCAR["A_ASDNCAR<br/>50%"]
+    end
+    derecho --> ASD
     classDef grp fill:#cfe2f3,stroke:#1f4e79,stroke-width:2px
     classDef selfleaf fill:#fff2cc,stroke:#bf9000
     classDef elided fill:#f3f3f3,stroke:#999999,stroke-dasharray:4 3,color:#666666
+    classDef tier fill:#f7f9fc,stroke:#8ea9c1
     class NCAR_more,UNIV_more elided
+    class CISL,CSL,NCAR,UNIV,WNA,ASD tier
 ```
