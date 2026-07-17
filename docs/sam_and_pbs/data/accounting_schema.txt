@@ -1,0 +1,51 @@
+CREATE TABLE users (uid integer primary key, name text);
+CREATE TABLE project_status (
+        id integer primary key,
+        code text,
+        unique(code));
+CREATE TABLE gpu_status (
+        id integer primary key,
+        code text,
+        unique(code));
+CREATE TABLE projects (
+        id integer primary key,
+        active integer,
+        code text,
+        unique(code));
+CREATE TABLE gpu_projects (
+        id integer primary key,
+        active integer,
+        code text,
+        unique(code));
+CREATE TABLE resource (
+        id integer primary key,
+        resource text,
+        unique(resource));
+CREATE TABLE projectusers (
+        id integer primary key,
+        uid integer, pid integer,
+        status integer,
+        foreign key(status) references project_status(id),
+        foreign key(uid) references users(uid),
+        foreign key(pid) references projects(id));
+CREATE TABLE gpu_users (
+        id integer primary key,
+        uid integer, pid integer,
+        status integer,
+        foreign key(status) references gpu_status(id),
+        foreign key(uid) references users(uid),
+        foreign key(pid) references gpu_projects(id));
+CREATE TABLE queues (
+        id integer primary key,
+        queue text,
+        wallclocklimit integer,
+        unique(queue)
+        );
+CREATE TABLE wcoverride (
+        id integer primary key,
+        uid integer,
+        seconds integer,
+        queueid integer,
+        foreign key(uid) references users(uid),
+        foreign key(queueid) references queues(id)
+        unique(uid,queueid));

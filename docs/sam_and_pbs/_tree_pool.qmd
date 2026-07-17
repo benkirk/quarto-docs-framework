@@ -1,0 +1,18 @@
+```{mermaid}
+%%| fig-width: 5.5
+graph TD
+    NMMM0003grp["NMMM0003grp<br/>36,541,544"]
+    NMMM0003grp --> NMMM0083["NMMM0083<br/>95,008,014"]
+    NMMM0003grp --> NMMM0003["NMMM0003<br/>36,541,544"]
+    NMMM0003grp --> NMMM0012grp["NMMM0012grp<br/>36,541,544"]
+    NMMM0003grp --> NMMM0004["NMMM0004<br/>36,541,544"]
+    NMMM0003grp --> NMMM0007["NMMM0007<br/>36,541,544"]
+    NMMM0003grp --> NMMM0080["NMMM0080<br/>1"]
+    NMMM0003grp --> NMMM0003grp_more(["(+8 more)"])
+    classDef grp fill:#cfe2f3,stroke:#1f4e79,stroke-width:2px
+    classDef selfleaf fill:#fff2cc,stroke:#bf9000
+    classDef elided fill:#f3f3f3,stroke:#999999,stroke-dasharray:4 3,color:#666666
+    class NMMM0003grp,NMMM0012grp grp
+    class NMMM0003 selfleaf
+    class NMMM0003grp_more elided
+```

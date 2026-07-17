@@ -1,0 +1,32 @@
+```{mermaid}
+%%| fig-width: 10
+graph TD
+    derecho["derecho<br/>100"]
+    derecho --> CISL["CISL<br/>100"]
+    CISL --> S_Staff["S_Staff<br/>70%"]
+    derecho --> CSL["CSL<br/>100"]
+    CSL --> C_CSL["C_CSL<br/>100%"]
+    derecho --> NCAR["NCAR<br/>100"]
+    NCAR --> N_NSC["N_NSC<br/>50%"]
+    NCAR --> N_Divisional["N_Divisional<br/>33%"]
+    NCAR --> N_DirectorReserve["N_DirectorReserve<br/>7%"]
+    NCAR --> N_ExternalProject["N_ExternalProject<br/>5%"]
+    NCAR --> NCAR_more(["(+1 more)"])
+    derecho --> UNIV["UNIV<br/>100"]
+    UNIV --> U_CHAP["U_CHAP<br/>70%"]
+    UNIV --> U_Small["U_Small<br/>10%"]
+    UNIV --> U_SmallNoNSFaward["U_SmallNoNSFaward<br/>10%"]
+    UNIV --> U_Classroom["U_Classroom<br/>3%"]
+    UNIV --> UNIV_more(["(+4 more)"])
+    derecho --> WNA["WNA<br/>100"]
+    WNA --> W_WRAP["W_WRAP<br/>55%"]
+    WNA --> W_LCAP["W_LCAP<br/>20%"]
+    WNA --> W_Small["W_Small<br/>20%"]
+    WNA --> W_Education["W_Education<br/>5%"]
+    derecho --> ASD["ASD<br/>95"]
+    ASD --> A_ASDNCAR["A_ASDNCAR<br/>50%"]
+    classDef grp fill:#cfe2f3,stroke:#1f4e79,stroke-width:2px
+    classDef selfleaf fill:#fff2cc,stroke:#bf9000
+    classDef elided fill:#f3f3f3,stroke:#999999,stroke-dasharray:4 3,color:#666666
+    class NCAR_more,UNIV_more elided
+```

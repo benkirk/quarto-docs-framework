@@ -1,0 +1,7 @@
+code      status  active
+--------  ------  ------
+SCSG0001  Normal  1     
+SCSG0002  Normal  1     
+SSSG0001  Normal  1     
+NRAL0032  Normal  1     
+NCIS0001  Normal  1     

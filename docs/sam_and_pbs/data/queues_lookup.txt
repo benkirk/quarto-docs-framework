@@ -1,0 +1,14 @@
+queue        wallclocklimit
+-----------  --------------
+M*                         
+R*                         
+S*                         
+cpu          43200         
+cpu-economy                
+cpu-premium                
+cpu-regular                
+cpu-special  43200         
+cpudev       21600         
+develop      21600         
+economy-cpu                
+economy-gpu                
