@@ -33,7 +33,8 @@ graph TD
     AT --> P[Project]
     P --> RA["Allocation<br/>(per resource)"]
     P --> U[Users]
-    CP["Project<br/>(sub-project)"] -. parentProject .-> P
+    P ~~~ CP["Project<br/>(sub-project)"]
+    CP -. parentProject .-> P
 ```
 :::
 ::::
