@@ -57,23 +57,29 @@ jobs:
       - name: Register bash Jupyter kernel
         run: python -m bash_kernel.install --sys-prefix
 
-      # Quarto renders mermaid diagrams through headless Chromium.
-      # Ubuntu 24.04 runner images restrict unprivileged user namespaces
-      # via AppArmor, which deadlocks Chromium's sandbox -- the render
-      # hangs forever right after cell execution (orphaned chrome +
-      # chrome_crashpad_handler processes at job cleanup). Lift the
-      # restriction so the sandbox can start.
-      - name: Allow unprivileged user namespaces (Chromium/mermaid)
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      # Quarto renders mermaid diagrams through a headless browser. The
+      # runner's system Chrome wedges quarto's discovery/handshake (runs
+      # hang forever right after cell execution, leaving orphaned chrome
+      # + chrome_crashpad_handler processes; lifting the AppArmor userns
+      # restriction did not help), so install quarto's own managed
+      # Chrome Headless Shell, which it prefers when present.
+      - name: Install Chrome Headless Shell (mermaid rendering)
+        run: quarto install chrome-headless-shell --no-prompt
 
       - name: Sanity-check activation
         run: |
           which python quarto 2>/dev/null || true
           conda info --envs
 
+      # timeout: a wedged browser render should fail here in minutes,
+      # with diagnostics, rather than hitting the job-level cap.
       - name: Build Sample PPTX
         run: |
-          make -C docs/sample
+          timeout 600 make -C docs/sample || {
+            echo '::error::sample pptx render timed out or failed'
+            ps aux | grep -i chrom | grep -v grep || true
+            exit 1
+          }
 
       - name: Upload sample.pptx artifact
         uses: actions/upload-artifact@v4
