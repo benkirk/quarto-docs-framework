@@ -2,18 +2,18 @@
 %%| fig-width: 9.5
 %%{init: {"flowchart": {"rankSpacing": 26, "nodeSpacing": 24}}}%%
 graph TD
-    derecho["derecho<br/>100"]
-    subgraph CISL["CISL&nbsp;&nbsp;(100)"]
+    derecho["derecho"]
+    subgraph CISL["CISL&nbsp;&nbsp;(16.8%)"]
         direction TB
-        S_Staff["S_Staff<br/>70%<br/>10 projects"]
+        S_Staff["S_Staff<br/>100%<br/>10 projects"]
     end
     derecho --> CISL
-    subgraph CSL["CSL&nbsp;&nbsp;(100)"]
+    subgraph CSL["CSL&nbsp;&nbsp;(16.8%)"]
         direction TB
         C_CSL["C_CSL<br/>100%<br/>19 projects"]
     end
     derecho --> CSL
-    subgraph NCAR["NCAR&nbsp;&nbsp;(100)"]
+    subgraph NCAR["NCAR&nbsp;&nbsp;(16.8%)"]
         direction TB
         N_NSC["N_NSC<br/>50%<br/>36 projects"]
         N_Divisional["N_Divisional<br/>33%<br/>95 projects"]
@@ -23,7 +23,7 @@ graph TD
         N_NSC ~~~ N_Divisional ~~~ N_DirectorReserve ~~~ N_ExternalProject ~~~ NCAR_more
     end
     derecho --> NCAR
-    subgraph UNIV["UNIV&nbsp;&nbsp;(100)"]
+    subgraph UNIV["UNIV&nbsp;&nbsp;(16.8%)"]
         direction TB
         U_CHAP["U_CHAP<br/>70%<br/>225 projects"]
         U_Small["U_Small<br/>10%<br/>300 projects"]
@@ -33,7 +33,7 @@ graph TD
         U_CHAP ~~~ U_Small ~~~ U_SmallNoNSFaward ~~~ U_Classroom ~~~ UNIV_more
     end
     derecho --> UNIV
-    subgraph WNA["WNA&nbsp;&nbsp;(100)"]
+    subgraph WNA["WNA&nbsp;&nbsp;(16.8%)"]
         direction TB
         W_WRAP["W_WRAP<br/>55%<br/>34 projects"]
         W_LCAP["W_LCAP<br/>20%<br/>4 projects"]
@@ -42,9 +42,9 @@ graph TD
         W_WRAP ~~~ W_LCAP ~~~ W_Small ~~~ W_Education
     end
     derecho --> WNA
-    subgraph ASD["ASD&nbsp;&nbsp;(95)"]
+    subgraph ASD["ASD&nbsp;&nbsp;(16%)"]
         direction TB
-        A_ASDNCAR["A_ASDNCAR<br/>50%<br/>2 projects"]
+        A_ASDNCAR["A_ASDNCAR<br/>100%<br/>2 projects"]
     end
     derecho --> ASD
     classDef grp fill:#cfe2f3,stroke:#1f4e79,stroke-width:2px

@@ -45,10 +45,15 @@ def parse_tree(path):
     return shares, children
 
 
-def format_share(share, as_percent):
-    """Percentage*100 tiers read as percentages, everything else raw."""
-    if as_percent:
-        return ("%.2f%%" % (share / 100.0)).replace(".00%", "%")
+def format_share(share, as_percent, sibling_total=0):
+    """Percent tiers show the share of the sibling set -- the ratio PBS
+    actually applies, and the only reading that stays correct across share
+    sources (top-down percentage*100, --rollup sums, --equalize counts).
+    Everything else shows the raw share."""
+    if as_percent and sibling_total > 0:
+        pct = 100.0 * share / sibling_total
+        txt = ("%.1f" % pct).rstrip("0").rstrip(".")
+        return txt + "%"
     return format(share, ",")
 
 
@@ -66,8 +71,9 @@ def emit(shares, children, root, depth, max_children, include,
          percent_levels, count_levels, stack, out):
     grp_nodes, leaf_nodes, elision_nodes, stack_nodes = [], [], [], []
 
-    def label_for(name, level):
-        label = format_share(shares[name], level in percent_levels)
+    def label_for(name, level, sibling_total):
+        label = format_share(shares[name], level in percent_levels,
+                             sibling_total)
         if level in count_levels:
             n = leaf_count(children, name)
             label += "<br/>%d project%s" % (n, "" if n == 1 else "s")
@@ -93,10 +99,13 @@ def emit(shares, children, root, depth, max_children, include,
     def walk(name, level):
         if level >= depth:
             return
-        keep, elided = cap(children.get(name, []))
+        kids = children.get(name, [])
+        sibtotal = sum(shares[k] for k in kids)
+        keep, elided = cap(kids)
         for kid in keep:
             out.append('    %s --> %s["%s<br/>%s"]'
-                       % (name, kid, kid, label_for(kid, level + 1)))
+                       % (name, kid, kid,
+                          label_for(kid, level + 1, sibtotal)))
             if kid.endswith("grp"):
                 grp_nodes.append(kid)
             elif kid + "grp" == name:
@@ -113,17 +122,21 @@ def emit(shares, children, root, depth, max_children, include,
         own children stack vertically (invisible ~~~ links force the
         column).  Subgraph titles stay on one line -- a <br/> second line
         gets clipped by the subgraph border."""
-        keep, elided = cap(children.get(root, []))
+        kids = children.get(root, [])
+        sibtotal = sum(shares[k] for k in kids)
+        keep, elided = cap(kids)
         for kid in keep:
-            label = format_share(shares[kid], 1 in percent_levels)
+            label = format_share(shares[kid], 1 in percent_levels, sibtotal)
             stack_nodes.append(kid)
             out.append('    subgraph %s["%s&nbsp;&nbsp;(%s)"]' % (kid, kid, label))
             out.append("        direction TB")
             col = []
-            gkeep, gelided = cap(children.get(kid, []))
+            gkids = children.get(kid, [])
+            gsibtotal = sum(shares[k] for k in gkids)
+            gkeep, gelided = cap(gkids)
             for gkid in gkeep:
                 out.append('        %s["%s<br/>%s"]'
-                           % (gkid, gkid, label_for(gkid, 2)))
+                           % (gkid, gkid, label_for(gkid, 2, gsibtotal)))
                 col.append(gkid)
             if gelided:
                 node = "%s_more" % kid
@@ -145,8 +158,12 @@ def emit(shares, children, root, depth, max_children, include,
         out.append('%%{init: {"flowchart": '
                    '{"rankSpacing": 26, "nodeSpacing": 24}}}%%')
     out.append("graph TD")
-    out.append('    %s["%s<br/>%s"]'
-               % (root, root, format_share(shares[root], 0 in percent_levels)))
+    if stack:
+        # The root's share is meaningless without siblings; name only.
+        out.append('    %s["%s"]' % (root, root))
+    else:
+        out.append('    %s["%s<br/>%s"]'
+                   % (root, root, format_share(shares[root], False)))
     if root.endswith("grp"):
         grp_nodes.append(root)
     if stack:
@@ -184,8 +201,9 @@ def main(argv):
                              "(repeatable)")
     parser.add_argument("--percent-level", action="append", type=int,
                         default=[], metavar="N",
-                        help="format shares at this depth below the root "
-                             "(children of the root = 1) as percentage*100 "
+                        help="at this depth below the root (children of the "
+                             "root = 1), show each share as its percentage "
+                             "of the sibling set -- the ratio PBS applies "
                              "(repeatable)")
     parser.add_argument("--count-level", action="append", type=int,
                         default=[], metavar="N",

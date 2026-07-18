@@ -285,9 +285,11 @@ $$
 ## The Tree, from the Top
 
 ::: {.notes}
-Facility tier: SAM policy shares. Group tier: fairSharePercentage, emitted
-×100 (7000 = 70%). Real Derecho data; some siblings elided for space —
-regenerate with ./refresh_data.sh.
+Percentages are sibling-normalized (share / sum of sibling shares) — the
+ratio PBS actually applies, whatever the share source. That is why S_Staff
+shows 100%: it is CISL's only child, even though SAM policy says 70. Boxes
+also carry each group's project-account count. Real Derecho data; some
+siblings elided for space — regenerate with ./refresh_data.sh.
 :::
 
 {{< include _tree_overview.qmd >}}
