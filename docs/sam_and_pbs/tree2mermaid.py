@@ -52,27 +52,51 @@ def format_share(share, as_percent):
     return format(share, ",")
 
 
+def leaf_count(children, name):
+    """Number of leaf vertices in a subtree.  Every project account appears
+    exactly once as a leaf (plain leaf or a tree's self-leaf; `grp` interior
+    vertices are structural), so this is the account count beneath a vertex."""
+    kids = children.get(name, [])
+    if not kids:
+        return 1
+    return sum(leaf_count(children, k) for k in kids)
+
+
 def emit(shares, children, root, depth, max_children, include,
-         percent_levels, stack, out):
+         percent_levels, count_levels, stack, out):
     grp_nodes, leaf_nodes, elision_nodes, stack_nodes = [], [], [], []
 
+    def label_for(name, level):
+        label = format_share(shares[name], level in percent_levels)
+        if level in count_levels:
+            n = leaf_count(children, name)
+            label += "<br/>%d project%s" % (n, "" if n == 1 else "s")
+        return label
+
     def cap(kids):
-        """Order children by share and apply --max-children / --include."""
+        """Order children by share and apply --max-children / --include.
+        Returns (kept, elided) child lists."""
         ordered = sorted(kids, key=lambda k: -shares[k])
         if max_children and len(ordered) > max_children:
             keep = ordered[:max_children]
             keep += [k for k in ordered[max_children:] if k in include]
-            return keep, len(ordered) - len(keep)
-        return ordered, 0
+            return keep, [k for k in ordered if k not in keep]
+        return ordered, []
+
+    def elision_label(elided, level):
+        label = "(+%d more" % len(elided)
+        if level in count_levels:
+            n = sum(leaf_count(children, k) for k in elided)
+            label += ", %d project%s" % (n, "" if n == 1 else "s")
+        return label + ")"
 
     def walk(name, level):
         if level >= depth:
             return
         keep, elided = cap(children.get(name, []))
         for kid in keep:
-            label = format_share(shares[kid], level + 1 in percent_levels)
             out.append('    %s --> %s["%s<br/>%s"]'
-                       % (name, kid, kid, label))
+                       % (name, kid, kid, label_for(kid, level + 1)))
             if kid.endswith("grp"):
                 grp_nodes.append(kid)
             elif kid + "grp" == name:
@@ -80,7 +104,8 @@ def emit(shares, children, root, depth, max_children, include,
             walk(kid, level + 1)
         if elided:
             node = "%s_more" % name
-            out.append('    %s --> %s(["(+%d more)"])' % (name, node, elided))
+            out.append('    %s --> %s(["%s"])'
+                       % (name, node, elision_label(elided, level + 1)))
             elision_nodes.append(node)
 
     def walk_stacked():
@@ -97,12 +122,13 @@ def emit(shares, children, root, depth, max_children, include,
             col = []
             gkeep, gelided = cap(children.get(kid, []))
             for gkid in gkeep:
-                glabel = format_share(shares[gkid], 2 in percent_levels)
-                out.append('        %s["%s<br/>%s"]' % (gkid, gkid, glabel))
+                out.append('        %s["%s<br/>%s"]'
+                           % (gkid, gkid, label_for(gkid, 2)))
                 col.append(gkid)
             if gelided:
                 node = "%s_more" % kid
-                out.append('        %s(["(+%d more)"])' % (node, gelided))
+                out.append('        %s(["%s"])'
+                           % (node, elision_label(gelided, 2)))
                 elision_nodes.append(node)
                 col.append(node)
             if len(col) > 1:
@@ -111,7 +137,8 @@ def emit(shares, children, root, depth, max_children, include,
             out.append("    %s --> %s" % (root, kid))
         if elided:
             node = "%s_more" % root
-            out.append('    %s --> %s(["(+%d more)"])' % (root, node, elided))
+            out.append('    %s --> %s(["%s"])'
+                       % (root, node, elision_label(elided, 1)))
             elision_nodes.append(node)
 
     if stack:
@@ -157,6 +184,11 @@ def main(argv):
                         help="format shares at this depth below the root "
                              "(children of the root = 1) as percentage*100 "
                              "(repeatable)")
+    parser.add_argument("--count-level", action="append", type=int,
+                        default=[], metavar="N",
+                        help="append the subtree's project-account count to "
+                             "node labels at this depth below the root "
+                             "(repeatable)")
     parser.add_argument("--stack", action="store_true",
                         help="render exactly two levels, children of the "
                              "root as subgraphs with vertically stacked "
@@ -176,7 +208,8 @@ def main(argv):
 
     out = []
     emit(shares, children, args.root, args.depth, args.max_children,
-         set(args.include), set(args.percent_level), args.stack, out)
+         set(args.include), set(args.percent_level), set(args.count_level),
+         args.stack, out)
     if args.qmd:
         out.insert(0, "```{mermaid}")
         if args.fig_width:
