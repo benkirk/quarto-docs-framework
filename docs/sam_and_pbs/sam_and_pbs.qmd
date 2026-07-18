@@ -13,24 +13,30 @@ jupyter: bash
 
 ## SAM Projects & Allocations
 
+:::: {.columns}
+::: {.column width="48%"}
 SAM is the source of truth for who may compute, where, and how much:
 
-- **Facilities** (NCAR, UNIV, CSL, …) contain **allocation types** (groups),
-  which contain **projects**.
-- Each project holds **per-resource allocations**: an amount, a time window
-  (`startDate`/`endDate`), and an account status.
+- **Facilities** (NCAR, UNIV, CSL, …) contain **allocation types**
+  (groups), which contain **projects**.
+- Each project holds **per-resource allocations**: an amount, a time
+  window (`startDate`/`endDate`), and an account status.
 - Each machine is a **pair of SAM resources**: a CPU resource plus
   `"<machine> GPU"` (e.g. `Derecho` / `Derecho GPU`).
 - Projects carry their **user membership** (`uid`, `username`).
-
+:::
+::: {.column width="52%"}
 ```{mermaid}
-graph LR
+%%| fig-width: 5
+graph TD
     F[Facility] --> AT[Allocation type]
     AT --> P[Project]
     P --> RA["Allocation<br/>(per resource)"]
     P --> U[Users]
-    P -. parentProject .-> P
+    CP["Project<br/>(sub-project)"] -. parentProject .-> P
 ```
+:::
+::::
 
 ## SAM Payload — `fstree_access`
 
