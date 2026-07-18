@@ -158,9 +158,12 @@ def emit(shares, children, root, depth, max_children, include,
     out.append("    classDef selfleaf fill:#fff2cc,stroke:#bf9000")
     out.append("    classDef elided fill:#f3f3f3,stroke:#999999,"
                "stroke-dasharray:4 3,color:#666666")
-    out.append("    classDef tier fill:#f7f9fc,stroke:#8ea9c1")
+    out.append("    classDef tier fill:#f7f9fc,stroke:#8ea9c1,"
+               "font-size:18px,font-weight:bold")
+    out.append("    classDef rootv font-size:22px,font-weight:bold")
     for cls, nodes in (("grp", grp_nodes), ("selfleaf", leaf_nodes),
-                       ("elided", elision_nodes), ("tier", stack_nodes)):
+                       ("elided", elision_nodes), ("tier", stack_nodes),
+                       ("rootv", [root] if stack else [])):
         if nodes:
             out.append("    class %s %s" % (",".join(nodes), cls))
 

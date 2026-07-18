@@ -50,7 +50,9 @@ graph TD
     classDef grp fill:#cfe2f3,stroke:#1f4e79,stroke-width:2px
     classDef selfleaf fill:#fff2cc,stroke:#bf9000
     classDef elided fill:#f3f3f3,stroke:#999999,stroke-dasharray:4 3,color:#666666
-    classDef tier fill:#f7f9fc,stroke:#8ea9c1
+    classDef tier fill:#f7f9fc,stroke:#8ea9c1,font-size:18px,font-weight:bold
+    classDef rootv font-size:22px,font-weight:bold
     class NCAR_more,UNIV_more elided
     class CISL,CSL,NCAR,UNIV,WNA,ASD tier
+    class derecho rootv
 ```
