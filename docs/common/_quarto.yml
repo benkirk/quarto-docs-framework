@@ -1,6 +1,12 @@
 project:
   type: default
 
+# Strip quarto's raw-HTML <figure> wrappers in pptx output -- pandoc ignores
+# them but counts them as text when choosing slide layouts, demoting a
+# columns slide with a diagram to the Comparison layout (see the filter).
+filters:
+  - ../common/strip-raw-figure.lua
+
 format:
   pptx:
     reference-doc: ../common/branding/ncar/template.pptx

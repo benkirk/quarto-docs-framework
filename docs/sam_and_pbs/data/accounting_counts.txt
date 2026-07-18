@@ -1,0 +1,7 @@
+users         4282
+projects      1480
+projectusers  7680
+gpu_projects  1476
+gpu_users     4139
+queues        36
+wcoverride    9

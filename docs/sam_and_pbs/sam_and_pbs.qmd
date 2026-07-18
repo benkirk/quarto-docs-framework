@@ -1,0 +1,425 @@
+<!-- -*- mode: markdown -*- -->
+
+---
+title: "SAM & PBS"
+subtitle: "Accounting & Scheduler Integration"
+author: "Ben Kirk, NCAR/CISL"
+date: last-modified
+engine: jupyter
+jupyter: bash
+---
+
+# Background
+
+## SAM Projects & Allocations
+
+:::: {.columns}
+::: {.column width="48%"}
+SAM is the source of truth for who may compute, where, and how much:
+
+- **Facilities** (NCAR, UNIV, CSL, …) contain **allocation types**
+  (groups), which contain **projects**.
+- Each project holds **per-resource allocations**: an amount, a time
+  window (`startDate`/`endDate`), and an account status.
+- Each machine is a **pair of SAM resources**: a CPU resource plus
+  `"<machine> GPU"` (e.g. `Derecho` / `Derecho GPU`).
+- Projects carry their **user membership** (`uid`, `username`).
+:::
+::: {.column width="52%"}
+```{mermaid}
+%%| fig-width: 5
+graph TD
+    F[Facility] --> AT[Allocation type]
+    AT --> P[Project]
+    P --> RA["Allocation<br/>(per resource)"]
+    P --> U[Users]
+    P ~~~ CP["Project<br/>(sub-project)"]
+    CP -. parentProject .-> P
+```
+:::
+::::
+
+## SAM Payload — `fstree_access`
+
+One JSON document per resource; the CPU and GPU endpoints return the same
+project set with per-resource figures:
+
+```json
+{ "facilities": [
+  { "allocationTypes": [
+    { "name": "C_CSL", "fairSharePercentage": 100.0,
+      "projects": [
+        { "projectCode": "CESM0002", "parentProject": null, "active": true,
+          "resources": [
+            { "name": "Derecho", "allocationAmount": 465000000,
+              "startDate": "...", "endDate": "...",
+              "accountStatus": "Normal",
+              "users": [ {"uid": 12345, "username": "..."} ] } ] } ] } ] } ] }
+```
+
+## SAM Project Trees
+
+Projects nest via `parentProject` — and NCAR runs **two conventions, stored
+identically** (a per-project amount per resource):
+
+- Invariant (audited upstream): a root's own amount **is already its subtree
+  total** under both conventions.
+- Amounts are deliberately never deduplicated by the API — consumers must
+  handle the trees.
+
+| convention | how it looks in SAM | example |
+|:--|:--|:--|
+| **shared pool** | every member carries the *same* amount — the whole pool | `NMMM0003` + members, all 36.5M |
+| **subdivided award** | children hold distinct amounts carved out of the root's total | `CESM0002` 465M; children carve 442M *of it* |
+
+## The SAM API — "SAMuel"
+
+- HTTP basic auth; credentials come from the environment
+  (`SAM_API_USER`/`SAM_API_PASS`/`SAM_API_URL` via a shared `sam_auth.py`) —
+  never hardcoded.
+- Responses are server-side cached; both tools take `--clear-cache` to purge
+  first when freshness matters.
+
+| endpoint | provides |
+|:--|:--|
+| `/v1/fstree_access/<resource>` | facilities → projects → allocations → users |
+| `/v1/queue` | per-resource queue list + wallclock limits |
+| `/v1/wallclock_exemption` | per-user, per-queue overrides |
+| `/v1/admin/cache/refresh?category=flask` | purge the server response cache |
+
+## The Big Picture
+
+::: {.notes}
+Cron (weekday work hours, every 2h): rebuild both artifacts, copy to the
+scheduler host(s), `kill -HUP` the scheduler.
+
+To run a job, a user must submit with `-A <project>` naming an active
+project they belong to with an allocation on that resource — SAM provides
+the facts, PBS enforces them.
+:::
+
+```{mermaid}
+%%| fig-width: 10
+graph LR
+    SAM[(SAM API)]
+    SAM --> S2S["samuel2sql.py"]
+    SAM --> FST["fsparsetree_mr.py"]
+    S2S --> DB[("ncar_accounting.db<br/>(SQLite)")]
+    FST --> RG["resource_group<br/>(fairshare tree)"]
+    DB --> ACC["accounting.PY<br/>queuejob hook"]
+    DB --> WCL["wallclock.PY<br/>queuejob hook"]
+    RG --> SCHED["PBS scheduler<br/>(HUP to reload)"]
+    ACC --> PBS[PBS Professional]
+    WCL --> PBS
+    SCHED --> PBS
+```
+
+## PBS Fairshare Concepts
+
+- The **fairshare entity is the project** (`qsub -A PROJ0001`), not the user.
+- Entities live in a **tree** (`resource_group` file); every vertex gets an
+  integer **share**.
+- **Shares are compared only among siblings** — a vertex competes with its
+  peers for their parent's slice; a constant scale factor across a level is
+  invisible.
+- Usage accumulates as jobs run and **decays** with the scheduler's
+  configured half-life; jobs are then prioritized by each entity's
+  usage-vs-entitlement.
+
+::: {.notes}
+See the Altair "Understanding fairshare" white paper (docs/) for the full
+treatment; these slides only need the tree + sibling-relative shares + decay.
+:::
+
+## PBS Fairshare — the factor
+
+$$
+\text{fairshare\_factor} = 2^{-\left(\text{tree\_usage}/\text{perc}\right)}
+$$
+
+- **0.5 is equilibrium** (usage = share).
+- `tree_usage` is **inherited along the whole path from the root** — an idle
+  leaf under busy parents still lands near 0.5 (worked example in Backup).
+
+| tree_usage / perc | factor | meaning |
+|--:|--:|:--|
+| 0 | 1.00 | used ~nothing of the entitlement |
+| 1 | 0.50 | used exactly the fair share |
+| 2 | 0.25 | used twice the share — decays fast |
+
+## PBS Fairshare — `fairshare_usage_res`
+
+Usage should accrue as a **fraction of machine capacity**, so saturating the
+GPUs and saturating the CPUs count comparably:
+
+$$
+\text{usage} \mathrel{+}= \left( \frac{\texttt{ncpus}}{N_{cpu}} + \frac{\texttt{ngpus}}{N_{gpu}} \right) \cdot \texttt{walltime}
+$$
+
+In `$PBS_HOME/sched_priv/sched_config` (Derecho: $N_{cpu}=318464$,
+$N_{gpu}=328$):
+
+```
+fairshare_usage_res: (ncpus/318464.0 + ngpus/328.0) * walltime
+```
+
+- The tree's shares are built in the **same capacity-normalized units**, so
+  usage and entitlement are directly comparable.
+- The constants live in `capacities.json` and **must stay in sync** with
+  `sched_config`.
+
+## The `resource_group` File
+
+Four columns: `Vertex_name  fairshare_id  parent  #shares` — parents must
+appear before children; PBS rejects a share of 0 (minimum 1).
+
+```{bash}
+#| echo: true
+head -8 data/derecho.tree
+```
+
+- The single top vertex is named for the machine (PBS's `root` is implicit).
+- Facilities carry SAM's policy percentages; deeper tiers follow below.
+
+# Tooling — `samuel2sql.py`
+
+## One Accounting DB per Machine
+
+```
+samuel2sql.py [--clear-cache] <machine> <outfile>
+```
+
+- Unified successor to three divergent per-cluster scripts (Casper's two-DB
+  split + Derecho's merged variant).
+- Fetches the machine's **CPU and GPU trees**, `/v1/queue`, and
+  `/v1/wallclock_exemption`; emits **one SQLite DB** in the Derecho schema.
+- Queue lists come from SAM — the old hardcoded per-cluster lists are gone.
+- Robustness: output built in a temp file and **renamed atomically**; a
+  machine with no GPU resource (HTTP 404) gets empty `gpu_*` tables; any
+  other fetch failure is fatal.
+
+## The Database — a Contract with the Hooks
+
+:::: {.columns}
+::: {.column width="48%"}
+**CPU tables**
+
+- `users` (uid, name)
+- `projects` (code, active)
+- `project_status`
+- `projectusers` (uid ↔ pid)
+- `queues` (queue, wallclocklimit)
+- `wcoverride` (uid, queueid, seconds)
+:::
+::: {.column width="52%"}
+**GPU mirror tables**
+
+- `gpu_projects`, `gpu_status`, `gpu_users`
+
+**Row counts (Derecho):**
+
+```{bash}
+#| echo: false
+cat data/accounting_counts.txt
+```
+:::
+::::
+
+::: {.notes}
+The schema is byte-identical to the deployed Derecho DB — it is an
+external contract with the PBS hooks, changed only in lock-step (it even
+retains a vestigial unused `resource` table).
+:::
+
+## How the Hooks Consume It
+
+`accounting.PY` (queuejob) validates `-A`; **CPU vs GPU jobs branch on
+`ngpus`** in the select statement, querying `projects`/`projectusers` or
+`gpu_projects`/`gpu_users`:
+
+```sql
+select projects.code, project_status.code, projects.active
+from projectusers
+join project_status on status = project_status.id
+join projects on projectusers.pid = projects.id
+join users on projectusers.uid = users.uid
+where users.name is ?
+```
+
+```{bash}
+#| echo: false
+head -8 data/accounting_lookup.txt
+```
+
+`wallclock.PY` reads `queues` for the per-queue limit and `wcoverride` for
+per-user exceptions (`-1` = unlimited; `R|S|M<digits>` queues map to
+"reservation").
+
+# Tooling — `fsparsetree_mr.py`
+
+## A Weighted, Multi-Resource Fairshare Tree
+
+```
+fsparsetree_mr.py [--rollup LEVEL] [--equalize LEVEL] [--clear-cache] <machine> <outfile>
+```
+
+Successor to the flat single-resource generator; three changes:
+
+1. **Merges CPU + GPU** SAM resources into one tree per machine.
+2. **Weights project leaves** by a capacity-normalized burn rate (instead of
+   flat `1`).
+3. **Mirrors SAM's project trees** into nested vertices (instead of
+   flattening to peers).
+
+## The Weighting Model
+
+For project $p$ with CPU allocation $A_{cpu}$ over $D_{cpu}$ days and GPU
+allocation $A_{gpu}$ over $D_{gpu}$ days:
+
+$$
+w(p) = \frac{A_{cpu}}{D_{cpu}} + \frac{N_{cpu}}{N_{gpu}}\cdot\frac{A_{gpu}}{D_{gpu}},
+\qquad
+\text{share}(p) = \max\!\left(1,\ \text{round}(w \cdot \text{scale})\right)
+$$
+
+- **Burn rate** — dividing by each allocation's own window compares projects
+  on per-day entitlement, not raw totals.
+- **Capacity normalization** — the $N_{cpu}/N_{gpu}$ factor mirrors
+  `fairshare_usage_res`, so shares and usage are in the same units.
+- Constants per machine in `capacities.json`
+  (Derecho: $N_{cpu}=318464$, $N_{gpu}=328$).
+
+## The Tree, from the Top
+
+::: {.notes}
+Percentages are sibling-normalized (share / sum of sibling shares) — the
+ratio PBS actually applies, whatever the share source. That is why S_Staff
+shows 100%: it is CISL's only child, even though SAM policy says 70. Boxes
+also carry each group's project-account count. Real Derecho data; some
+siblings elided for space — regenerate with ./refresh_data.sh.
+:::
+
+{{< include _tree_overview.qmd >}}
+
+## Handling Project Trees
+
+Flattening SAM's project trees to peers **double-counts**: a shared pool is
+claimed once per member (14×), a subdivided award twice (root + children).
+
+- On Derecho, flat vs nested: `N_Divisional` projects claimed **3.2 B vs
+  379 M** (−88%); `C_CSL` **1.16 B vs 181 M** (−84%).
+
+The fix needs no tree taxonomy — PBS compares shares **only among siblings**:
+
+- Interior vertex **`<code>grp`** carries the project's **raw amount** (a
+  root's amount is already its subtree total, under both conventions).
+- A **self-leaf `<code>`** carries the **residual**, so the root's own jobs
+  compete fairly with its children:
+
+$$
+\text{leaf}(X) = X.\text{amount} - \sum \text{amounts of } X\text{'s carve-out children}
+$$
+
+(a child is a carve-out iff its amount differs from $X$'s).
+
+## Project Trees — a Subdivided Award
+
+:::: {.columns}
+::: {.column width="58%"}
+{{< include _tree_cesm.qmd >}}
+:::
+::: {.column width="42%"}
+- Interior `grp` vertices (blue) hold **subtree totals**.
+- Self-leaves (yellow) hold the **residual**: `CESM0002`'s own jobs get
+  59.7M of the 181M subtree — what it did not carve out to children.
+- Sub-trees recurse (`CESM0028grp`).
+:::
+::::
+
+## Project Trees — a Shared Pool
+
+:::: {.columns}
+::: {.column width="58%"}
+{{< include _tree_pool.qmd >}}
+:::
+::: {.column width="42%"}
+- Pool members all carry the pool amount → **peers split it evenly**.
+- `NMMM0083` shares the same pool over a **shorter window** → burns
+  faster by design (95M vs 36.5M).
+- A member with no allocation of its own floors to PBS's minimum share
+  of 1.
+:::
+::::
+
+## Alternate Share Policies — `--rollup` / `--equalize`
+
+- Roll-up **overrides** top-down policy and warns per override — e.g.
+  `N_NSC 59% → 0.48%` exposes a policy reserve being flattened.
+- *"All accounts equal, tree-wide"* is the explicit combination
+  `--equalize leaf --rollup facility`.
+
+| flag | effect |
+|:--|:--|
+| `--rollup group` | allocation-group shares = Σ of member weights (not SAM %) |
+| `--rollup facility` | …facility tier too |
+| `--rollup all` | telescopes to one flat allocation-proportional pool |
+| `--equalize facility` | facilities peer-equal (6 → 16.67% each) |
+| `--equalize leaf` | every project account weighs the same (count-based) |
+
+# Backup
+
+## References
+
+- Altair, *Understanding fairshare usage for PBS Professional* (white paper,
+  `docs/`).
+- `docs/FAIRSHARE_TREE.md` — the authoritative model doc (weighting,
+  project-tree mirroring, rollup/equalize semantics, verification recipes).
+- `docs/FAIRSHARE_FACTOR.md` — the live `fairshare_factor.sh` tool and
+  findings.
+- Repo: `hpc-scheduling-tools`; SAM server side: `sam-queries`
+  (`parentProject` added in #354).
+- Diagrams on these slides: real Derecho data, frozen via
+  `./refresh_data.sh` (`tree2mermaid.py` + `data/`).
+
+## Observability — `fairshare_factor.sh`
+
+For every project with queued jobs, computes
+$2^{-(\text{tree\_usage}/\text{perc})}$ live on the PBS host and prints a
+sorted table (8-way parallel `fairshare` queries).
+
+Findings from a 212-project run:
+
+- **Nothing scores above ~0.455** — reaching 1.0 needs the *entire* root
+  path under-used, and the big facility tiers run at/above their shares.
+- The bottom of the table spans ~60 orders of magnitude (tiny share, huge
+  inherited usage → factor underflows toward 0).
+
+## Worked Example — `tree_usage` Is Inherited
+
+`SCSG0002`: raw own usage of **16 core-seconds**, yet:
+
+```
+Percentage           : 1.307190%
+fairshare_tree_usage : 0.015112     <- inherited from CISL -> S_Staff
+ratio = 1.156  ->  factor = 0.45
+```
+
+An idle leaf under busy parents cannot pull its tree-usage below its
+parents' — by design: the group, not just the leaf, has spent its share.
+
+## Verification Recipes
+
+Structural checks on a generated tree (run here against the frozen copy):
+
+```{bash}
+#| echo: true
+# duplicate vertex names (must be empty):
+awk '{print $1}' data/derecho.tree | sort | uniq -d
+# every parent defined before use (must be empty):
+awk '{seen[$1]=1} $3!="root" && !($3 in seen){print "unordered:",$1}' data/derecho.tree
+# shares are a real distribution, not all 1:
+awk '{print $4}' data/derecho.tree | sort -n | uniq -c | sort -rn | head -3
+```
+
+`samuel2sql.py` was validated against the legacy builders: schema identical;
+row-for-row identical tables except 11 intentionally-fixed GPU-only users.

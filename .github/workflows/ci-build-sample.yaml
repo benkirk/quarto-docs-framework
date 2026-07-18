@@ -33,6 +33,9 @@ jobs:
       && !contains(github.event.pull_request.title, '[ci skip]')
       && !contains(github.event.pull_request.title, '[no ci]')
     runs-on: ubuntu-latest
+    # A wedged render (see the Chromium step below) should fail fast,
+    # not burn the 6-hour job limit.
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
@@ -54,23 +57,29 @@ jobs:
       - name: Register bash Jupyter kernel
         run: python -m bash_kernel.install --sys-prefix
 
-      # mpicxx is referenced by sample.qmd's executable {bash} chunk
-      # ("which mpicxx && mpicxx --version"). Without it the chunk fails
-      # the build instead of just printing into the slide. APT install
-      # is fast (~20s on ubuntu-latest).
-      - name: Install OpenMPI (for sample.qmd's mpicxx demo)
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends libopenmpi-dev openmpi-bin
+      # Quarto renders mermaid diagrams through a headless browser. The
+      # runner's system Chrome wedges quarto's discovery/handshake (runs
+      # hang forever right after cell execution, leaving orphaned chrome
+      # + chrome_crashpad_handler processes; lifting the AppArmor userns
+      # restriction did not help), so install quarto's own managed
+      # Chrome Headless Shell, which it prefers when present.
+      - name: Install Chrome Headless Shell (mermaid rendering)
+        run: quarto install chrome-headless-shell --no-prompt
 
       - name: Sanity-check activation
         run: |
-          which python quarto mpicxx 2>/dev/null || true
+          which python quarto 2>/dev/null || true
           conda info --envs
 
+      # timeout: a wedged browser render should fail here in minutes,
+      # with diagnostics, rather than hitting the job-level cap.
       - name: Build Sample PPTX
         run: |
-          make -C docs/sample
+          timeout 600 make -C docs/sample || {
+            echo '::error::sample pptx render timed out or failed'
+            ps aux | grep -i chrom | grep -v grep || true
+            exit 1
+          }
 
       - name: Upload sample.pptx artifact
         uses: actions/upload-artifact@v4
