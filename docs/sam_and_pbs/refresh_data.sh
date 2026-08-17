@@ -7,7 +7,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 REPO=../../../..                       # hpc-scheduling-tools checkout
-source "${REPO}/config_env.sh"         # tool env + SAM credentials
+source "${REPO}/etc/config_env.sh"     # tool env + SAM credentials
 
 mkdir -p data
 tmpdb=$(mktemp -t sam_and_pbs_accounting)

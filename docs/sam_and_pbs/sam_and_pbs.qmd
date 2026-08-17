@@ -90,12 +90,12 @@ identically** (a per-project amount per resource):
 ## The Big Picture
 
 ::: {.notes}
-Cron (weekday work hours, every 2h): rebuild both artifacts, copy to the
-scheduler host(s), `kill -HUP` the scheduler.
-
 To run a job, a user must submit with `-A <project>` naming an active
 project they belong to with an allocation on that resource — SAM provides
 the facts, PBS enforces them.
+
+How the artifacts actually reach the scheduler is the "SAM to PBS Pipeline"
+section later on.
 :::
 
 ```{mermaid}
@@ -365,6 +365,162 @@ $$
 | `--rollup all` | telescopes to one flat allocation-proportional pool |
 | `--equalize facility` | facilities peer-equal (6 → 16.67% each) |
 | `--equalize leaf` | every project account weighs the same (count-based) |
+
+
+# Tooling — SAM to PBS Pipeline
+
+## How Data Flows from SAM to PBS
+
+:::: {.columns}
+::: {.column width="50%"}
+**Updating PBS Artifacts — CSG**
+
+- A `cron` process
+- Can run on any node with access to `sam.hpc.ucar.edu`
+- Rebuilds both artifacts, for every machine:
+  - `resource_group` — the fairshare tree
+  - `ncar_accounting.db` — projects, users, queues
+- **Publishes only when the content changed**
+- Touches no scheduler — cannot disturb a running system
+:::
+::: {.column width="50%"}
+**Updating PBS Scheduler — HSG**
+
+- An admin, on the scheduler host
+- Needs the privilege to pause and `HUP` the scheduler
+- `make` against the published directory
+- **Installs only what differs from what is deployed**
+- A database swap is free; a tree costs a scheduler pause
+:::
+::::
+
+::: {.notes}
+The published directory is the interface between the two groups — the one
+place both sides touch. Each side gates on content independently rather than
+trusting the other's bookkeeping, so the expensive action only ever happens
+when something real moved.
+:::
+
+## SAM to PBS Schematic
+
+::: {.notes}
+Two artifacts, two independent gates, two very different consequences. The
+database can be swapped under a running scheduler; the tree cannot, which is
+the whole reason the pipeline refuses to act on unchanged content.
+
+The common case by far is that both gates say "no" — the grey terminal — and
+nothing anywhere is written or restarted.
+:::
+
+```{mermaid}
+%%| fig-width: 10
+graph LR
+    SAM[(SAM API)] --> CRON["CSG &middot; cron<br/>every 12 min"]
+    CRON --> S2S["samuel2sql.py"]
+    CRON --> FST["fsparsetree_mr.py"]
+    S2S --> GD{"changed?"}
+    FST --> GT{"changed?"}
+    GD -. no .-> ND(["nothing published"])
+    GT -. no .-> NT(["nothing published"])
+    GD == yes ==> PDB[("ncar_accounting.db")]
+    GT == yes ==> PTR[("resource_group")]
+    PDB --> IDB["HSG &middot; rename into place<br/>no outage"]
+    PTR --> ITR["HSG &middot; pause &rarr; install<br/>&rarr; HUP &rarr; resume"]
+    IDB --> PBS["PBS Professional"]
+    ITR --> PBS
+    classDef csg fill:#cfe2f3,stroke:#1f4e79,stroke-width:2px
+    classDef handoff fill:#ffffff,stroke:#333333,stroke-width:3px
+    classDef quiet fill:#f3f3f3,stroke:#999999,stroke-dasharray:4 3,color:#666666
+    classDef cheap fill:#d9ead3,stroke:#38761d,stroke-width:2px
+    classDef costly fill:#f4cccc,stroke:#a61c00,stroke-width:2px
+    classDef pbs fill:#fff2cc,stroke:#bf9000,stroke-width:2px
+    class SAM,CRON,S2S,FST,GD,GT csg
+    class PDB,PTR handoff
+    class ND,NT quiet
+    class IDB cheap
+    class ITR costly
+    class PBS pbs
+```
+
+## Updating PBS Artifacts
+
+- Runs from `cron.hpc.ucar.edu` every 12 minutes, via a wrapper that `ssh`es
+  to a login node — **Casper, falling back to Derecho** only if `ssh` cannot
+  reach it. Which node runs it does not change the result.
+- Rebuilds the tree and database for every machine, validates them, and
+  **replaces a published file only when its digest changed**.
+- Digests are asymmetric on purpose: the tree by **bytes**, the database over
+  its logical `.dump` — otherwise a `sqlite` upgrade would move every byte and
+  trigger a pointless deploy on every cluster.
+- A **churn guard** blocks an implausible delta — a collapsed table, wholesale
+  membership churn — until a second run agrees, and exits non-zero so `cron`
+  mails somebody.
+- Each replaced artifact is kept as `<name>.prev`: plain `diff` for the tree,
+  `sqlite3 .dump` for the database.
+
+::: {.notes}
+First day in production: ~70 cycles, the databases changed a handful of times
+and the fairshare tree twice — every other cycle wrote nothing at all. That
+ratio is the whole justification for content-gating.
+
+One cycle failed on a transient SAM connect timeout: Casper published nothing
+and kept its last good artifacts, Derecho published normally, and cron mailed
+on the non-zero exit.
+
+It never passes `--clear-cache` — that cache is shared with every other SAM
+consumer.
+:::
+
+## Updating PBS Scheduler
+
+HSG territory: this is the only half that can disturb a running scheduler.
+
+```bash
+make status                # what differs from what is deployed
+make deploy                # install only that
+make rollback-derecho      # put back the previous artifact
+```
+
+- Compares against **the deployed file itself**, not a timestamp — so it is
+  correct on a fresh checkout, and it repairs a hand-edit or a partial copy on
+  the next run instead of never noticing.
+- **Database**: written as a sibling, then renamed over the destination.
+  Atomic, no outage, safe while the hooks are reading it.
+- **Fairshare tree**: pause scheduling → install → `HUP` → resume. The
+  expensive path, and the reason everything upstream is content-gated.
+- The `Makefile` is self-contained — copy it to the scheduler host, set the
+  destinations and the pause/HUP/resume commands, and it needs nothing else:
+  no checkout, no Python.
+  - Today at `/glade/work/benkirk/repos/hpc-scheduling-tools/integration/`,
+    alongside a `README.md` covering every failure mode
+- **Casper deploys stay gated** until its hook migration lands.
+
+::: {.notes}
+Why the rename is safe under a live hook: a reader either holds a descriptor on
+the old inode (complete, stale) or opens the new one (complete) — never a torn
+file. Never unlink the destination, though: `sqlite3.connect()` on a missing
+path *creates* an empty database, and every job would then be rejected with
+"Invalid account".
+:::
+
+## When Something Looks Wrong
+
+Most of these clear themselves; the table says which.
+
+| you see | it means |
+|:--|:--|
+| `NOT PUBLISHED -- rerun to confirm` | churn guard tripped once; a legitimate delta publishes on the next run |
+| `refresh: FAILED for <machine>` | transient SAM error; that machine keeps its last good artifacts, the others still publish |
+| `REPAIRED <name>` | a published artifact had drifted and was restored — the content itself did not change |
+| `fetch: verification failed` | the copy straddled a publish; one retry is automatic |
+| `make status` says `DIFFERS` right after a deploy | the destination was edited out of band; the next `make deploy` repairs it |
+| nothing changed for hours | normal — this is the common case |
+
+::: {.notes}
+`checked_at` in `status.json` answers "is the job alive"; `changed_at` answers
+"did the data move". Conflating the two is the easy mistake — a long run of
+unchanged cycles is health, not staleness.
+:::
 
 # Backup
 
