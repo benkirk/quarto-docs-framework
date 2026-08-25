@@ -156,17 +156,22 @@ $$
 \text{usage} \mathrel{+}= \left( \frac{\texttt{ncpus}}{N_{cpu}} + \frac{\texttt{ngpus}}{N_{gpu}} \right) \cdot \texttt{walltime}
 $$
 
+- PBS compares usage only **relatively** — against entitlement, and among
+  siblings — so scaling every job by a constant changes no ranking.
+- But PBS accrues usage as an **integer**, so those raw fractions truncate
+  toward zero. Fix: **multiply through by $N_{cpu}$** — same ranking, usable
+  integers.
+
 In `$PBS_HOME/sched_priv/sched_config` (Derecho: $N_{cpu}=318464$,
 $N_{gpu}=328$):
 
 ```
-fairshare_usage_res: (ncpus/318464.0 + ngpus/328.0) * walltime
+fairshare_usage_res: ncpus*walltime + (318464/328)*ngpus*walltime
 ```
 
-- The tree's shares are built in the **same capacity-normalized units**, so
-  usage and entitlement are directly comparable.
-- The constants live in `capacities.json` and **must stay in sync** with
-  `sched_config`.
+- Shares are built in the **same units**, so usage and entitlement stay
+  comparable; the constants live in `capacities.json` and **must match
+  `sched_config`**.
 
 ## The `resource_group` File
 
@@ -365,6 +370,104 @@ $$
 | `--rollup all` | telescopes to one flat allocation-proportional pool |
 | `--equalize facility` | facilities peer-equal (6 → 16.67% each) |
 | `--equalize leaf` | every project account weighs the same (count-based) |
+
+
+# Job Sort
+
+## The End Goal
+
+We want a single job priority sorting algorithm we can apply across queues:
+
+```
+priority_boost +
+(queue_scale*priority_scale)*(1000*fairshare_factor +
+                              1000*min(1.0, eligible_time/172800.0)**2)
+```
+
+- Jobs are prioritized primarily by `fairshare_factor`, with a quadratic
+  dependence on `eligible_time`.
+- That merit is scaled by the job's **tier** (`priority_scale`) and its **queue**
+  (`queue_scale`); `priority_boost` is a separate additive operator override.
+
+This requires several changes vs. what we do today.
+
+## Getting there
+
+Three new **custom resources** — set only by operators (`csgteam`) and `root`,
+never requestable by users:
+
+- **`priority_boost`** (default `0`) — an additive **operator override**, sized
+  to swamp the formula. Replaces the `qalter -p` boost that overwrites `Priority`
+  and destroys the tier.
+- **`queue_scale`** (default `1.0`, must stay `> 0`) — a per-queue **multiplier**
+  on the merit, set as a queue `resources_default`: `>1` favors a queue, `<1`
+  disfavors. A missing value binds to `0` and sinks the job, so the default is
+  load-bearing.
+- **`priority_scale`** (default `1.0`) — the priority *tier* as a **multiplier**
+  on `(fairshare + wait)`, stamped by the `job_priority` hook, so a premium job
+  with poor fairshare can lose to a regular job with good fairshare.
+
+Create with `qmgr -c "create resource <name> type=float, flag=r"`, give each a
+server `resources_default`, then set them in hooks or via a manager's
+`qalter -l` — invisible to users, alterable by `csgteam`.
+
+## The `by_queue` decision
+
+:::: {.columns}
+::: {.column width="50%"}
+**The plan**
+
+- Flatten the **normal** queues to equal `Priority` + `by_queue: False` → the
+  formula ranks CPU and GPU jobs head-to-head in one pool.
+- `queue_scale` then **tilts** among those queues where warranted.
+- Dev/preempt keep a **higher, hard queue `Priority`** — a latency guarantee the
+  formula can't (and shouldn't) override.
+:::
+::: {.column width="50%"}
+**The catch (OpenPBS testbed)**
+
+- Queue `Priority` is a **primary sort key the formula can't cross**.
+- `by_queue: False` only merges queues **already equal** in `Priority`.
+- Letting the formula arbitrate means **flattening** `Priority` — but
+  `preempt_queue_prio` reads the same values, so preemption reshuffles.
+:::
+::::
+
+::: {.notes}
+Measured on the OpenPBS 23.06 testbed (2026-08-19); the clusters run PBS Pro
+2024.1, so confirm there. Three queue pairs, each giving the lower-Priority queue
+a formula score of 999 vs 10: cpudev(200) vs cpu(100) and cpu(100) vs pcpu(50)
+both sorted by queue Priority under by_queue True *and* False; only the
+equal-Priority cpu(100) vs gpu(100) pair flipped to formula order under
+by_queue False. So queue_scale only bites among queues flattened to equal
+Priority, and flattening them moves the preemption classes.
+:::
+
+## Open questions for the vendor
+
+Our evidence is an OpenPBS 23.06 testbed; the clusters run **PBS Pro 2024.1** —
+we'd like to confirm each of these there:
+
+- **`sched_config` keys** — seven keys (`backfill`, `half_life`, `preempt_*`,
+  `log_filter`) are no longer read from the file in 23.06; a stale value is
+  **silently ignored**. Still file-read in 2024.1, or `qmgr`-only now?
+- **Queue `Priority` vs. the formula** — can the formula ever outrank queue
+  `Priority`, or must we flatten it (and disturb `preempt_queue_prio`)?
+- **Formula failure modes** — confirm a missing custom resource binds to `0`
+  (not a zeroed formula), while an unknown symbol or `^` fails at *evaluation* —
+  silently, on every job.
+- **Formula syntax** — `min()` / `max()` / ternary / `**` and `math` functions,
+  and the `qmgr` quoting they need.
+
+::: {.notes}
+Testbed detail (2026-08-19): `^` is XOR in Python — `...^2` passes qmgr
+validation, then raises for every job forever with only a DEBUG2 trace. A missing
+consumable resource binds to literal 0, so the rest of the formula still
+evaluates. A manager who is not root can `qalter` a resource users cannot
+request. A custom resource can't be deleted while any job — including one in
+history — still carries it, which shapes the rollback path.
+:::
+
 
 
 # Tooling — SAM to PBS Pipeline
