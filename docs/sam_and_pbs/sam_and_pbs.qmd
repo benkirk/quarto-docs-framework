@@ -453,32 +453,34 @@ in beside them.
 
 :::: {.columns}
 ::: {.column width="50%"}
-**The plan**
+**`by_queue: True`** — today's default
 
-- Flatten the **normal** queues to equal `Priority` + `by_queue: False` → the
-  formula ranks CPU and GPU jobs head-to-head in one pool.
-- `queue_scale` then **tilts** among those queues where warranted.
-- Dev/preempt keep a **higher, hard queue `Priority`** — a latency guarantee the
-  formula can't (and shouldn't) override.
+- The formula orders jobs **within** each queue; the scheduler then walks queues
+  in **`Priority`** order.
+- A `cpu` job and a `gpu` job are **never** ranked against each other — each
+  queue is its own block, and the formula's range is spent inside it.
 :::
 ::: {.column width="50%"}
-**The catch (OpenPBS testbed)**
+**`by_queue: False`**
 
-- Queue `Priority` is a **primary sort key the formula can't cross**.
-- `by_queue: False` only merges queues **already equal** in `Priority`.
-- Letting the formula arbitrate means **flattening** `Priority` — but
-  `preempt_queue_prio` reads the same values, so preemption reshuffles.
+- Queues that **share a `Priority`** merge into **one pool** the formula ranks
+  together — CPU and GPU compete on merit.
+- Only **equal-`Priority`** queues merge (`Priority` is a primary key the formula
+  can't cross), so we flatten the normal queues.
+- **→ We probably want this** — it lets the formula rank across queues, the basis
+  for *Queue Stuffing* in Backup.
 :::
 ::::
 
 ::: {.notes}
-Measured on the OpenPBS 23.06 testbed (2026-08-19); the clusters run PBS Pro
-2024.1, so confirm there. Three queue pairs, each giving the lower-Priority queue
-a formula score of 999 vs 10: cpudev(200) vs cpu(100) and cpu(100) vs pcpu(50)
-both sorted by queue Priority under by_queue True *and* False; only the
-equal-Priority cpu(100) vs gpu(100) pair flipped to formula order under
-by_queue False. So queue_scale only bites among queues flattened to equal
-Priority, and flattening them moves the preemption classes.
+Measured on the OpenPBS 23.06 testbed (2026-08-19); clusters run PBS Pro 2024.1,
+so confirm there. Three queue pairs, each giving the lower-Priority queue a
+formula score of 999 vs 10: cpudev(200) vs cpu(100) and cpu(100) vs pcpu(50) both
+sorted by queue Priority under by_queue True *and* False; only the equal-Priority
+cpu(100) vs gpu(100) pair flipped to formula order under by_queue False. So
+dev/preempt keep their higher Priority as a hard latency/preemption guarantee and
+queue_scale only tilts the flattened normal queues; flattening Priority also moves
+the preemption classes (preempt_queue_prio reads the same values).
 :::
 
 ## Open questions for the vendor
@@ -720,3 +722,71 @@ awk '{print $4}' data/derecho.tree | sort -n | uniq -c | sort -rn | head -3
 
 `samuel2sql.py` was validated against the legacy builders: schema identical;
 row-for-row identical tables except 11 intentionally-fixed GPU-only users.
+
+# Queue Stuffing
+
+Per-user responsiveness without starving the bulk — an idea for discussion.
+
+## The idea
+
+Fairshare is per **account**, so when one user floods a project every one of
+those jobs carries the **same `fairshare_factor`** — they form one contiguous
+block in the sort. A per-user routing **waterfall** spreads that block across
+tiers so everyone stays responsive:
+
+- A user's **first N** jobs route to **high**, the next **M** to **med**, the
+  **rest** to **low** — per-user `max_queued` limits on high/med force the
+  cascade (N, M tunable).
+- high/med/low share **one `Priority`** with **`by_queue: False`**, and
+  **`queue_scale`** gives a soft high → med → low nudge.
+- **Merit still crosses the tiers**: fairshare + aging let a deserving `low` job
+  surface, so the bulk is *delayed, never starved* — a soft tilt, not a hard cage.
+
+## The waterfall
+
+::: {.notes}
+Hybrid is similar. Grounding: `fairshare_entity = Account_Name`, so users are
+never modeled — one account's queued jobs share one factor. The per-user cascade
+(routing + `max_queued`) decides which tier a job lands in; `queue_scale` + merit
+decide the order. Aging is the anti-starvation floor (though tiny early: ~3.5% of
+cap at 9 h, and 99% of jobs start within ~31 h). `strict_ordering:False` +
+backfill + the 168 h usage-decay already soften the block, so this targets
+responsiveness/latency more than raw throughput.
+:::
+
+```{mermaid}
+%%| fig-width: 9.5
+graph LR
+    J["a user's<br/>jobs"] --> M["Main<br/>(route)"]
+    M --> RC["cpu<br/>(route)"]
+    M --> RG["gpu<br/>(route)"]
+    RC -->|first N| CH["cpu-high"]
+    RC -->|next M| CM["cpu-med"]
+    RC -->|rest| CL["cpu-low"]
+    RG -->|first N| GH["gpu-high"]
+    RG -->|next M| GM["gpu-med"]
+    RG -->|rest| GL["gpu-low"]
+    classDef hi fill:#d7ead7,stroke:#4a7a4a,color:#123;
+    classDef me fill:#f7edc0,stroke:#b9932a,color:#123;
+    classDef lo fill:#f0d3d3,stroke:#c0504d,color:#123;
+    class CH,GH hi;
+    class CM,GM me;
+    class CL,GL lo;
+```
+
+## Open questions
+
+- **Does routing cascade on a *per-user* `max_queued`?** PBS routing cascades on
+  resource eligibility today (`main → cpu/gpu`); we believe it also falls through
+  on a per-user queued limit — confirm on Gust / with the vendor.
+- **How to size it** — the `queue_scale` tiers (a small tilt on a small factor),
+  or a dedicated per-user boost resource, and the N / M cutoffs.
+- **Relationship to per-user run-caps** — we already cap a user's *running*
+  footprint (`[u:PBS_GENERIC=…]`); this adds a *responsiveness* layer on top.
+- **Is it worth it?** Backfill + usage-decay already blunt the block — quantify
+  the real latency win before committing to the queue proliferation.
+- **Requires `eligible_time` fix!!**  We can block jobs with limits in
+  any of the execution queues, allowing jobs to "pile up" in routing
+  queues.  These should *not* accrue `eligible_time`; their eligible
+  time needs to be 0 when they enter an execution queue so that the
+  job sort behaves.
