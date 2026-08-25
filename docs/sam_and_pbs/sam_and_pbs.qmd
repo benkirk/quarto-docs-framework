@@ -374,6 +374,8 @@ $$
 
 # Job Sort
 
+Prioritizing job execution.
+
 ## The End Goal
 
 We want a single job priority sorting algorithm we can apply across queues:
@@ -384,12 +386,16 @@ priority_boost +
                               1000*min(1.0, eligible_time/172800.0)**2)
 ```
 
-- Jobs are prioritized primarily by `fairshare_factor`, with a quadratic
+- Jobs are prioritized primarily by **merit**: `fairshare_factor`, with a quadratic
   dependence on `eligible_time`.
 - That merit is scaled by the job's **tier** (`priority_scale`) and its **queue**
   (`queue_scale`); `priority_boost` is a separate additive operator override.
 
 This requires several changes vs. what we do today.
+
+::: {.notes}
+FIXME: rationale for the 172800 magic number above,
+:::
 
 ## Getting there
 
@@ -398,10 +404,11 @@ never requestable by users:
 
 - **`priority_boost`** (default `0`) — an additive **operator override**, sized
   to swamp the formula. Replaces the `qalter -p` boost that overwrites `Priority`
-  and destroys the tier.
+  and destroys the tier. Use this feature for `-l job_priority=special`, `ampsrt`,
+  and other hacks.
 - **`queue_scale`** (default `1.0`, must stay `> 0`) — a per-queue **multiplier**
   on the merit, set as a queue `resources_default`: `>1` favors a queue, `<1`
-  disfavors. A missing value binds to `0` and sinks the job, so the default is
+  disfavors. A missing value binds to `0` and clobbers the job, so the default is
   load-bearing.
 - **`priority_scale`** (default `1.0`) — the priority *tier* as a **multiplier**
   on `(fairshare + wait)`, stamped by the `job_priority` hook, so a premium job
@@ -410,6 +417,37 @@ never requestable by users:
 Create with `qmgr -c "create resource <name> type=float, flag=r"`, give each a
 server `resources_default`, then set them in hooks or via a manager's
 `qalter -l` — invisible to users, alterable by `csgteam`.
+
+## Who Sets What
+
+No new machinery — the existing `job_priority` hook, per-queue config, and
+server defaults already do this:
+
+- The **`job_priority` hook** (queuejob) stamps `priority_scale` per tier
+  instead of `j.Priority`, plus `priority_boost` for the gated `special` /
+  `system` classes; ad-hoc boosts become a manager's `qalter -l priority_boost=N`.
+- **`queue_scale`** is a per-queue `resources_default` in `qmgr-config`, exactly
+  like `resources_default.ncpus` / `preempt_targets` today — no hook.
+- **Server `resources_default`** gives every job the safe floor; a missing
+  multiplicative factor binds to `0` and would clobber the job.
+
+| resource | type | default | set by |
+|:--|:--|--:|:--|
+| `job_priority` | string, user-requestable | `regular` | user `-l job_priority=…` (hook-validated) |
+| `priority_scale` | float, unrequestable | `1.0` | `job_priority` hook, per tier |
+| `priority_boost` | float, unrequestable | `0` | hook (gated) + manager `qalter -l` |
+| `queue_scale` | float, unrequestable | `1.0` | per-queue `resources_default` |
+
+::: {.notes}
+Today `derecho/hooks/job_priority.py` sets `j.Priority` by class: regular 200,
+premium 300, economy 140, special 800 (gated: cisl_special_account, ampsrt, ssg,
+csg), system 1023 (gated: ssg, csg), preempt/develop 0. The migration keeps the
+same class parsing, group gates, and MODIFYJOB rejection, but stamps
+`priority_scale` (1.0 / 1.4 / 0.7 / …) and `priority_boost` (special, system)
+instead of `j.Priority`. Per-queue `resources_default` are already how
+`qmgr-config` sets queue GPU counts and preempt targets, so `queue_scale` slots
+in beside them.
+:::
 
 ## The `by_queue` decision
 
