@@ -372,9 +372,144 @@ $$
 | `--equalize leaf` | every project account weighs the same (count-based) |
 
 
+# Queue Stuffing
+
+Per-user responsiveness, while corralling the 'stuffers'.
+
+## The problem
+
+Fairshare is computed per **account/project**, not per user. So when one user
+submits hundreds of jobs at once, every one initially carries the **same
+`fairshare_factor`** and lands as a single contiguous block at the top of the
+sort — everyone else waits behind that wall. This is **"queue stuffing."**
+
+- A per-user job-count **limit** only converts the wall into a hard *"too many
+  jobs"* submission error.  This invites other problems like resubmission scripts that invariably go awry.
+- We want a **soft, self-balancing spread**: the user's first jobs stay
+  responsive, the overflow is delayed but never rejected, and the ordering stays
+  fair.
+
+## Per-user tiers
+
+Three ordinary execution queues — **`cpu_high`, `cpu_med`, `cpu_low`** — at
+**equal `Priority`** with **`by_queue: False`**, so the scheduler merges them into
+**one pool** and orders every job by the `job_sort_formula` (Job Sort, next). The
+tiers are a lens for *placement*, not a hard ranking.
+
+- A small **`queuejob` hook** counts how many jobs the user already has queued and
+  places the new one: first **N** → `cpu_high`, next **M** → `cpu_med`, the rest →
+  `cpu_low`.
+- The caps are **per user**, so a flooder fills only *their own* high/med
+  allotment — never anyone else's. Every user's first *N + M* jobs stay responsive
+  no matter how deep another user's overflow runs.
+
+*† Shown for CPU jobs to keep it concrete — the idea generalizes immediately; GPU
+jobs get their own paired `gpu_*` tiers (see Final Structure).*
+
+## The mechanism
+
+One `queuejob` hook is the entire moving part — it counts the user's queued jobs,
+picks the tier, and redirects the job (failing open if anything goes wrong).
+
+::: {.notes}
+Assigning the tier in the hook — rather than routing the job through a route
+queue — is deliberate and load-bearing (see the Experimentation backup: a routed
+job accrues `eligible_time` in the route queue and keeps it across the move, and
+no hook can reset it). Placing the job directly into its execution queue at submit
+means its aging clock starts *in the tier*. The hook and the full `qmgr` setup are
+in `docs/plans/PER_USER_TIERING.md`.
+:::
+
+```{mermaid}
+%%| fig-width: 9.5
+graph LR
+    Q["qsub<br/>(a user's jobs)"] --> H["queuejob hook:<br/>count this user's<br/>queued jobs"]
+    H -->|first N| CH["cpu_high"]
+    H -->|next M| CM["cpu_med"]
+    H -->|rest| CL["cpu_low<br/>(unbounded)"]
+    classDef hook fill:#cfe2f3,stroke:#1f4e79,stroke-width:2px,color:#123;
+    classDef hi fill:#d7ead7,stroke:#4a7a4a,color:#123;
+    classDef me fill:#f7edc0,stroke:#b9932a,color:#123;
+    classDef lo fill:#f0d3d3,stroke:#c0504d,color:#123;
+    class H hook;
+    class CH hi;
+    class CM me;
+    class CL lo;
+```
+
+## Biasing, not fencing
+
+A per-queue **`queue_scale`** biases the tiers so that at equal merit
+`high > med > low`. But all three share one pool, and **merit (fairshare + aging)
+is a term in the same formula** — so a `low` job with strong enough merit still
+out-sorts a `high` one.
+
+- The bias **delays** a user's later jobs; it never **blocks** them, so nothing
+  starves.
+- Aging works because the hook places each job **directly** into its
+  tier at submit, so `eligible_time` measures **time-in-tier** — not
+  time spent waiting to be placed.  - This means `eligible_time`
+  accrues basically from submission - the issue we have been fighting
+  for a while. But this is solveable...
+
+## Unbounded overflow
+
+`cpu_low` accepts **any number of jobs** — a user never hits a hard *"too many
+jobs"* rejection. On its own that would just move the stuffing into `cpu_low`,
+where one user's overflow could sit ahead of another's.
+
+- A second per-queue resource, **`age_scale`**, de-weights the aging term **in
+  `cpu_low` only**, so overflow is ordered primarily by **fairshare** — per-account
+  fairness — rather than by who piled in first.
+- It is **self-limiting**: as a heavy user's jobs run and burn allocation, their
+  `fairshare_factor` drops and their overflow sinks on its own. `age_scale` just
+  keeps aging from fighting that in the brief window before usage has accrued.
+- We will revisit this shorty when we talk more about job sorting.
+
+::: {.notes}
+Validated end to end on a containerized OpenPBS 23.06 testbed (2026-08-26): the
+`queuejob` hook tiers `2/3/3` by per-user count, and the `age_scale` dampener
+flips an unbounded `cpu_low` from ordering by submission time to ordering by
+fairshare (probe 16). The design + hook + `qmgr` setup:
+`docs/plans/PER_USER_TIERING.md`; the dated probe evidence:
+`docs/plans/QUEUE_STUFFING_TESTBED.md`.
+:::
+
+
+## Final Structure
+
+:::: {.columns}
+::: {.column width="46%"}
+```{mermaid}
+%%| fig-width: 4.6
+graph LR
+    Q["qsub"] --> H{"GPU<br/>requested?"}
+    H -->|no| C["cpu tier<br/>high / med / low"]
+    H -->|yes| G["gpu tier<br/>high / med / low"]
+    classDef cpu fill:#cfe2f3,stroke:#1f4e79,color:#123;
+    classDef gpu fill:#fff2cc,stroke:#bf9000,color:#123;
+    class C cpu;
+    class G gpu;
+```
+:::
+::: {.column width="54%"}
+The testbed proved the tiers on **CPU only** — but each machine is a **CPU + GPU
+pair** that routes differently, so production mirrors the tiers per resource:
+
+- **Six execution queues**: `cpu_{high,med,low}` + `gpu_{high,med,low}`.
+- The **`queuejob` hook** branches first on the request — a GPU job (`ngpus > 0`)
+  → `gpu_*`, a CPU job → `cpu_*` — then tiers by the user's queued count **in that
+  family**.
+- All six share **one `Priority`** + **`by_queue: False`**: CPU and GPU compete on
+  merit in one pool; `queue_scale` / `age_scale` apply per queue as on CPU.
+- Counts are **per family** — a user's CPU and GPU bursts tier independently.
+:::
+::::
+
+
 # Job Sort
 
-Prioritizing job execution.
+Prioritizing job execution — the formula behind the Queue Stuffing tiers.
 
 ## The End Goal
 
@@ -382,41 +517,56 @@ We want a single job priority sorting algorithm we can apply across queues:
 
 ```
 priority_boost +
-(queue_scale*priority_scale)*(1000*fairshare_factor +
-                              1000*min(1.0, eligible_time/172800.0)**2)
+(queue_scale*priority_scale)*
+    (1000*fairshare_factor +
+     1000*age_scale*min(1.0, eligible_time/age_horizon)**2)
 ```
 
 - Jobs are prioritized primarily by **merit**: `fairshare_factor`, with a quadratic
   dependence on `eligible_time`.
 - That merit is scaled by the job's **tier** (`priority_scale`) and its **queue**
   (`queue_scale`); `priority_boost` is a separate additive operator override.
+- The **aging** term is tuned **per queue**: **`age_horizon`** sets how long a wait
+  counts as "old" (short on `cpu_high`, long on `cpu_low`), and **`age_scale`** caps
+  its magnitude — together they let `cpu_low` sort by fairshare until a job is
+  genuinely old.
 
 This requires several changes vs. what we do today.
 
+
+*† Magnitude (`age_scale`) and timing (`age_horizon`) are the two per-queue aging
+knobs recommended below; the `**2` ramp is a third, finer lever — steepen it to push
+aging later within a tier's horizon — if those two prove too blunt.*
+
 ::: {.notes}
-FIXME: rationale for the 172800 magic number above,
+The old hard-coded `172800` (2 days) is now just the *default* `age_horizon` — the
+wait at which the aging term saturates — overridable per queue. Not a magic number:
+it is a tunable tolerance, ~2 days by default because historically ~99% of jobs
+start within ~31 h.
 :::
 
 ## Getting there
 
-Three new **custom resources** — set only by operators (`csgteam`) and `root`,
+Five new **custom resources** — set only by operators (`csgteam`) and `root`,
 never requestable by users:
 
 - **`priority_boost`** (default `0`) — an additive **operator override**, sized
   to swamp the formula. Replaces the `qalter -p` boost that overwrites `Priority`
-  and destroys the tier. Use this feature for `-l job_priority=special`, `ampsrt`,
-  and other hacks.
-- **`queue_scale`** (default `1.0`, must stay `> 0`) — a per-queue **multiplier**
-  on the merit, set as a queue `resources_default`: `>1` favors a queue, `<1`
-  disfavors. A missing value binds to `0` and clobbers the job, so the default is
-  load-bearing.
+  and destroys the tier.
+- **`queue_scale`** (default `1.0`, must stay `> 0`) — a per-queue **multiplier** on
+  the merit (`>1` favors a queue, `<1` disfavors). A missing value binds to `0` and
+  clobbers the job, so the default is load-bearing.
 - **`priority_scale`** (default `1.0`) — the priority *tier* as a **multiplier**
   on `(fairshare + wait)`, stamped by the `job_priority` hook, so a premium job
   with poor fairshare can lose to a regular job with good fairshare.
+- **`age_scale`** & **`age_horizon`** (defaults `1.0`, `172800` s; `age_horizon > 0`)
+  — the per-queue aging controls: `age_scale` caps the term's **magnitude** (`~0.3`
+  in overflow), `age_horizon` its **saturation time** — TBD other per-queue recommenations.
 
-Create with `qmgr -c "create resource <name> type=float, flag=r"`, give each a
-server `resources_default`, then set them in hooks or via a manager's
-`qalter -l` — invisible to users, alterable by `csgteam`.
+Create with `qmgr -c "create resource <name> type=float, flag=r"` and a server
+`resources_default`; set them in hooks or a manager's `qalter -l` — invisible to
+users, alterable by `csgteam`.
+
 
 ## Who Sets What
 
@@ -437,6 +587,8 @@ server defaults already do this:
 | `priority_scale` | float, unrequestable | `1.0` | `job_priority` hook, per tier |
 | `priority_boost` | float, unrequestable | `0` | hook (gated) + manager `qalter -l` |
 | `queue_scale` | float, unrequestable | `1.0` | per-queue `resources_default` |
+| `age_scale` | float, unrequestable | `1.0` | per-queue `resources_default` (`~0.3` in overflow) |
+| `age_horizon` | float (s), unrequestable | `172800` | per-queue `resources_default` (per-tier, TBD) |
 
 ::: {.notes}
 Today `derecho/hooks/job_priority.py` sets `j.Priority` by class: regular 200,
@@ -455,20 +607,21 @@ in beside them.
 ::: {.column width="50%"}
 **`by_queue: True`** — today's default
 
-- The formula orders jobs **within** each queue; the scheduler then walks queues
-  in **`Priority`** order.
-- A `cpu` job and a `gpu` job are **never** ranked against each other — each
-  queue is its own block, and the formula's range is spent inside it.
+- The formula orders jobs **within** each queue; the scheduler then walks queues in
+  **`Priority`** order.
+- A tier is then a **hard wall**: a `cpu_low` job can **never** out-rank a
+  `cpu_high` one, however strong its merit. That *fences* the tiers.
 :::
 ::: {.column width="50%"}
-**`by_queue: False`**
+**`by_queue: False`** — what the tiers need
 
-- Queues that **share a `Priority`** merge into **one pool** the formula ranks
-  together — CPU and GPU compete on merit.
-- Only **equal-`Priority`** queues merge (`Priority` is a primary key the formula
-  can't cross), so we flatten the normal queues.
-- **→ We probably want this** — it lets the formula rank across queues, the basis
-  for *Queue Stuffing* in Backup.
+- Queues at the **same `Priority`** merge into **one pool** the formula ranks
+  together, so a job crosses its tier boundary on **merit** — a strong `cpu_low` job
+  out-sorts a weak `cpu_high` one.
+- **`Priority` stays a hard barrier** the formula can't cross, so dev/preempt keep a
+  *higher* `Priority` above the merged tiers as a latency guarantee.
+- **→ This is what makes it *biasing, not fencing*** — `queue_scale` then tilts only
+  the flattened tiers (CPU and GPU merge the same way).
 :::
 ::::
 
@@ -723,35 +876,24 @@ awk '{print $4}' data/derecho.tree | sort -n | uniq -c | sort -rn | head -3
 `samuel2sql.py` was validated against the legacy builders: schema identical;
 row-for-row identical tables except 11 intentionally-fixed GPU-only users.
 
-# Queue Stuffing
+# Queue Stuffing — Experimentation
 
-Per-user responsiveness without starving the bulk — an idea for discussion.
+How we landed on the `queuejob` hook — the routing design we ruled out, and the
+testbed evidence behind it.
 
-## The idea
+## The routing waterfall
 
-Fairshare is per **account**, so when one user floods a project every one of
-those jobs carries the **same `fairshare_factor`** — they form one contiguous
-block in the sort. A per-user routing **waterfall** spreads that block across
-tiers so everyone stays responsive:
-
-- A user's **first N** jobs route to **high**, the next **M** to **med**, the
-  **rest** to **low** — per-user `max_queued` limits on high/med force the
-  cascade (N, M tunable).
-- high/med/low share **one `Priority`** with **`by_queue: False`**, and
-  **`queue_scale`** gives a soft high → med → low nudge.
-- **Merit still crosses the tiers**: fairshare + aging let a deserving `low` job
-  surface, so the bulk is *delayed, never starved* — a soft tilt, not a hard cage.
-
-## The waterfall
+A route queue cascades a user's jobs across per-user tiers — the design we
+started from.
 
 ::: {.notes}
-Hybrid is similar. Grounding: `fairshare_entity = Account_Name`, so users are
-never modeled — one account's queued jobs share one factor. The per-user cascade
-(routing + `max_queued`) decides which tier a job lands in; `queue_scale` + merit
-decide the order. Aging is the anti-starvation floor (though tiny early: ~3.5% of
-cap at 9 h, and 99% of jobs start within ~31 h). `strict_ordering:False` +
-backfill + the 168 h usage-decay already soften the block, so this targets
-responsiveness/latency more than raw throughput.
+Grounding: `fairshare_entity = Account_Name`, so one account's queued jobs share
+one factor. The proposal used per-user `max_queued` limits on high/med to cascade
+a user's first *N* jobs to high, the next *M* to med, the rest to low, with
+`queue_scale` + merit deciding the order in the merged pool. It is sound on paper —
+and the testbed confirmed the mechanics (next slides). The flaw is the aging term;
+the fix is to assign the tier in a `queuejob` hook instead (the primary Queue
+Stuffing section), so jobs never sit in a route queue.
 :::
 
 ```{mermaid}
@@ -774,19 +916,43 @@ graph LR
     class CL,GL lo;
 ```
 
-## Open questions
+## Why we ruled it out
 
-- **Does routing cascade on a *per-user* `max_queued`?** PBS routing cascades on
-  resource eligibility today (`main → cpu/gpu`); we believe it also falls through
-  on a per-user queued limit — confirm on Gust / with the vendor.
-- **How to size it** — the `queue_scale` tiers (a small tilt on a small factor),
-  or a dedicated per-user boost resource, and the N / M cutoffs.
-- **Relationship to per-user run-caps** — we already cap a user's *running*
-  footprint (`[u:PBS_GENERIC=…]`); this adds a *responsiveness* layer on top.
-- **Is it worth it?** Backfill + usage-decay already blunt the block — quantify
-  the real latency win before committing to the queue proliferation.
-- **Requires `eligible_time` fix!!**  We can block jobs with limits in
-  any of the execution queues, allowing jobs to "pile up" in routing
-  queues.  These should *not* accrue `eligible_time`; their eligible
-  time needs to be 0 when they enter an execution queue so that the
-  job sort behaves.
+The routing mechanics work — but the **aging term breaks the design**:
+
+- A job backed up in the route queue accrues `eligible_time` and **keeps it across
+  the move** into its tier, so a stuffed backlog ages *en masse* and re-forms the
+  very block the waterfall set out to break (probe 14).
+- **No hook can reset that clock:** routing fires no `movejob` hook, and a
+  `periodic` hook receives **read-only** job objects (probe 15).
+- So on 23.06 native routing and a safe aging term are **mutually exclusive** —
+  which is why the tier is assigned in a `queuejob` hook instead, placing each job
+  directly into its tier at submit (probe 16, the primary section).
+
+## What the testbed found
+
+Eight probes on a throwaway **OpenPBS 23.06** container (SHA `be361a18`,
+2026-08-26); full log in `docs/plans/QUEUE_STUFFING_TESTBED.md`.
+
+| probe | verdict | finding |
+|:--|:--|:--|
+| 09 route cascade | pass | cascades on per-user `max_queued`: 2 / 3 / 3 |
+| 10 soft tilt | pass | orders high → med → low; a better-merit `low` job crosses |
+| 11 queued semantics | pass | freed high slot takes a new submit; `low` jobs stay |
+| 12 low-tier aging | pass | a queued `low` job is eligible; `eligible_time` climbs |
+| **14 route → exec aging** | **fail** | accrues in the route queue **and survives the move** |
+| **15 reset the clock** | **fail** | no hook can: no `movejob` hook, periodic is read-only |
+| **16 hook tiering** | pass | `queuejob` tiers 2 / 3 / 3; `age_scale` tames unbounded `low` |
+
+## Re-confirm on Gust (PBS Pro 2024.1)
+
+The testbed is 23.06; the clusters run **PBS Pro 2024.1** (newer). Re-confirm the
+load-bearing results before production:
+
+- A `queuejob` hook can redirect `job.queue` the same way on 2024.1.
+- The cost of `pbs.server().jobs()` at `queuejob` under a real queue of thousands
+  of jobs — the hook counts on **every** submission (the one scaling concern).
+- Whether 2024.1 routing fires a `movejob` hook — which would reopen the simpler
+  route-then-reset path we abandoned on 23.06.
+- Real fairshare dynamics — how fast a heavy user's `fairshare_factor` sinks their
+  overflow, which sets how hard `age_scale` must work.
