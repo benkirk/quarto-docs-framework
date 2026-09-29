@@ -90,7 +90,9 @@ jobs:
               bad=1
             fi
           done
-          exit $bad
+          # not `exit $bad`: in this login shell (bash -el) `exit` runs
+          # ~/.bash_logout, whose last status (1 on the runner) replaces ours
+          test "$bad" -eq 0
 
       - name: Build Sample PPTX
         run: |
