@@ -21,8 +21,20 @@ embedding.
   putting `conda-env/bin` on `PATH` fails with a missing-deno error.
 - **Build**: `make pptx` (also `html`, `pdf`) inside the deck directory.
   `Make.common` names the output after the directory and auto-symlinks
-  `_quarto.yml`. The pptx recipe post-processes with `enable_autofit.py` and
-  `embed_poppins.py`.
+  `_quarto.yml` and `_extensions`. The pptx recipe post-processes with
+  `section_subtitle.py`, `enable_autofit.py`, `embed_poppins.py`, and
+  `style_footnotes.py`.
+- **PDF** is `--to ncar-beamer`: the NCAR beamer theme, vendored from
+  `benkirk/NCAR_beamer_template` into `docs/common/_extensions/benkirk/ncar/`.
+  Don't edit the vendored copy. Change the theme repo, then re-vendor with
+  `cd docs/common && quarto update benkirk/NCAR_beamer_template` (the
+  vendored `_extension.yml` records no source, so the bare `quarto update`
+  fails). The extension's Lua filter loads the theme in place
+  through `\input@path`, so nothing is copied into deck directories. Needs
+  XeLaTeX (TinyTeX or TeX Live) and Quarto >= 1.6 (`quarto-required` in the
+  shared `_quarto.yml`; `conda-env.yaml` pins it). Beamer has no autofit: dense slides
+  overflow silently, so render the PDF and look at it, then trim the content
+  or add `{.shrink}` to the heading.
 - **Stale-fragment gotcha**: make only tracks the deck's own `.qmd` — after
   editing an included fragment (`_*.qmd`) or `data/`, `touch <deck>.qmd` (or the
   render is skipped).

@@ -1,6 +1,8 @@
 project:
   type: default
 
+quarto-required: ">=1.6.0"   # the NCAR beamer theme needs pandoc >= 3.2.1
+
 # Strip quarto's raw-HTML <figure> wrappers in pptx output -- pandoc ignores
 # them but counts them as text when choosing slide layouts, demoting a
 # columns slide with a diagram to the Comparison layout (see the filter).
@@ -12,6 +14,10 @@ format:
     reference-doc: ../common/branding/ncar/template.pptx
     slide-level: 2
     toc: false
+  ncar-beamer:           # NCAR beamer theme, vendored in common/_extensions
+    toc: false
+    fontsize: 10pt        # ~pptx text density; beamer has no autofit
+    themeoptions: [fonts=bundled]  # bundled Poppins; skip the system-font probe
 
 # Mermaid diagrams render to PNG automatically during quarto render
 diagram:

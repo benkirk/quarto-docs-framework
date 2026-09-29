@@ -103,6 +103,23 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      # beamer PDF via the vendored NCAR theme; TinyTeX installs missing
+      # LaTeX packages on the fly (fonts and logos ship with the theme)
+      - name: Install TinyTeX (beamer PDF)
+        run: quarto install tinytex --no-prompt
+
+      - name: Build Sample PDF
+        run: |
+          timeout 600 make -C docs/sample sample.pdf
+
+      - name: Upload sample.pdf artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-pdf
+          path: docs/sample/sample.pdf
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Cleanup
         if: always()
         run: true

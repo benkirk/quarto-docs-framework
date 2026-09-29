@@ -1,6 +1,6 @@
-# Shared recipes for Quarto→pptx presentations under docs/presentations/.
-# Per-presentation Makefiles set OUT (and optionally QFILE), then
-# `include ../Makefile.common`.
+# Shared recipes for the decks under docs/<deck>/ (pptx, revealjs, beamer).
+# Per-deck Makefiles set OUT (and optionally QFILE), then
+# `include ../Make.common`.
 
 .PHONY: pptx html pdf all clean
 
@@ -10,6 +10,7 @@ ENABLE_AUTOFIT     := $(PRESENTATIONS_ROOT)common/utils/enable_autofit.py
 SECTION_SUBTITLE   := $(PRESENTATIONS_ROOT)common/utils/section_subtitle.py
 STYLE_FOOTNOTES    := $(PRESENTATIONS_ROOT)common/utils/style_footnotes.py
 SHARED_QUARTO_YML  := $(PRESENTATIONS_ROOT)common/_quarto.yml
+SHARED_EXTENSIONS  := $(PRESENTATIONS_ROOT)common/_extensions
 
 QFILE ?= $(OUT).qmd
 
@@ -24,18 +25,25 @@ all:  pptx html pdf
 _quarto.yml:
 	ln -s $(SHARED_QUARTO_YML) $@
 
-$(OUT).pptx: $(QFILE) _quarto.yml
+# Same for the shared Quarto extensions (the NCAR beamer theme): each deck
+# dir is its own project root, and quarto does not look above it.  Every
+# format needs it -- _quarto.yml names ncar-beamer, and quarto resolves all
+# listed formats even when rendering pptx.
+_extensions:
+	ln -s $(SHARED_EXTENSIONS) $@
+
+$(OUT).pptx: $(QFILE) _quarto.yml _extensions
 	quarto render $(QFILE) --to pptx -o $@
 	python3 $(SECTION_SUBTITLE) $@
 	python3 $(ENABLE_AUTOFIT) $@
 	python3 $(EMBED_POPPINS) $@
 	python3 $(STYLE_FOOTNOTES) $@
 
-$(OUT).html: $(QFILE) _quarto.yml
+$(OUT).html: $(QFILE) _quarto.yml _extensions
 	quarto render $(QFILE) --to revealjs -o $@
 
-$(OUT).pdf: $(QFILE) _quarto.yml
-	quarto render $(QFILE) --to beamer -o $@
+$(OUT).pdf: $(QFILE) _quarto.yml _extensions
+	quarto render $(QFILE) --to ncar-beamer -o $@
 
 clean:
 	rm -f $(OUT).pptx $(OUT).html $(OUT).pdf

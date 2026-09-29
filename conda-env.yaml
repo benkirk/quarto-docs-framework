@@ -4,7 +4,7 @@ channels:
 dependencies:
   # Binaries / runtime — must come from conda.
   - python
-  - quarto
+  - quarto >=1.6   # ncar-beamer's Lua filter uses \pandocbounded (pandoc >= 3.2.1)
   - gh
   - make
   - pip

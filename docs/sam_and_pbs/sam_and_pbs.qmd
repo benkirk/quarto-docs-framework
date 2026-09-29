@@ -704,7 +704,7 @@ Two artifacts, two independent gates, two very different consequences. The
 database can be swapped under a running scheduler; the tree cannot, which is
 the whole reason the pipeline refuses to act on unchanged content.
 
-The common case by far is that both gates say "no" — the grey terminal — and
+The common case by far is that both gates say "no" — the gray terminal — and
 nothing anywhere is written or restarted.
 :::
 
