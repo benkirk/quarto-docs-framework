@@ -12,6 +12,9 @@ format:
     reference-doc: ../common/branding/ncar/template.pptx
     slide-level: 2
     toc: false
+  ncar-beamer:           # NCAR beamer theme, vendored in common/_extensions
+    toc: false
+    fontsize: 10pt        # ~pptx text density; beamer has no autofit
 
 # Mermaid diagrams render to PNG automatically during quarto render
 diagram:

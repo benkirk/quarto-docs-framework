@@ -27,7 +27,7 @@ conda activate ./conda-env
 cd docs/sample
 make pptx              # → sample.pptx (NCAR-branded, fonts embedded)
 make html              # → sample.html (revealjs)
-make pdf               # → sample.pdf  (beamer)
+make pdf               # → sample.pdf  (beamer, NCAR beamer theme; needs TeX)
 ```
 
 Open `sample.pptx` to see what each cookbook slide looks like, then start
@@ -44,6 +44,7 @@ quarto-docs-framework/
 │   ├── Make.common        # shared per-deck recipes (pptx/html/pdf/clean)
 │   ├── common/
 │   │   ├── _quarto.yml    # shared Quarto config (symlinked into decks)
+│   │   ├── _extensions/benkirk/ncar/  # NCAR beamer theme (vendored; symlinked into decks)
 │   │   ├── assets/fonts/  # Poppins .fntdata blobs (EOT-subsetted)
 │   │   ├── branding/ncar/template.pptx
 │   │   └── utils/
@@ -52,6 +53,7 @@ quarto-docs-framework/
 │   └── sample/                     # the cookbook deck
 │       ├── Makefile        (3-line include of ../Make.common)
 │       ├── _quarto.yml     (symlink → ../common/_quarto.yml)
+│       ├── _extensions     (symlink → ../common/_extensions, made by make)
 │       ├── sample.qmd      (the cookbook)
 │       ├── old.qmd         (richer real-world example, kept for reference)
 │       └── images/         (drop your PNGs / JPGs here)
@@ -80,6 +82,32 @@ Per deck, `make pptx` runs:
 
 `make html` (revealjs) and `make pdf` (beamer) bypass steps 2 and 3 — the
 template, fonts, and autofit step are pptx-specific.
+
+### PDF (beamer)
+
+`make pdf` renders with `--to ncar-beamer`. That format comes from the NSF NCAR
+beamer theme ([benkirk/NCAR_beamer_template](https://github.com/benkirk/NCAR_beamer_template)),
+which is vendored in `docs/common/_extensions/benkirk/ncar/`. Make symlinks
+`_extensions` into each deck directory, just as it does for `_quarto.yml`.
+
+- **You need TeX with XeLaTeX.** Quarto's own TinyTeX (`quarto install
+  tinytex`) works and installs missing LaTeX packages on the fly. So does a
+  system TeX Live.
+- **No fonts to install.** The theme bundles Poppins and the official logo
+  lockups.
+- **Theme options** go in a deck's front matter:
+  `themeoptions: [brand=ucar, title=light]`.
+  - `titlegraphic: images/photo.jpg` puts a photo on the title slide.
+  - `fineprint: "..."` adds small print under the title block.
+- **Markdown extras:**
+  - `## Title {.feature background="images/photo.jpg"}` makes a full-bleed photo slide.
+  - `## Thank you! {.closing}` makes a closing slide.
+  - `### Heading {.example}` / `{.alert}` give block variants.
+  - `[text]{.alert}` emphasizes text.
+- **Beamer never shrinks overflowing text.** The shared config uses 10pt,
+  which matches the pptx template's text density. Add `{.shrink}` to a dense
+  slide's heading to scale that one slide down; pptx ignores the class.
+- **To update the theme:** `cd docs/common && quarto update benkirk/NCAR_beamer_template`.
 
 ## Adding a new deck
 
