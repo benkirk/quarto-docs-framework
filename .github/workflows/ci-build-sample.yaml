@@ -81,8 +81,12 @@ jobs:
           bad=0
           for f in docs/*/*.qmd; do
             case "$(basename "$f")" in _*) continue ;; esac   # included fragments
-            if [ "$(head -n1 "$f")" != "---" ]; then
-              echo "::error file=$f,line=1::front matter must start on line 1 (found: $(head -n1 "$f"))"
+            first=$(head -n1 "$f")
+            if [ "$first" = "---" ]; then
+              echo "ok    $f"
+            else
+              echo "FAIL  $f: line 1 is '$first', expected '---'"
+              echo "::error file=$f,line=1::front matter must start on line 1"
               bad=1
             fi
           done
