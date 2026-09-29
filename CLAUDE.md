@@ -26,8 +26,10 @@ embedding.
   `style_footnotes.py`.
 - **PDF** is `--to ncar-beamer`: the NCAR beamer theme, vendored from
   `benkirk/NCAR_beamer_template` into `docs/common/_extensions/benkirk/ncar/`.
-  Don't edit the vendored copy. Change the theme repo, then run
-  `quarto update` here. The extension's Lua filter loads the theme in place
+  Don't edit the vendored copy. Change the theme repo, then re-vendor with
+  `cd docs/common && quarto update benkirk/NCAR_beamer_template` (the
+  vendored `_extension.yml` records no source, so the bare `quarto update`
+  fails). The extension's Lua filter loads the theme in place
   through `\input@path`, so nothing is copied into deck directories. Needs
   XeLaTeX (TinyTeX or TeX Live). Beamer has no autofit: dense slides
   overflow silently, so render the PDF and look at it, then trim the content

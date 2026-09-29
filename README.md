@@ -72,16 +72,23 @@ Per deck, `make pptx` runs:
    - Uses `reference-doc: ../common/branding/ncar/template.pptx` from the
      deck's `_quarto.yml`, so the output inherits NCAR theme colors,
      title slide layout, masters, etc.
-2. `python3 ../common/utils/enable_autofit.py <deck>.pptx`
+2. `python3 ../common/utils/section_subtitle.py <deck>.pptx`
+   - Merges the paragraph after a `#` section heading back onto the
+     Section Header slide as its subtitle. Pandoc otherwise drops it onto
+     a separate untitled slide.
+3. `python3 ../common/utils/enable_autofit.py <deck>.pptx`
    - Flips every body placeholder's autofit dropdown from "Do not Autofit"
      to "Shrink text on overflow." See "About text autofit" below.
-3. `python3 ../common/utils/embed_poppins.py <deck>.pptx`
+4. `python3 ../common/utils/embed_poppins.py <deck>.pptx`
    - Re-injects the four Poppins variants as `<p:embeddedFont>` entries.
      Pandoc strips these on reference-doc copy; the script puts them
      back so the font travels with the file.
+5. `python3 ../common/utils/style_footnotes.py <deck>.pptx`
+   - Restyles body paragraphs that start with `†` as footnotes (smaller,
+     muted), since pandoc ignores inline size and color in markdown.
 
-`make html` (revealjs) and `make pdf` (beamer) bypass steps 2 and 3 — the
-template, fonts, and autofit step are pptx-specific.
+`make html` (revealjs) and `make pdf` (beamer) bypass steps 2 through 5 — the
+template, fonts, autofit, and the other pptx fix-ups are pptx-specific.
 
 ### PDF (beamer)
 
@@ -96,11 +103,16 @@ which is vendored in `docs/common/_extensions/benkirk/ncar/`. Make symlinks
 - **No fonts to install.** The theme bundles Poppins and the official logo
   lockups.
 - **Theme options** go in a deck's front matter:
-  `themeoptions: [brand=ucar, title=light]`.
+  `themeoptions: [brand=ucar, title=light, fonts=bundled]`. A deck-level
+  list replaces the shared one, so keep `fonts=bundled` (from the shared
+  `_quarto.yml`): it uses the theme's own Poppins instead of probing for a
+  system copy, which is noisy under XeLaTeX and leaves `missfont.log` behind.
   - `titlegraphic: images/photo.jpg` puts a photo on the title slide.
   - `fineprint: "..."` adds small print under the title block.
 - **Markdown extras:**
-  - `## Title {.feature background="images/photo.jpg"}` makes a full-bleed photo slide.
+  - `## Title {.feature background-image="images/photo.jpg"}` makes a
+    full-bleed photo slide (`background=` also works; `background-image=`
+    doubles as the revealjs background).
   - `## Thank you! {.closing}` makes a closing slide.
   - `### Heading {.example}` / `{.alert}` give block variants.
   - `[text]{.alert}` emphasizes text.

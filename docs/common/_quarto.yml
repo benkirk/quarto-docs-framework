@@ -15,6 +15,7 @@ format:
   ncar-beamer:           # NCAR beamer theme, vendored in common/_extensions
     toc: false
     fontsize: 10pt        # ~pptx text density; beamer has no autofit
+    themeoptions: [fonts=bundled]  # bundled Poppins; skip the system-font probe
 
 # Mermaid diagrams render to PNG automatically during quarto render
 diagram:
