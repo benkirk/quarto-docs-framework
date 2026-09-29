@@ -73,6 +73,27 @@ jobs:
 
       # timeout: a wedged browser render should fail here in minutes,
       # with diagnostics, rather than hitting the job-level cap.
+      # Quarto only treats YAML as front matter when it is the very first
+      # thing in the file; anything above it (e.g. an editor mode-line)
+      # leaves `date: last-modified` unresolved (#7).
+      - name: Check deck front matter starts on line 1
+        run: |
+          bad=0
+          for f in docs/*/*.qmd; do
+            case "$(basename "$f")" in _*) continue ;; esac   # included fragments
+            first=$(head -n1 "$f")
+            if [ "$first" = "---" ]; then
+              echo "ok    $f"
+            else
+              echo "FAIL  $f: line 1 is '$first', expected '---'"
+              echo "::error file=$f,line=1::front matter must start on line 1"
+              bad=1
+            fi
+          done
+          # not `exit $bad`: in this login shell (bash -el) `exit` runs
+          # ~/.bash_logout, whose last status (1 on the runner) replaces ours
+          test "$bad" -eq 0
+
       - name: Build Sample PPTX
         run: |
           timeout 600 make -C docs/sample || {
@@ -80,6 +101,13 @@ jobs:
             ps aux | grep -i chrom | grep -v grep || true
             exit 1
           }
+
+      - name: Check dates resolved in sample.pptx
+        run: |
+          if unzip -p docs/sample/sample.pptx 'ppt/slides/*.xml' | grep -q '<a:t>last-modified</a:t>'; then
+            echo '::error::sample.pptx contains a literal "last-modified" date (#7)'
+            exit 1
+          fi
 
       - name: Upload sample.pptx artifact
         uses: actions/upload-artifact@v4

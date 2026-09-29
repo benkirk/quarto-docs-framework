@@ -35,6 +35,10 @@ embedding.
   shared `_quarto.yml`; `conda-env.yaml` pins it). Beamer has no autofit: dense slides
   overflow silently, so render the PDF and look at it, then trim the content
   or add `{.shrink}` to the heading.
+- **Front matter must be line 1** of every deck `.qmd`: anything above the
+  opening `---` (an editor mode-line, a comment) hides it from Quarto, and
+  `date: last-modified` renders literally (#7). CI checks this; set editor
+  modes in the editor config, not in the file.
 - **Stale-fragment gotcha**: make only tracks the deck's own `.qmd` — after
   editing an included fragment (`_*.qmd`) or `data/`, `touch <deck>.qmd` (or the
   render is skipped).
@@ -105,7 +109,10 @@ embedding.
 ## CI
 
 `.github/workflows/ci-build-sample.yaml` renders the sample deck. Notes:
-login-shell default (`bash -el`) is required for conda activation;
+login-shell default (`bash -el`) is required for conda activation, and
+because of it a `run:` script must not end with `exit N` (in a login shell
+`exit` runs `~/.bash_logout`, which returns 1 on the runner and overrides
+N; end with a test such as `test "$bad" -eq 0` instead);
 `quarto install chrome-headless-shell` is required — quarto wedges forever
 against the runner's system Chrome when rendering mermaid (job + `timeout`
 guards keep any future hang to minutes, not the 6-hour cap).
