@@ -1,5 +1,3 @@
-<!-- -*- mode: markdown -*- -->
-
 ---
 title: "SAM & PBS"
 subtitle: "Accounting & Scheduler Integration"

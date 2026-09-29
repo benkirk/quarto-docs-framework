@@ -51,7 +51,3 @@ clean:
 
 distclean:
 	git clean --exclude=.env -xdf .
-
-# Local Variables:
-# mode: makefile
-# End:

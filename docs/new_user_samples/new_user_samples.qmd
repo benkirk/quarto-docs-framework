@@ -1,5 +1,3 @@
-<!-- -*- mode: markdown -*- -->
-
 ---
 title: "Quarto for HPC Documentation"
 subtitle: "Sample Commands & Output"

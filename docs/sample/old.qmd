@@ -1,5 +1,3 @@
-<!-- -*- mode: markdown -*- -->
-
 ---
 title: "Quarto-Styled Presentation Slides"
 subtitle: "Sample Capabilities"
