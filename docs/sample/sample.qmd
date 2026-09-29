@@ -1,5 +1,3 @@
-<!-- -*- mode: markdown -*- -->
-
 ---
 title: "Quarto for HPC Documentation"
 subtitle: "A Cookbook of Slide Patterns"
