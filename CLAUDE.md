@@ -31,7 +31,8 @@ embedding.
   vendored `_extension.yml` records no source, so the bare `quarto update`
   fails). The extension's Lua filter loads the theme in place
   through `\input@path`, so nothing is copied into deck directories. Needs
-  XeLaTeX (TinyTeX or TeX Live). Beamer has no autofit: dense slides
+  XeLaTeX (TinyTeX or TeX Live) and Quarto >= 1.6 (`quarto-required` in the
+  shared `_quarto.yml`; `conda-env.yaml` pins it). Beamer has no autofit: dense slides
   overflow silently, so render the PDF and look at it, then trim the content
   or add `{.shrink}` to the heading.
 - **Stale-fragment gotcha**: make only tracks the deck's own `.qmd` — after

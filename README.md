@@ -97,6 +97,8 @@ beamer theme ([benkirk/NCAR_beamer_template](https://github.com/benkirk/NCAR_bea
 which is vendored in `docs/common/_extensions/benkirk/ncar/`. Make symlinks
 `_extensions` into each deck directory, just as it does for `_quarto.yml`.
 
+- **You need Quarto 1.6 or newer** (the conda env pins it): the theme's Lua
+  filter uses a pandoc macro that older Quarto releases lack.
 - **You need TeX with XeLaTeX.** Quarto's own TinyTeX (`quarto install
   tinytex`) works and installs missing LaTeX packages on the fly. So does a
   system TeX Live.
