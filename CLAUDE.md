@@ -65,8 +65,26 @@ embedding.
   links to stack wide fan-outs vertically; an invisible `~~~` edge plus the
   real edge to force a child *below* its parent while the arrow points up.
   Avoid self-loops (sprawling arc, detached label) and `<br/>` in subgraph
-  titles (clipped). Reversed arrow syntax (`A <-. l .- B`) silently renders
-  the head on the wrong end — don't use it.
+  titles (clipped — a long title truncates mid-word rather than wrapping).
+  Reversed arrow syntax (`A <-. l .- B`) silently renders the head on the
+  wrong end — don't use it.
+- **Subgraphs constrain layout hard; for multi-lane flows prefer node classes.**
+  A subgraph's contents are kept contiguous, so two zones with edges between
+  them land diagonally (wasting a quadrant) and the connecting edges cross —
+  and a crossing edge that passes *behind* a node reads as an edge that does
+  not exist. `direction` inside a subgraph is silently **ignored** whenever an
+  edge crosses the subgraph boundary, which is exactly when you want it. Moving
+  nodes between/inside the subgraphs does not help. If parallel lanes must stay
+  readable, drop the boxes and mark the grouping with `classDef` fills plus a
+  prefix in the node label (`CSG · …`, `HSG · …`); plain rank ordering then
+  guarantees no crossings. `docs/sam_and_pbs/sam_and_pbs.qmd`'s "SAM to PBS
+  Schematic" is the worked example — it took four renders to learn this.
+- **Look at the rendered PNG, not the source.** Every mermaid failure above is
+  silent: no warning, no error, just a diagram that is wrong or unreadable.
+  Extract it from the deck and view it:
+  `unzip -p deck.pptx ppt/slides/_rels/slideN.xml.rels` for the media id, then
+  pull `ppt/media/imageM.png`. Check the aspect ratio too — a 16:9 content area
+  is ≈2.4:1, so a much wider diagram scales down until the labels are unusable.
 - `docs/sam_and_pbs/tree2mermaid.py` converts PBS `resource_group` trees into
   styled mermaid; its frozen inputs/fragments regenerate via `refresh_data.sh`
   (needs the `hpc-scheduling-tools` checkout four levels up + SAM credentials;
