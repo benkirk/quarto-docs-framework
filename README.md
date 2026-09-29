@@ -220,3 +220,22 @@ deck loses its look.
 If portability stops mattering, drop the `embed_poppins.py` step from
 `docs/Make.common` and delete `docs/common/assets/fonts/` +
 `docs/common/utils/embed_poppins.py`.
+
+## License
+
+Copyright © 2026 University Corporation for Atmospheric Research.
+
+This framework is licensed under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) (Creative
+Commons Attribution-ShareAlike 4.0 International); the full text is in
+[`LICENSE.txt`](LICENSE.txt). You may share and adapt it with attribution,
+provided you distribute your changes under the same license.
+
+These parts are **not** covered by that license:
+
+- **NSF, NCAR, UCAR and UCP logos and brand marks.** These appear in
+  `docs/common/branding/` and in the vendored theme. They are trademarks
+  used under the
+  [UCAR brand guidelines](https://ucar.canto.com/v/branding).
+- **The Poppins font** (`docs/common/assets/fonts/` and the vendored theme)
+  is licensed under the [SIL Open Font License](https://openfontlicense.org).
