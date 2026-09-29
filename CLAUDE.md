@@ -109,7 +109,10 @@ embedding.
 ## CI
 
 `.github/workflows/ci-build-sample.yaml` renders the sample deck. Notes:
-login-shell default (`bash -el`) is required for conda activation;
+login-shell default (`bash -el`) is required for conda activation, and
+because of it a `run:` script must not end with `exit N` (in a login shell
+`exit` runs `~/.bash_logout`, which returns 1 on the runner and overrides
+N; end with a test such as `test "$bad" -eq 0` instead);
 `quarto install chrome-headless-shell` is required — quarto wedges forever
 against the runner's system Chrome when rendering mermaid (job + `timeout`
 guards keep any future hang to minutes, not the 6-hour cap).
