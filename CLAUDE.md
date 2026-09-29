@@ -35,6 +35,10 @@ embedding.
   shared `_quarto.yml`; `conda-env.yaml` pins it). Beamer has no autofit: dense slides
   overflow silently, so render the PDF and look at it, then trim the content
   or add `{.shrink}` to the heading.
+- **Front matter must be line 1** of every deck `.qmd`: anything above the
+  opening `---` (an editor mode-line, a comment) hides it from Quarto, and
+  `date: last-modified` renders literally (#7). CI checks this; set editor
+  modes in the editor config, not in the file.
 - **Stale-fragment gotcha**: make only tracks the deck's own `.qmd` — after
   editing an included fragment (`_*.qmd`) or `data/`, `touch <deck>.qmd` (or the
   render is skipped).
