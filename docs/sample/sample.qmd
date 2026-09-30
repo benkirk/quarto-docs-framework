@@ -9,6 +9,8 @@ jupyter: bash
 
 # Basics
 
+A paragraph right after a `#` divider becomes its subtitle, in pptx and PDF alike.
+
 ## Text & inline formatting
 
 Plain prose with **bold**, *italic*, and `inline code`. Hyperlinks look

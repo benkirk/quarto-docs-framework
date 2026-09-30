@@ -34,13 +34,22 @@ embedding.
   XeLaTeX (TinyTeX or TeX Live) and Quarto >= 1.6 (`quarto-required` in the
   shared `_quarto.yml`; `conda-env.yaml` pins it). Beamer has no autofit: dense slides
   overflow silently, so render the PDF and look at it, then trim the content
-  or add `{.shrink}` to the heading.
+  or add `{.shrink}` to the heading. A full-width 16:9 screenshot is taller than
+  the frame's content area; cap it with `{height="72%" fig-align="center"}`
+  (pptx ignores the attribute and fits the placeholder anyway).
+- **Format conditionals**: `when-format="beamer"` matches the custom
+  `ncar-beamer` format; `when-format="ncar-beamer"` matches nothing. Always
+  write `beamer`.
+- **Divider subtitles**: a paragraph right after a `#` divider becomes that
+  divider's subtitle in both formats: `section_subtitle.py` for pptx, and the
+  theme's `\sectionsubtitle` (via its Lua filter) for beamer. Only plain
+  paragraphs qualify; anything else after a divider stays a slide of its own.
 - **Front matter must be line 1** of every deck `.qmd`: anything above the
   opening `---` (an editor mode-line, a comment) hides it from Quarto, and
   `date: last-modified` renders literally (#7). CI checks this; set editor
   modes in the editor config, not in the file.
 - **Fragments are prerequisites**: every deck in a directory depends on its
-  `_*.qmd` fragments and `data/*`, so editing either rebuilds all of them. A
+  `_*.qmd` fragments, `data/*` and `images/*`, so editing any of them rebuilds all of them. A
   file included from anywhere else (e.g. `../other_deck/_x.qmd`) is invisible
   to make; `touch <deck>.qmd` after editing one.
 - **Several decks in one directory**: set `DECKS := a b c` before the include;
@@ -62,6 +71,12 @@ embedding.
   stuffed into Comparison's tiny per-column heading box.
   `docs/common/strip-raw-figure.lua` (wired into the shared `_quarto.yml`,
   pptx-only) strips them; don't remove it.
+- **A lead paragraph before a table demotes the slide** to Content with
+  Caption: the title moves into a small side caption and the title bar stays
+  empty. Put the lead in the slide title (or the notes) and start the body
+  with the table. Text followed by an image lands in Two Content the same
+  way, so a wide chart shrinks to half width; bake a chart's footnote into the
+  PNG instead.
 - **Diagnosing layout problems**: `unzip -p deck.pptx
   ppt/slides/_rels/slideN.xml.rels` — in the NCAR template, layout4 = Title and
   Content, 6 = Two Content, 7 = Comparison. Hunt for orphan slides by
@@ -105,6 +120,10 @@ embedding.
   `unzip -p deck.pptx ppt/slides/_rels/slideN.xml.rels` for the media id, then
   pull `ppt/media/imageM.png`. Check the aspect ratio too — a 16:9 content area
   is ≈2.4:1, so a much wider diagram scales down until the labels are unusable.
+  The same goes for tall ones: a hub with five outputs as `flowchart LR` came
+  out 1.4:1 with its right and bottom labels clipped (the renderer mis-measures
+  wrapped `<br/>` lines). As `flowchart TB` with one short line per label, it
+  was 2.7:1 and clean.
 - `docs/sam_and_pbs/tree2mermaid.py` converts PBS `resource_group` trees into
   styled mermaid; its frozen inputs/fragments regenerate via `refresh_data.sh`
   (needs the `hpc-scheduling-tools` checkout four levels up + SAM credentials;
