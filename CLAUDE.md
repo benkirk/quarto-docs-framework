@@ -135,7 +135,8 @@ bit while building it:
   script renders in mermaid's own scratch element instead (theme 2.2.0).
 - **A percentage image height resolves against the whole slide**, so the
   beamer screenshot recipe `{height="72%"}` overflowed; the theme's Lua filter
-  turns it into the content-height cap (2.2.0).
+  maps it onto the content height (2.2.0): 72% is the full cap, a smaller
+  percentage is proportionally smaller.
 - **`chalkboard` blocks `embed-resources`**, and `-M chalkboard:false` does
   not override a format option; set it in the deck's `format:` block.
 - **Check it in a browser, not the source**: serve the deck directory
