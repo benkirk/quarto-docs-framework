@@ -69,7 +69,6 @@ casper_jobs) and fs_scans (campaign, destor). Prod MySQL is sam-sql.ucar.edu.
 | job_history | CNPG, read-only | jobhist-sync | My Jobs, charge rebuilds |
 | fs_scans | CNPG, read-only | disk scanners | disk-scan tabs |
 
-
 ## SAM: the core in one picture
 
 ::: {.notes}
@@ -281,7 +280,6 @@ sam-webapp:<pod>:fs_scans:<db>:<collection>.
 | Pool | 5 + 10 overflow | owned by the plugin |
 | Off switch | `JOB_HISTORY_MACHINES=` | `FS_SCANS_ENABLED=0` |
 
-
 ## /database: every engine, read-only
 
 ::: {.notes}
@@ -293,10 +291,6 @@ the resources table are Bluefire and Yellowstone.
 :::
 
 [![](images/database-resources.png){width="78%" fig-align="center"}](https://sam.hpc.ucar.edu/database/sam/resources)
-
-::: shot-link
-https://sam.hpc.ucar.edu/database/sam/resources
-:::
 
 ## TL;DR - where state lives
 
