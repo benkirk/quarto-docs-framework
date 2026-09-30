@@ -21,6 +21,11 @@ format:
     toc: false
     fontsize: 10pt        # ~pptx text density; beamer has no autofit
     themeoptions: [fonts=bundled]  # bundled Poppins; skip the system-font probe
+  ncar-revealjs:         # NCAR revealjs (HTML) theme, same extension
+    toc: false
+    # footer: "Deck title | CISL"   # small text, bottom center
+    # embed-resources: true         # one self-contained .html (needs chalkboard: false)
+    # chalkboard: false
 
 # Mermaid diagrams render to PNG automatically during quarto render
 diagram:

@@ -26,7 +26,7 @@ conda activate ./conda-env
 # 2. Render the sample deck.
 cd docs/sample
 make pptx              # → sample.pptx (NCAR-branded, fonts embedded)
-make html              # → sample.html (revealjs)
+make html              # → sample.html (revealjs, NCAR web theme)
 make pdf               # → sample.pdf  (beamer, NCAR beamer theme; needs TeX)
 ```
 
@@ -123,6 +123,34 @@ which is vendored in `docs/common/_extensions/benkirk/ncar/`. Make symlinks
   slide's heading to scale that one slide down; pptx ignores the class.
 - **To update the theme:** `cd docs/common && quarto update benkirk/NCAR_beamer_template`.
 
+### HTML (revealjs)
+
+`make html` renders with `--to ncar-revealjs`, the web format from the same
+vendored extension. The deck looks like the PDF: title slide with the brand
+waves (or `titlegraphic:`), section dividers with subtitles, content slides
+with the accent tab and logo, `.feature` and `.closing` slides. The same
+`themeoptions:` apply (`brand=`, `title=`). Open `<deck>.html` in a browser
+and keep `<deck>_files/` beside it.
+
+- **Presenting:** `s` speaker view (notes), `m` slide menu, `b`/`c`
+  whiteboard / draw on the slide, `f` full screen.
+- **HTML-only extras:**
+  - `## Title {.brand-dark}` puts a content slide on Space with white text;
+    pptx and PDF draw an ordinary slide.
+  - Overflowing content slides shrink to fit (see "About text autofit").
+  - Mermaid and Graphviz draw live in the browser; mermaid uses the brand
+    colors and Poppins, not the baked-PNG look of pptx/PDF.
+- **One file to share:** in a deck's front matter,
+  ```yaml
+  format:
+    ncar-revealjs:
+      embed-resources: true
+      chalkboard: false     # the whiteboard can't be embedded
+  ```
+  gives a single self-contained `.html`.
+- **PDF from the browser:** open `<deck>.html?print-pdf` in Chrome and print
+  with background graphics. `make pdf` is usually the better handout.
+
 ## Adding a new deck
 
 ```bash
@@ -203,13 +231,17 @@ a `.pptm` macro). None of these are wired up — author-side discipline
 (split walls of text into multiple slides, use columns) is cheaper and
 more robust.
 
-For revealjs HTML output, tag overflowing slides with `{.smaller}`:
+The HTML deck fits itself: a content slide that runs past the bottom margin
+shrinks its body text (down to 65%) until it fits, keeping the title size.
+`{.smaller}` still sets a slide smaller from the start:
 
 ```markdown
 ## Wall of text {.smaller}
 ```
 
-PPTX silently ignores `{.smaller}`; revealjs honors it.
+PPTX silently ignores `{.smaller}`; revealjs honors it. Opt a slide out of
+the HTML autofit with `{.no-autofit}` (or `{.scrollable}`), or a whole deck
+with `themeoptions: [autofit=false]`.
 
 ## Template constraints
 

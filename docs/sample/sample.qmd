@@ -15,7 +15,7 @@ A paragraph right after a `#` divider becomes its subtitle, in pptx and PDF alik
 
 Plain prose with **bold**, *italic*, and `inline code`. Hyperlinks look
 like [Quarto docs](https://quarto.org). [Alerted text]{.alert} is
-emphasized in the beamer PDF; pptx and revealjs render it as plain text.
+emphasized in the PDF and HTML decks; pptx renders it as plain text.
 
 Bulleted list:
 
@@ -95,9 +95,19 @@ attribute. PNG, JPG, and SVG all work for HTML/PDF; PPTX prefers PNG/JPG.
 
 ## Full-bleed photo {.feature background-image="images/example.jpg"}
 
-The `.feature` class makes the beamer PDF a full-bleed photo slide (and
-`background-image` is also the revealjs background); pptx shows a plain
-title slide.
+The `.feature` class makes the PDF and HTML decks a full-bleed photo slide
+with the text on a translucent panel; pptx shows a plain title slide.
+
+## Dark slide, step by step {.brand-dark}
+
+`{.brand-dark}` sets an HTML slide on Space with white text; pptx and PDF
+draw an ordinary slide.
+
+::: {.incremental}
+- `::: {.incremental}` reveals a list one item at a time
+- in the HTML deck and the beamer PDF (one page per step)
+- pptx shows the whole list at once
+:::
 
 # Code & Diagrams
 
@@ -200,8 +210,8 @@ slide.
 
 ## Thank you! {.closing}
 
-The `.closing` class makes the beamer PDF a closing slide on the brand
-field, with this text under the headline. Other formats render it as an
+The `.closing` class makes the PDF and HTML decks a closing slide on the
+brand field, with this text under the headline; pptx renders it as an
 ordinary slide.
 
 Questions: your.name@ucar.edu
