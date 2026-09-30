@@ -44,6 +44,15 @@ embedding.
   (pptx ignores the attribute and fits the placeholder anyway).
 - **HTML** is `--to ncar-revealjs`, from the same vendored extension (see
   "revealjs (HTML) theme" below).
+- **Theme options** (`themeoptions:` in a deck's front matter) replace the
+  shared list in `docs/common/_quarto.yml`, so a deck that sets any must
+  repeat `fonts=bundled`. Theme 2.3: `mathfont=` (default a serif math font,
+  NewCM Book scaled to Poppins; `stix`, `lm`, `pagella`, `sans`, `fira`,
+  `poppins` for the old Poppins-letter look, `keep`, or a font name; Quarto's
+  own `mathfont:` key still wins) and `waves=false` (drops the faint wave
+  lines behind content slides in PDF and HTML; pptx has them on the master).
+  The waves are fitted to the brand's cover art by `tools/fit-waves.py` in
+  the theme repo, which prints the TikZ and Lua blocks to paste.
 - **Format conditionals**: `when-format="beamer"` matches the custom
   `ncar-beamer` format; `when-format="ncar-beamer"` matches nothing. Always
   write `beamer`.

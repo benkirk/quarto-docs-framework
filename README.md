@@ -129,6 +129,12 @@ which is vendored in `docs/common/_extensions/benkirk/ncar/`. Make symlinks
   system copy, which is noisy under XeLaTeX and leaves `missfont.log` behind.
   - `titlegraphic: images/photo.jpg` puts a photo on the title slide.
   - `fineprint: "..."` adds small print under the title block.
+  - `mathfont=stix` (or `lm`, `pagella`, `sans`, `fira`, `poppins`, any
+    OpenType math font) changes the math font; the default is New Computer
+    Modern Math, scaled to sit with Poppins. Quarto's own `mathfont:` key
+    still works. The theme README shows every preset on one slide.
+  - `waves=false` removes the faint brand wave lines behind content slides
+    (they are on the pptx master too).
 - **Markdown extras:**
   - `## Title {.feature background-image="images/photo.jpg"}` makes a
     full-bleed photo slide (`background=` also works; `background-image=`
@@ -147,7 +153,8 @@ which is vendored in `docs/common/_extensions/benkirk/ncar/`. Make symlinks
 vendored extension. The deck looks like the PDF: title slide with the brand
 waves (or `titlegraphic:`), section dividers with subtitles, content slides
 with the accent tab and logo, `.feature` and `.closing` slides. The same
-`themeoptions:` apply (`brand=`, `title=`). Open `<deck>.html` in a browser
+`themeoptions:` apply (`brand=`, `title=`, `waves=`; math in the browser is
+MathJax's, so `mathfont=` does not). Open `<deck>.html` in a browser
 and keep `<deck>_files/` beside it.
 
 - **Presenting:** `s` speaker view (notes), `m` slide menu, `b`/`c`
