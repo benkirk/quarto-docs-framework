@@ -21,6 +21,8 @@ tasks:
 size:
   lines: "444K"             # data/loc_progression.tsv (refresh_data.sh), origin/main 2026-09-29
   python_lines: "254K"      # same file, python_lines column
+  source_lines: "186K"      # same file, source_lines column
+  test_lines: "153K"        # same file, test_lines column
   prs_merged: "645"         # gh pr list --state merged, 2026-09-29
 
 legacy:

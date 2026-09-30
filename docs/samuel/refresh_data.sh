@@ -14,10 +14,20 @@ ref=${SAMUEL_REF:-origin/main}
 # LOC = every text line in the tree (code, tests, docs, fixtures): the same
 # method as the March 2026 "Project SAMuel Progression" slide, which it
 # reproduces exactly (8,791 / 51,829 / 64,202 / 75,420).
-lines() { git -C "$repo" grep -I -c '' "$1" -- "${@:2}" | awk -F: '{s+=$NF} END{print s+0}'; }
+# Split: tests = tests/ dirs, test_*.py, conftest.py; other = docs/ and every non-code file;
+# source = code files everywhere else.
+split() {
+    git -C "$repo" grep -I -c '' "$1" -- . | awk -F: '
+        { p = $2; n = $NF; all += n }
+        p ~ /\.py$/ { py += n }
+        p ~ /(^|\/)tests?\// || p ~ /(^|\/)(test_[^\/]*|conftest)\.py$/ { t += n; next }
+        p ~ /^docs\// || p !~ /\.(py|html|js|css|sh|lua|j2|jinja|ipynb)$/ { o += n; next }
+        { s += n }
+        END { printf "%d\t%d\t%d\t%d\t%d", all, s, t, o, py }'
+}
 
 out=data/loc_progression.tsv
-printf 'date\tcommits\tlines\tpython_lines\n' > "$out"
+printf 'date\tcommits\tlines\tsource_lines\ttest_lines\tother_lines\tpython_lines\n' > "$out"
 first=$(git -C "$repo" log --reverse --format=%ad --date=short "$ref" | awk 'NR == 1')
 # Month-ends from the first commit through today (today closes the series).
 month_ends() {
@@ -31,8 +41,7 @@ while True:
 }
 for end in $(month_ends "$first"); do
     rev=$(git -C "$repo" rev-list -1 --before="$end 23:59:59" "$ref")
-    printf '%s\t%s\t%s\t%s\n' "$end" "$(git -C "$repo" rev-list --count "$rev")" \
-        "$(lines "$rev" .)" "$(lines "$rev" '*.py')" >> "$out"
+    printf '%s\t%s\t%s\n' "$end" "$(git -C "$repo" rev-list --count "$rev")" "$(split "$rev")" >> "$out"
 done
 cat "$out"
 

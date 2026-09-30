@@ -165,7 +165,8 @@ date window it runs in. Screenshots use the obfuscated test database.
 ## Usage, by day and by user
 
 ::: {.notes}
-Resource Usage Details: charges over time, stacked by user; click a bar to open that day.
+Resource Usage Details for a busy university project on Derecho: 90 days of charges, stacked
+by user; click a bar to open that day.
 :::
 
 ![](images/tour-usage.png){height="72%" fig-align="center"}
@@ -213,9 +214,10 @@ phone-sized chart, not a shrunken desktop one.
 ## The Progression, continued
 
 ::: {.notes}
-Picks up where "Confessions of a Vibe Coder" (March 2026) stopped at ~75K lines. Python
-alone is now {{< var size.python_lines >}}; {{< var size.prs_merged >}} pull requests merged
-since October 2025.
+Picks up where "Confessions of a Vibe Coder" (March 2026) stopped at ~75K lines. The
+twist: source alone is {{< var size.source_lines >}}, still under legacy's ~250K, and the
+tests ({{< var size.test_lines >}}) are nearly as big as the code they test.
+{{< var size.prs_merged >}} pull requests merged since October 2025.
 :::
 
 ![](images/loc_progression.png){height="72%" fig-align="center"}
