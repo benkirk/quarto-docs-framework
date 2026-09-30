@@ -141,6 +141,20 @@ make pptx
 `Make.common` infers the deck name from `$(notdir $(CURDIR))`, so the
 output file is `<dirname>.pptx`. Override with `OUT=foo` if needed.
 
+A directory can hold several decks that share images and fragments, e.g. a
+full deck plus one deck per part:
+
+```make
+DECKS := roadmap 1-intro 2-details
+include ../Make.common
+```
+
+Each `<name>.qmd` builds `<name>.pptx` / `.html` / `.pdf`, and `make pptx`
+builds all of them. Put shared slide bodies in `_*.qmd` fragments and pull
+them in with `{{< include _1-intro.qmd >}}`; quarto skips underscore files
+when rendering, and make treats every `_*.qmd` and `data/*` in the directory
+as a prerequisite of every deck, so editing one rebuilds them all.
+
 A deck that needs custom Quarto config (a different reference template,
 extra extensions, etc.) can replace the symlinked `_quarto.yml` with a
 real file — `make` sees the file already exists and skips the symlink
