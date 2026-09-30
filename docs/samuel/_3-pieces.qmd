@@ -1,8 +1,6 @@
 # Some Assembly Required
 
-::: {.content-visible unless-format="beamer"}
 CI, GitOps on CIRRUS, dev vs prod, and the data-gathering lanes on NCAR HPC.
-:::
 
 ## Placeholder: from commit to pod
 

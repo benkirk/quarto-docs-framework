@@ -1,8 +1,6 @@
 # The Lay of the Land
 
-::: {.content-visible unless-format="beamer"}
 What SAM is, who uses it, and what SAMuel puts on top of it.
-:::
 
 ## SAM in one slide
 

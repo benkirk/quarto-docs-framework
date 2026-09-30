@@ -1,8 +1,6 @@
 # Where State Lives
 
-::: {.content-visible unless-format="beamer"}
 Four databases, two engines, one browser.
-:::
 
 ## Placeholder: the database map
 

@@ -1,8 +1,6 @@
 # The Neighbors
 
-::: {.content-visible unless-format="beamer"}
 The peer repos SAMuel loads, feeds, or answers to.
-:::
 
 ## Placeholder: peer repos
 
