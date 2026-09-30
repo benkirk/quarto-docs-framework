@@ -4,8 +4,9 @@
 #
 #   SAMUEL_REPO=~/codes/project_samuel/devel ./refresh_data.sh
 #
-# Reads the checkout's origin/main (fetch first). Needs a python3 with
-# matplotlib for the charts, e.g. the sam-queries conda env.
+# Reads the checkout's origin/main (fetch first) for the LOC chart, and its
+# working tree for the SAM models. Needs the sam-queries python3 (matplotlib,
+# the models) and the obfuscated test DB on 127.0.0.1:3307 (count_tables.py).
 set -euo pipefail
 cd "$(dirname "$0")"
 repo=${SAMUEL_REPO:-$HOME/codes/project_samuel/devel}
@@ -46,3 +47,29 @@ done
 cat "$out"
 
 python3 plot_progression.py
+
+# Table counts, live vs ORM (count_tables.py refuses anything but port 3307).
+SAMUEL_REPO=$repo python3 count_tables.py
+
+# ER fragments from the ORM metadata, one ```{dot} cell each.
+# er <name> <er_diagram.py args...>, then optional extra dot lines on stdin.
+er() {
+    local name=$1; shift
+    { printf '```{dot}\n//| fig-width: 10\n'
+      python3 "$repo/scripts/er_diagram.py" "$@" | sed '$d'
+      cat
+      printf '}\n```\n'
+    } > "_er_$name.qmd"
+}
+er core project:projcode account allocation resources:resource_name \
+    account_user users:username < /dev/null
+# Invisible edges stack the five summaries in two rows (one row runs ~5:1).
+er balance --rankdir TB allocation:amount,start_date,end_date account \
+    comp_charge_summary:activity_date,charges dav_charge_summary:activity_date,charges \
+    hpc_charge_summary:activity_date,charges \
+    disk_charge_summary:activity_date,charges archive_charge_summary:activity_date,charges \
+    charge_adjustment:adjustment_date,amount <<'EOF_DOT'
+  "comp_charge_summary" -> "disk_charge_summary" [style=invis];
+  "dav_charge_summary" -> "archive_charge_summary" [style=invis];
+  "hpc_charge_summary" -> "allocation" [style=invis];
+EOF_DOT
