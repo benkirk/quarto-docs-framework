@@ -1,5 +1,34 @@
 # Facts that go stale. Cite as {{< var tests.collected >}}; refresh here, never in slides.
-# Each entry: the source it was read from (sam-queries repo path) and the as-of date.
+# Each entry: the source it was read from (sam-queries repo path unless noted) and the as-of date.
 
 tests:
-  collected: "9,296"   # docs/TESTING.md, measured 2026-09-18
+  collected: "9,296"        # docs/TESTING.md, measured 2026-09-18
+
+dashboards:
+  count: "4"                # src/webapp/dashboards/{user,admin,allocations,status}; gallery is dev-only (helm/values.yaml), 2026-09-29
+
+api:
+  modules: "14"             # src/webapp/api/v1/*.py minus __init__, all registered in src/webapp/run.py, 2026-09-29
+  legacy_compat: "5"        # directory_access, project_access, fstree_access, queue, wallclock_exemption (CLAUDE.md), 2026-09-29
+
+clis:
+  count: "3"                # sam-search, sam-admin, sam-status (pyproject.toml [project.scripts]), 2026-09-29
+
+tasks:
+  count: "8"                # src/scheduling/tasks/__init__.py registry, 2026-09-29
+  cadence: "15 minutes"     # read as "checked every 15 minutes"; helm/values.yaml samuel-tasks CronJob, 7,22,37,52 * * * *, 2026-09-29
+
+size:
+  lines: "444K"             # data/loc_progression.tsv (refresh_data.sh), origin/main 2026-09-29
+  python_lines: "254K"      # same file, python_lines column
+  prs_merged: "645"         # gh pr list --state merged, 2026-09-29
+
+legacy:
+  loc: "~250K"              # "Confessions of a Vibe Coder" (SEA, 2026-03-11), slide 3
+  years: "nearly 15"        # same slide
+
+hosts:
+  prod: "sam.hpc.ucar.edu"  # docs/AUTHENTICATION.md, 2026-09-29
+
+milestones:
+  xras_repoint: "August 2026"   # XRAS repointed its handoffs to SAMuel 2026-08-24 (docs/plans/XRAS_TRIAGE_WEEK.md)
