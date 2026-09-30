@@ -3,6 +3,8 @@ title: "SAMuel"
 subtitle: "SAM, updated for extended lifecycle"
 author: "Ben Kirk, NCAR/CISL"
 date: last-modified
+filters:
+  - screenshots.lua
 ---
 
 {{< include _1-overview.qmd >}}

@@ -3,6 +3,8 @@ title: "SAMuel, Appendix"
 subtitle: "The Neighbors"
 author: "Ben Kirk, NCAR/CISL"
 date: last-modified
+filters:
+  - screenshots.lua
 ---
 
 {{< include _A-peers.qmd >}}

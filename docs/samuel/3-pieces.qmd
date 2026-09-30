@@ -3,6 +3,8 @@ title: "SAMuel, Part 3"
 subtitle: "Some Assembly Required"
 author: "Ben Kirk, NCAR/CISL"
 date: last-modified
+filters:
+  - screenshots.lua
 ---
 
 {{< include _3-pieces.qmd >}}

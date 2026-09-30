@@ -158,7 +158,11 @@ The User dashboard: every project a person belongs to, each allocation's balance
 date window it runs in. Screenshots use the obfuscated test database.
 :::
 
-![](images/tour-project.png){height="72%" fig-align="center"}
+[![](images/tour-project.png){height="66%" fig-align="center"}](https://sam.hpc.ucar.edu/user/)
+
+::: shot-link
+https://sam.hpc.ucar.edu/user/
+:::
 
 ## Usage, by day and by user
 
@@ -167,7 +171,11 @@ Resource Usage Details for a busy university project on Derecho: 90 days of char
 by user; click a bar to open that day.
 :::
 
-![](images/tour-usage.png){height="72%" fig-align="center"}
+[![](images/tour-usage.png){height="66%" fig-align="center"}](https://sam.hpc.ucar.edu/user/resource-details/WYOM0247?resource=Derecho)
+
+::: shot-link
+https://sam.hpc.ucar.edu/user/resource-details/WYOM0247?resource=Derecho
+:::
 
 ## Allocations across every facility
 
@@ -176,7 +184,11 @@ The Allocations dashboard: totals by facility and allocation type, per resource,
 Excel export.
 :::
 
-![](images/tour-allocations.png){height="72%" fig-align="center"}
+[![](images/tour-allocations.png){height="66%" fig-align="center"}](https://sam.hpc.ucar.edu/allocations/projects?resources=Derecho)
+
+::: shot-link
+https://sam.hpc.ucar.edu/allocations/projects?resources=Derecho
+:::
 
 ## Admin: one project, every knob
 
@@ -184,7 +196,11 @@ Excel export.
 The project editor: details, allocations, members and invitations in one place.
 :::
 
-![](images/tour-admin.png){height="72%" fig-align="center"}
+[![](images/tour-admin.png){height="66%" fig-align="center"}](https://sam.hpc.ucar.edu/admin/project/SCSG0001/edit)
+
+::: shot-link
+https://sam.hpc.ucar.edu/admin/project/SCSG0001/edit
+:::
 
 ## Status: what Derecho is doing right now
 
@@ -193,7 +209,11 @@ Fed every 5 minutes by collectors on the HPC systems. Public, no login needed. (
 copy's "no updates" banner is hidden in this shot.)
 :::
 
-![](images/tour-status.png){height="72%" fig-align="center"}
+[![](images/tour-status.png){height="66%" fig-align="center"}](https://sam.hpc.ucar.edu/status/derecho)
+
+::: shot-link
+https://sam.hpc.ucar.edu/status/derecho
+:::
 
 ## Also on your phone. In the dark.
 
