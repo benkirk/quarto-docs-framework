@@ -125,6 +125,7 @@ jobs:
       # and the Lua filter drew the waves (a stock revealjs render has neither)
       - name: Check sample.html carries the NCAR theme
         run: |
+          set -e   # the login shell has no -e: without it only the last line gates
           cd docs/sample
           grep -q 'ncar-revealjs.css' sample.html
           grep -q 'class="ncar-waves"' sample.html

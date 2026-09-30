@@ -9,7 +9,7 @@ jupyter: bash
 
 # Basics
 
-A paragraph right after a `#` divider becomes its subtitle, in pptx and PDF alike.
+A paragraph right after a `#` divider becomes its subtitle, in every format.
 
 ## Text & inline formatting
 
