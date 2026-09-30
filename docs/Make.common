@@ -15,6 +15,7 @@ EMBED_POPPINS      := $(PRESENTATIONS_ROOT)common/utils/embed_poppins.py
 ENABLE_AUTOFIT     := $(PRESENTATIONS_ROOT)common/utils/enable_autofit.py
 SECTION_SUBTITLE   := $(PRESENTATIONS_ROOT)common/utils/section_subtitle.py
 STYLE_FOOTNOTES    := $(PRESENTATIONS_ROOT)common/utils/style_footnotes.py
+LINK_CAPTIONS      := $(PRESENTATIONS_ROOT)common/utils/link_captions.py
 SHARED_QUARTO_YML  := $(PRESENTATIONS_ROOT)common/_quarto.yml
 SHARED_EXTENSIONS  := $(PRESENTATIONS_ROOT)common/_extensions
 
@@ -52,6 +53,7 @@ define render_pptx
 	python3 $(ENABLE_AUTOFIT) $@
 	python3 $(EMBED_POPPINS) $@
 	python3 $(STYLE_FOOTNOTES) $@
+	python3 $(LINK_CAPTIONS) $@
 endef
 
 define render_html
