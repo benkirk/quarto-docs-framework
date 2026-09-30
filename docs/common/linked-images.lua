@@ -1,14 +1,26 @@
 -- A linked image, [![](shot.png)](https://...), gets a visible link line on
 -- its slide in every format, so a viewer knows the picture opens the live page:
 --   revealjs  the slide's footer, muted
---   beamer    a tiny muted line, bottom center (a TikZ overlay: it takes no
---             room from the image, so {height="72%"} screenshots still fit)
+--   beamer    a tiny muted line, bottom center (a TikZ overlay); a linked
+--             image taller than 68% is capped there to keep the line clear
 --   pptx      nothing here: anything after an image splits the slide, so
 --             utils/link_captions.py adds a caption box after rendering
 -- The picture itself is the link in all three. One line per slide: the first
 -- linked image's URL.
 
 local MUTED = "6B7C99"  -- the theme's muted gray ($ncar-muted)
+local PDF_MAX = 68      -- % height that leaves the PDF foot line clear of a 16:9 shot
+
+-- PDF: a linked 16:9 screenshot at {height="72%"} reaches the page foot, under
+-- the link line; cap it so authors keep one recipe for every format.
+function Link(link)
+  if not quarto.doc.is_format("beamer") then return nil end
+  for _, il in ipairs(link.content) do
+    local pct = il.t == "Image" and tonumber((il.attributes.height or ""):match("^([%d.]+)%%$"))
+    if pct and pct > PDF_MAX then il.attributes.height = PDF_MAX .. "%" end
+  end
+  return link
+end
 
 local function image_link(blk)
   local url
