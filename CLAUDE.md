@@ -42,6 +42,8 @@ embedding.
 - **Format conditionals**: `when-format="beamer"` matches the custom
   `ncar-beamer` format; `when-format="ncar-beamer"` matches nothing. Always
   write `beamer`.
+- **Poppins has no arrows**: `→` renders as a missing-glyph box in the PDF
+  (XeLaTeX has no fallback font). Write "to", or keep the arrow in code.
 - **Divider subtitles**: a paragraph right after a `#` divider becomes that
   divider's subtitle in every format: `section_subtitle.py` for pptx, the
   theme's `\sectionsubtitle` (via its Lua filter) for beamer, and
@@ -52,7 +54,8 @@ embedding.
   `date: last-modified` renders literally (#7). CI checks this; set editor
   modes in the editor config, not in the file.
 - **Fragments are prerequisites**: every deck in a directory depends on its
-  `_*.qmd` fragments, `data/*` and `images/*`, so editing any of them rebuilds all of them. A
+  `_*.qmd` fragments, `data/*`, `images/*` and deck-local `*.lua` filters, so editing any of
+  them rebuilds all of them. A
   file included from anywhere else (e.g. `../other_deck/_x.qmd`) is invisible
   to make; `touch <deck>.qmd` after editing one.
 - **Several decks in one directory**: set `DECKS := a b c` before the include;
@@ -65,9 +68,13 @@ embedding.
 ## pandoc pptx gotchas (hard-won — read before restructuring slides)
 
 - **Content after a table or image splits the slide** into an untitled
-  continuation. Order: bullets *before* tables; speaker notes (`::: {.notes}`)
-  *before* a full-bleed image; use `:::: {.columns}` to put a diagram beside
-  text. Verified template-independent (pandoc writer behavior).
+  continuation. Order: bullets *before* tables; use `:::: {.columns}` to put a
+  diagram beside text. Verified template-independent (pandoc writer behavior).
+  Tables and code blocks *inside* a column are fine.
+- **Speaker notes can go anywhere.** Pandoc only picks Two Content when the
+  body *starts* with the columns div, so notes written before columns split the
+  slide; `docs/common/notes-last.lua` (shared `_quarto.yml`, pptx-only) moves
+  every slide's notes to its end. Notes after an image or table do not split.
 - **Raw-HTML `<figure>` wrappers demote columns slides to the Comparison
   layout**: quarto wraps rendered diagrams in `` `<figure>`{=html} `` inlines,
   pandoc's layout chooser counts them as text, and the other column's text gets
@@ -120,12 +127,23 @@ bit while building it:
 - **Mermaid pins its SVG to its natural width** (tiny labels); the scss
   lets it fill the column, capped by `calc(600px * var(--ncar-fit))`. The
   autofit script (`ncar-revealjs.js`) sets `--ncar-fit` when it shrinks a
-  slide; `em` does not work there (mermaid sets `font-size: 16px`).
+  slide; `em` does not work there (mermaid sets `font-size: 16px`). Graphviz
+  SVGs get the same cap.
+- **Mermaid must render unscaled.** Quarto renders each diagram inside its
+  slide, which reveal has scaled to the window, and mermaid measured labels at
+  that scale (0.8 at 1280 px): boxes 20% small, labels clipped. The theme's
+  script renders in mermaid's own scratch element instead (theme 2.2.0).
+- **A percentage image height resolves against the whole slide**, so the
+  beamer screenshot recipe `{height="72%"}` overflowed; the theme's Lua filter
+  turns it into the content-height cap (2.2.0).
 - **`chalkboard` blocks `embed-resources`**, and `-M chalkboard:false` does
   not override a format option; set it in the deck's `format:` block.
 - **Check it in a browser, not the source**: serve the deck directory
-  (`python3 -m http.server`) and screenshot each slide type (Playwright), at
-  16:9 and a letterboxed size, plus `?print-pdf`.
+  (`python3 -m http.server`; Playwright blocks `file://`) and screenshot each
+  slide type, at 16:9 and a letterboxed size, plus `?print-pdf`. Run
+  `Reveal.configure({transition: 'none'})` first or shots catch a fade, and walk
+  `Reveal.getSlides()` with `Reveal.getIndices()`: the `##` slides nest
+  vertically under their `#` divider, so `Reveal.slide(n)` stays on the divider.
 
 ## Mermaid diagrams
 
@@ -134,6 +152,9 @@ bit while building it:
   size with `%%| fig-width` (≈10 full-bleed, ≈5 in a column). Labels render in
   Trebuchet MS (mermaid's default theme font), not Poppins — diagrams are baked
   images, outside the template's font machinery.
+- **Install Chrome Headless Shell once** (`quarto install chrome-headless-shell`).
+  With only the system Chrome, quarto's handshake can wedge and a render hangs
+  with no output (CI hit it; so did a local `make all`, for 29 minutes).
 - Layout tricks that work: subgraphs with `direction TB` + invisible `~~~`
   links to stack wide fan-outs vertically; an invisible `~~~` edge plus the
   real edge to force a child *below* its parent while the arrow points up.
