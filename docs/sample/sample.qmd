@@ -50,7 +50,9 @@ S(p) \;=\; \frac{1}{(1 - f) + f / p}
 $$
 
 where $f$ is the parallel fraction and $p$ is the processor count. PPTX
-renders these natively as OMML equations.
+renders these natively as OMML equations. The PDF sets math in a serif math
+font beside Poppins; `themeoptions: [fonts=bundled, mathfont=stix]` (or
+`lm`, `pagella`, `sans`, `poppins`) picks another.
 
 ## Tables
 
