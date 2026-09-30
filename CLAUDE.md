@@ -40,11 +40,10 @@ embedding.
 - **Format conditionals**: `when-format="beamer"` matches the custom
   `ncar-beamer` format; `when-format="ncar-beamer"` matches nothing. Always
   write `beamer`.
-- **Divider subtitles are pptx-only.** `section_subtitle.py` merges the
-  paragraph after a `#` divider into the Section Header slide, but beamer
-  renders that paragraph as a slide of its own, titled after the section. Until
-  the theme has a section-subtitle slot, fence it:
-  `::: {.content-visible unless-format="beamer"}`.
+- **Divider subtitles**: a paragraph right after a `#` divider becomes that
+  divider's subtitle in both formats: `section_subtitle.py` for pptx, and the
+  theme's `\sectionsubtitle` (via its Lua filter) for beamer. Only plain
+  paragraphs qualify; anything else after a divider stays a slide of its own.
 - **Front matter must be line 1** of every deck `.qmd`: anything above the
   opening `---` (an editor mode-line, a comment) hides it from Quarto, and
   `date: last-modified` renders literally (#7). CI checks this; set editor
