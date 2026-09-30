@@ -22,8 +22,13 @@ embedding.
 - **Build**: `make pptx` (also `html`, `pdf`) inside the deck directory.
   `Make.common` names the output after the directory (`OUT`) and auto-symlinks
   `_quarto.yml` and `_extensions`. The pptx recipe post-processes with
-  `section_subtitle.py`, `enable_autofit.py`, `embed_poppins.py`, and
-  `style_footnotes.py`.
+  `section_subtitle.py`, `enable_autofit.py`, `embed_poppins.py`,
+  `style_footnotes.py`, and `link_captions.py`.
+- **Linked images** (`[![](x.png)](url)`): the picture is the link in every
+  format, and each shows the URL: the HTML footer and a PDF foot line come from
+  `docs/common/linked-images.lua`, the pptx caption box from `link_captions.py`
+  (after pandoc, because anything after an image splits a pptx slide). A deck
+  should not hand-roll footers for this. README "Linked images".
 - **PDF** is `--to ncar-beamer`: the NCAR beamer theme, vendored from
   `benkirk/NCAR_beamer_template` into `docs/common/_extensions/benkirk/ncar/`.
   Don't edit the vendored copy. Change the theme repo, then re-vendor with

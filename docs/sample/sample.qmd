@@ -95,6 +95,17 @@ mpirun -n 4 ./a.out
 Width can also be set in pixels (`{width=400}`) or with a `height=`
 attribute. PNG, JPG, and SVG all work for HTML/PDF; PPTX prefers PNG/JPG.
 
+## A linked screenshot
+
+::: {.notes}
+Wrap an image in a link and the picture opens the page in every format. Each
+format also shows the URL: the HTML footer, a line at the foot of the PDF page,
+and a caption box in pptx (link_captions.py). {height="72%"} is the full-width
+screenshot recipe; it fits all three.
+:::
+
+[![](images/example.jpg){height="72%" fig-align="center"}](https://ncar.ucar.edu/)
+
 ## Full-bleed photo {.feature background-image="images/example.jpg"}
 
 The `.feature` class makes the PDF and HTML decks a full-bleed photo slide

@@ -86,9 +86,27 @@ Per deck, `make pptx` runs:
 5. `python3 ../common/utils/style_footnotes.py <deck>.pptx`
    - Restyles body paragraphs that start with `†` as footnotes (smaller,
      muted), since pandoc ignores inline size and color in markdown.
+6. `python3 ../common/utils/link_captions.py <deck>.pptx`
+   - Captions each linked picture (see "Linked images" below) with its URL,
+     bottom center, muted; the caption box is itself the link.
 
-`make html` (revealjs) and `make pdf` (beamer) bypass steps 2 through 5 — the
+`make html` (revealjs) and `make pdf` (beamer) bypass steps 2 through 6 — the
 template, fonts, autofit, and the other pptx fix-ups are pptx-specific.
+
+### Linked images
+
+Wrap an image in a link and the picture opens that page, in every format:
+
+```markdown
+[![](images/dashboard.png){height="72%" fig-align="center"}](https://example.org/dashboard)
+```
+
+Each format also shows the URL, small and muted, so a reader knows the
+picture is live: the slide footer in HTML, a line at the foot of the PDF page
+(`common/linked-images.lua`), and a caption box in pptx (`link_captions.py`;
+pandoc can't add one without splitting the slide). One line per slide, from
+its first linked image. `{height="72%"}` is the full-width screenshot recipe
+and fits all three.
 
 ### PDF (beamer)
 

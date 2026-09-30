@@ -14,6 +14,7 @@ date-format: "MMMM D, YYYY"
 filters:
   - ../common/strip-raw-figure.lua
   - ../common/notes-last.lua
+  - ../common/linked-images.lua   # [![](x.png)](url): a link line on the slide
 
 format:
   pptx:
