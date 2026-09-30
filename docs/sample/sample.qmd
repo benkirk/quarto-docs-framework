@@ -62,8 +62,10 @@ renders these natively as OMML equations.
 
 : Sample HPC resources
 
+::: {.notes}
 Column alignment is set with `:---`, `:---:`, and `---:` in the separator
-row.
+row. (Text after a table would split the pptx slide; notes never do.)
+:::
 
 # Layouts
 
