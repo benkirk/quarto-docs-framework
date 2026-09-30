@@ -1,0 +1,8 @@
+---
+title: "SAMuel, Part 3"
+subtitle: "Some Assembly Required"
+author: "Ben Kirk, NCAR/CISL"
+date: last-modified
+---
+
+{{< include _3-pieces.qmd >}}

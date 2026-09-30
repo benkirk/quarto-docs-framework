@@ -1,0 +1,10 @@
+# The Lay of the Land
+
+::: {.content-visible unless-format="beamer"}
+What SAM is, who uses it, and the surfaces SAMuel puts on it.
+:::
+
+## Placeholder: what SAM is
+
+- The system of record for who may compute, on what, and how much.
+- Facts come from `_variables.yml`: {{< var tests.collected >}} tests collected.

@@ -1,0 +1,8 @@
+---
+title: "SAMuel, Part 2"
+subtitle: "Where State Lives"
+author: "Ben Kirk, NCAR/CISL"
+date: last-modified
+---
+
+{{< include _2-databases.qmd >}}

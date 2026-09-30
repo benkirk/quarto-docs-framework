@@ -1,0 +1,5 @@
+# Facts that go stale. Cite as {{< var tests.collected >}}; refresh here, never in slides.
+# Each entry: the source it was read from (sam-queries repo path) and the as-of date.
+
+tests:
+  collected: "9,296"   # docs/TESTING.md, measured 2026-09-18

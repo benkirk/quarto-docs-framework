@@ -1,0 +1,9 @@
+# The Neighbors
+
+::: {.content-visible unless-format="beamer"}
+The peer repos SAMuel loads, feeds, or answers to.
+:::
+
+## Placeholder: peer repos
+
+- hpc-usage-queries, hpc-scheduling-tools, legacy SAM, sam-ldap-syncd.
