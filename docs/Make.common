@@ -1,8 +1,14 @@
 # Shared recipes for the decks under docs/<deck>/ (pptx, revealjs, beamer).
-# Per-deck Makefiles set OUT (and optionally QFILE), then
-# `include ../Make.common`.
+# A deck Makefile is `include ../Make.common`. One deck per directory by
+# default, named after the directory (OUT); a directory holding several
+# decks lists them in DECKS (each <name>.qmd builds <name>.{pptx,html,pdf}).
 
-.PHONY: pptx html pdf all clean
+.PHONY: pptx html pdf all clean distclean
+
+# Every deck in a directory shares one .quarto/ project cache.
+.NOTPARALLEL:
+# A failed post-render step must not leave a "finished" output behind.
+.DELETE_ON_ERROR:
 
 PRESENTATIONS_ROOT := $(dir $(lastword $(MAKEFILE_LIST)))
 EMBED_POPPINS      := $(PRESENTATIONS_ROOT)common/utils/embed_poppins.py
@@ -12,11 +18,18 @@ STYLE_FOOTNOTES    := $(PRESENTATIONS_ROOT)common/utils/style_footnotes.py
 SHARED_QUARTO_YML  := $(PRESENTATIONS_ROOT)common/_quarto.yml
 SHARED_EXTENSIONS  := $(PRESENTATIONS_ROOT)common/_extensions
 
+OUT   ?= $(notdir $(CURDIR))
+DECKS ?= $(OUT)
 QFILE ?= $(OUT).qmd
 
-pptx: $(OUT).pptx
-html: $(OUT).html
-pdf:  $(OUT).pdf
+# Included fragments and frozen data: {{< include >}} is invisible to make,
+# so an edit to either rebuilds every deck in the directory.
+FRAGMENTS := $(wildcard _*.qmd) $(wildcard data/*)
+DEPS      := $(FRAGMENTS) _quarto.yml _extensions
+
+pptx: $(DECKS:=.pptx)
+html: $(DECKS:=.html)
+pdf:  $(DECKS:=.pdf)
 all:  pptx html pdf
 
 # Auto-symlink the shared _quarto.yml into the deck dir. A deck that
@@ -32,22 +45,46 @@ _quarto.yml:
 _extensions:
 	ln -s $(SHARED_EXTENSIONS) $@
 
-$(OUT).pptx: $(QFILE) _quarto.yml _extensions
-	quarto render $(QFILE) --to pptx -o $@
+define render_pptx
+	quarto render $< --to pptx -o $@
 	python3 $(SECTION_SUBTITLE) $@
 	python3 $(ENABLE_AUTOFIT) $@
 	python3 $(EMBED_POPPINS) $@
 	python3 $(STYLE_FOOTNOTES) $@
+endef
 
-$(OUT).html: $(QFILE) _quarto.yml _extensions
-	quarto render $(QFILE) --to revealjs -o $@
+define render_html
+	quarto render $< --to revealjs -o $@
+endef
 
-$(OUT).pdf: $(QFILE) _quarto.yml _extensions
-	quarto render $(QFILE) --to ncar-beamer -o $@
+define render_pdf
+	quarto render $< --to ncar-beamer -o $@
+endef
+
+%.pptx: %.qmd $(DEPS)
+	$(render_pptx)
+
+%.html: %.qmd $(DEPS)
+	$(render_html)
+
+%.pdf: %.qmd $(DEPS)
+	$(render_pdf)
+
+# QFILE: a single-deck directory whose source is not named <OUT>.qmd.
+ifneq ($(QFILE),$(OUT).qmd)
+$(OUT).pptx: $(QFILE) $(DEPS)
+	$(render_pptx)
+
+$(OUT).html: $(QFILE) $(DEPS)
+	$(render_html)
+
+$(OUT).pdf: $(QFILE) $(DEPS)
+	$(render_pdf)
+endif
 
 clean:
-	rm -f $(OUT).pptx $(OUT).html $(OUT).pdf
-	rm -rf $(OUT)_files
+	rm -f $(foreach d,$(DECKS),$(d).pptx $(d).html $(d).pdf)
+	rm -rf $(DECKS:=_files)
 
 distclean:
 	git clean --exclude=.env -xdf .

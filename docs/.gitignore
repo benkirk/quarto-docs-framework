@@ -1,3 +1,10 @@
 .quarto/
 **/*.quarto_ipynb
 **/*_files/
+
+# Deck outputs (docs/<deck>/<name>.{pptx,html,pdf}). Anchored one level deep
+# so the tracked assets under common/ are never matched.
+/*/*.pptx
+/*/*.pdf
+/*/*.html
+~$*

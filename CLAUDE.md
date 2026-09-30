@@ -20,7 +20,7 @@ embedding.
   `activate.d` scripts export `QUARTO_DENO`, `QUARTO_PANDOC`, etc.; merely
   putting `conda-env/bin` on `PATH` fails with a missing-deno error.
 - **Build**: `make pptx` (also `html`, `pdf`) inside the deck directory.
-  `Make.common` names the output after the directory and auto-symlinks
+  `Make.common` names the output after the directory (`OUT`) and auto-symlinks
   `_quarto.yml` and `_extensions`. The pptx recipe post-processes with
   `section_subtitle.py`, `enable_autofit.py`, `embed_poppins.py`, and
   `style_footnotes.py`.
@@ -39,9 +39,13 @@ embedding.
   opening `---` (an editor mode-line, a comment) hides it from Quarto, and
   `date: last-modified` renders literally (#7). CI checks this; set editor
   modes in the editor config, not in the file.
-- **Stale-fragment gotcha**: make only tracks the deck's own `.qmd` — after
-  editing an included fragment (`_*.qmd`) or `data/`, `touch <deck>.qmd` (or the
-  render is skipped).
+- **Fragments are prerequisites**: every deck in a directory depends on its
+  `_*.qmd` fragments and `data/*`, so editing either rebuilds all of them. A
+  file included from anywhere else (e.g. `../other_deck/_x.qmd`) is invisible
+  to make; `touch <deck>.qmd` after editing one.
+- **Several decks in one directory**: set `DECKS := a b c` before the include;
+  each `<name>.qmd` builds `<name>.{pptx,html,pdf}`. They share one `.quarto/`
+  cache, so `Make.common` is `.NOTPARALLEL`.
 - Executable ```{bash} cells run at render time via the jupyter `bash` kernel
   (deck frontmatter: `engine: jupyter`, `jupyter: bash`). Keep them
   deterministic — CI renders the sample deck.
