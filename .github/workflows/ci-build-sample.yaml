@@ -121,6 +121,16 @@ jobs:
         run: |
           make -C docs/sample sample.html
 
+      # the NCAR revealjs theme applied: its fonts/logos dependency is attached
+      # and the Lua filter drew the waves (a stock revealjs render has neither)
+      - name: Check sample.html carries the NCAR theme
+        run: |
+          set -e   # the login shell has no -e: without it only the last line gates
+          cd docs/sample
+          grep -q 'ncar-revealjs.css' sample.html
+          grep -q 'class="ncar-waves"' sample.html
+          ls sample_files/libs/quarto-contrib/ncar-revealjs-*/Poppins-Bold.ttf
+
       - name: Upload sample.html artifact
         uses: actions/upload-artifact@v4
         with:

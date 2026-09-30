@@ -37,12 +37,15 @@ embedding.
   or add `{.shrink}` to the heading. A full-width 16:9 screenshot is taller than
   the frame's content area; cap it with `{height="72%" fig-align="center"}`
   (pptx ignores the attribute and fits the placeholder anyway).
+- **HTML** is `--to ncar-revealjs`, from the same vendored extension (see
+  "revealjs (HTML) theme" below).
 - **Format conditionals**: `when-format="beamer"` matches the custom
   `ncar-beamer` format; `when-format="ncar-beamer"` matches nothing. Always
   write `beamer`.
 - **Divider subtitles**: a paragraph right after a `#` divider becomes that
-  divider's subtitle in both formats: `section_subtitle.py` for pptx, and the
-  theme's `\sectionsubtitle` (via its Lua filter) for beamer. Only plain
+  divider's subtitle in every format: `section_subtitle.py` for pptx, the
+  theme's `\sectionsubtitle` (via its Lua filter) for beamer, and
+  `ncar-revealjs.lua` for HTML. Only plain
   paragraphs qualify; anything else after a divider stays a slide of its own.
 - **Front matter must be line 1** of every deck `.qmd`: anything above the
   opening `---` (an editor mode-line, a comment) hides it from Quarto, and
@@ -90,9 +93,44 @@ embedding.
   `slideLayout1` placeholders) — see README "Template constraints" and its
   verification one-liner.
 
+## revealjs (HTML) theme
+
+Lives in the vendored extension (`ncar-revealjs.{scss,css,js,lua}`,
+`title-slide.html`); change it in the theme repo, like beamer. Things that
+bit while building it:
+
+- **The slide is 1600x900 slide pixels** (`width`/`height`, `margin: 0`);
+  every length in the scss is in those units and reveal scales the whole
+  slide. The waves are inline SVG in slide pixels, drawn by the Lua filter.
+- **`url()`s go in `ncar-revealjs.css`, never the scss.** The scss compiles
+  into `libs/revealjs/dist/theme/`, where relative URLs break; the css is an
+  HTML dependency whose resources (fonts, `ncar-assets/web/` logos) are
+  copied beside it and inlined under `embed-resources`. Web logos are
+  separate RGB files: the PDF lockups are CMYK and convert off-color.
+- **`hash-type: number` strips `#title-slide`**: target `.ncar-title`.
+- **`?print-pdf` moves slides into `.pdf-page` and forces `padding: 0
+  !important`**: use descendant selectors (`section.slide`, not
+  `.slides > section`), restate padding under `html.reveal-print`, and keep
+  `isolation: isolate` so the `z-index:-1` waves stay above the background.
+- **A pandoc `Div` whose first block is a heading becomes a `<section>`**,
+  which reveal counts as an extra slide (wrong numbering, a vanished slide).
+  Wrap slide content in raw `<div>` tags from the filter instead.
+- **pandoc's embed-resources inlines `<img src>`, not SVG `<image href>`**:
+  the title photo is an `<img>` behind the wave SVG.
+- **Mermaid pins its SVG to its natural width** (tiny labels); the scss
+  lets it fill the column, capped by `calc(600px * var(--ncar-fit))`. The
+  autofit script (`ncar-revealjs.js`) sets `--ncar-fit` when it shrinks a
+  slide; `em` does not work there (mermaid sets `font-size: 16px`).
+- **`chalkboard` blocks `embed-resources`**, and `-M chalkboard:false` does
+  not override a format option; set it in the deck's `format:` block.
+- **Check it in a browser, not the source**: serve the deck directory
+  (`python3 -m http.server`) and screenshot each slide type (Playwright), at
+  16:9 and a letterboxed size, plus `?print-pdf`.
+
 ## Mermaid diagrams
 
-- ```{mermaid} blocks render to PNG at build time through a headless browser;
+- ```{mermaid} blocks render to PNG at build time through a headless browser
+  (pptx and PDF; the HTML deck draws them live, in brand colors and Poppins);
   size with `%%| fig-width` (≈10 full-bleed, ≈5 in a column). Labels render in
   Trebuchet MS (mermaid's default theme font), not Poppins — diagrams are baked
   images, outside the template's font machinery.

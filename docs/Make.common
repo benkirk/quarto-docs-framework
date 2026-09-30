@@ -38,10 +38,10 @@ all:  pptx html pdf
 _quarto.yml:
 	ln -s $(SHARED_QUARTO_YML) $@
 
-# Same for the shared Quarto extensions (the NCAR beamer theme): each deck
-# dir is its own project root, and quarto does not look above it.  Every
-# format needs it -- _quarto.yml names ncar-beamer, and quarto resolves all
-# listed formats even when rendering pptx.
+# Same for the shared Quarto extensions (the NCAR theme: ncar-beamer and
+# ncar-revealjs): each deck dir is its own project root, and quarto does not
+# look above it.  Every format needs it -- _quarto.yml names both, and quarto
+# resolves all listed formats even when rendering pptx.
 _extensions:
 	ln -s $(SHARED_EXTENSIONS) $@
 
@@ -54,7 +54,7 @@ define render_pptx
 endef
 
 define render_html
-	quarto render $< --to revealjs -o $@
+	quarto render $< --to ncar-revealjs -o $@
 endef
 
 define render_pdf
