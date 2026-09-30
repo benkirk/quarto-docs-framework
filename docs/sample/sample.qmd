@@ -140,6 +140,14 @@ is baked into the .pptx. Engine is `jupyter` with the `bash` kernel
 
 ## Mermaid diagram
 
+::: {.notes}
+Mermaid blocks render to PNG automatically for PPTX (configured in
+`_quarto.yml`). Use `graph TD` for top-down, `sequenceDiagram` for
+sequence diagrams, etc. The explanation lives in these notes, before the
+diagram: text after an image would split the slide in pptx, and text before
+it demotes the layout.
+:::
+
 ```{mermaid}
 graph LR
     SRC[Source code] --> CMP[Compiler]
@@ -147,9 +155,25 @@ graph LR
     EXE --> RUN[mpirun on Derecho]
 ```
 
-Mermaid blocks render to PNG automatically for PPTX (configured in
-`_quarto.yml`). Use `graph TD` for top-down, `sequenceDiagram` for
-sequence diagrams, etc.
+## Graphviz diagram
+
+::: {.notes}
+Graphviz (`{dot}`) is built into Quarto, so there is nothing to install. Reach for it
+over mermaid when grouping and ranking matter: its clusters keep their layout.
+:::
+
+```{dot}
+//| fig-width: 9
+digraph G {
+  graph [rankdir=LR, fontname="Helvetica", fontcolor="#00357A"];
+  node  [shape=box, style="rounded,filled", fontname="Helvetica",
+         fillcolor="#E6F0FA", color="#0057C2", fontcolor="#00357A"];
+  edge  [color="#6B7280"];
+  subgraph cluster_hpc { label="NCAR HPC"; derecho [label="Derecho"]; casper [label="Casper"]; }
+  subgraph cluster_svc { label="Services"; api [label="REST API"]; db [label="Database", shape=cylinder]; }
+  derecho -> api; casper -> api; api -> db;
+}
+```
 
 ## Speaker notes
 
