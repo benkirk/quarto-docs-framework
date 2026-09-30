@@ -22,9 +22,9 @@ OUT   ?= $(notdir $(CURDIR))
 DECKS ?= $(OUT)
 QFILE ?= $(OUT).qmd
 
-# Included fragments and frozen data: {{< include >}} is invisible to make,
-# so an edit to either rebuilds every deck in the directory.
-FRAGMENTS := $(wildcard _*.qmd) $(wildcard data/*)
+# Included fragments, frozen data and images: {{< include >}} and ![](...) are
+# invisible to make, so an edit to any of them rebuilds every deck in the directory.
+FRAGMENTS := $(wildcard _*.qmd) $(wildcard data/*) $(wildcard images/*)
 DEPS      := $(FRAGMENTS) _quarto.yml _extensions
 
 pptx: $(DECKS:=.pptx)
