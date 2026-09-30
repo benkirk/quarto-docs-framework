@@ -12,8 +12,8 @@ config_env := module load conda >/dev/null 2>&1 || true && . $(CONDA_ROOT)/etc/p
 # -------------------------------------------------------------------
 help: ## Show this help message
 	@echo ""
-	@echo -e "\033[1;36mSAM Queries - Makefile Help\033[0m"
-	@echo -e "\033[1;36m============================\033[0m"
+	@echo -e "\033[1;36mquarto-docs-framework - Makefile Help\033[0m"
+	@echo -e "\033[1;36m=====================================\033[0m"
 	@echo ""
 	@echo -e "\033[1mAvailable targets:\033[0m"
 	@echo ""
