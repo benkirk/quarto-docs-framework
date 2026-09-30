@@ -119,14 +119,17 @@ which is vendored in `docs/common/_extensions/benkirk/ncar/`. Make symlinks
   filter uses a pandoc macro that older Quarto releases lack.
 - **You need TeX with XeLaTeX.** Quarto's own TinyTeX (`quarto install
   tinytex`) works and installs missing LaTeX packages on the fly. So does a
-  system TeX Live.
+  system TeX Live. (Plain-LaTeX decks, not Quarto ones, can also be written
+  on Overleaf: the theme README's
+  [Overleaf section](https://github.com/benkirk/NCAR_beamer_template#overleaf)
+  has a one-click link.)
 - **No fonts to install.** The theme bundles Poppins and the official logo
   lockups.
 - **Theme options** go in a deck's front matter:
   `themeoptions: [brand=ucar, title=light, fonts=bundled]`. A deck-level
   list replaces the shared one, so keep `fonts=bundled` (from the shared
-  `_quarto.yml`): it uses the theme's own Poppins instead of probing for a
-  system copy, which is noisy under XeLaTeX and leaves `missfont.log` behind.
+  `_quarto.yml`): it pins the theme's own Poppins and never probes for a
+  system copy.
   - `titlegraphic: images/photo.jpg` puts a photo on the title slide.
   - `fineprint: "..."` adds small print under the title block.
   - `mathfont=stix` (or `lm`, `pagella`, `sans`, `fira`, `poppins`, any
