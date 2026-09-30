@@ -129,6 +129,23 @@ embedding.
   (needs the `hpc-scheduling-tools` checkout four levels up + SAM credentials;
   rendering the deck itself never does).
 
+## Graphviz diagrams
+
+- ```{dot} cells render like mermaid (a PNG in pptx and PDF, live in revealjs) through
+  Quarto's bundled Graphviz (WASM): nothing to install. Size them with `//| fig-width`.
+- Use Graphviz where mermaid's layout fails: its clusters really cluster, and `rankdir`,
+  `rank=same` and compass ports (`node:port:e`) steer the routing. Keep mermaid for
+  simple flows and sequence diagrams.
+- **Set `fontname` on `graph`, `node` and `edge`** ("Helvetica" renders as the WASM
+  sans). Unset, it falls back to Times, so cluster labels come out serif. The WASM
+  build cannot load Poppins.
+- HTML-like labels (tables, ER boxes) have two silent traps:
+  - an empty `<font></font>` makes Graphviz drop the whole label to plain text; emit an
+    empty `<td></td>` instead;
+  - a colon in a `port` name reads as `port:compass`, so name ports `col__out`, not
+    `col:out`.
+- As with mermaid: look at the rendered image, and keep it near 2.4:1.
+
 ## CI
 
 `.github/workflows/ci-build-sample.yaml` renders the sample deck. Notes:
