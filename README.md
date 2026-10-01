@@ -91,8 +91,12 @@ Per deck, `make pptx` runs:
 6. `python3 ../common/utils/link_captions.py <deck>.pptx`
    - Captions each linked picture (see "Linked images" below) with its URL,
      bottom center, muted; the caption box is itself the link.
+7. `python3 ../common/utils/slide_layout.py <deck>.pptx`
+   - Applies a slide's layout controls (see "Centering and scaling a short
+     slide" below), which `common/slide-layout.lua` leaves as a speaker-notes
+     line because pandoc drops slide classes; the line is removed.
 
-`make html` (revealjs) and `make pdf` (beamer) bypass steps 2 through 6 — the
+`make html` (revealjs) and `make pdf` (beamer) bypass steps 2 through 7 — the
 template, fonts, autofit, and the other pptx fix-ups are pptx-specific.
 
 ### Linked images
@@ -109,6 +113,25 @@ picture is live: the slide footer in HTML, a line at the foot of the PDF page
 pandoc can't add one without splitting the slide). One line per slide, from
 its first linked image. `{height="72%"}` is the full-width screenshot recipe
 and fits all three.
+
+### Centering and scaling a short slide
+
+Five per-slide controls on the heading, each independent, act on the body
+(everything but the title, speaker notes and footnotes). They come from the
+vendored theme (>= 2.5.0); pptx gets them through step 7.
+
+```markdown
+## Who's still on legacy {.center scale="1.4"}
+## A short script {.hcenter .fill}
+```
+
+| Control | HTML | PDF | pptx |
+|---|---|---|---|
+| `.hcenter`: center the body across as a block | yes | prose, lists, plain code (a table centers anyway) | no |
+| `.vcenter`: center it between the title and the floor | yes | yes | text yes; a table to an estimated center |
+| `.center`: both (the theme's, not Quarto's) | yes | yes | as `.vcenter` |
+| `scale="S"`: text, tables and code × S | yes (autofit still shrinks an overshoot) | yes (no autofit: check the page) | yes |
+| `.fill`: grow until it just fits, up to 3× | yes | no; add `scale=` | no; add `scale=` |
 
 ### PDF (beamer)
 
