@@ -9,10 +9,12 @@ date-format: "MMMM D, YYYY"
 # Strip quarto's raw-HTML <figure> wrappers in pptx output -- pandoc ignores
 # them but counts them as text when choosing slide layouts, demoting a
 # columns slide with a diagram to the Comparison layout (see the filter).
+# slide-layout.lua: carries the per-slide layout controls to utils/slide_layout.py.
 # notes-last.lua: speaker notes before a columns div split the pptx slide;
 # moving every slide's notes to its end makes any placement safe.
 filters:
   - ../common/strip-raw-figure.lua
+  - ../common/slide-layout.lua   # pptx: the theme's .center/scale= etc. as a notes line
   - ../common/notes-last.lua
   - ../common/linked-images.lua   # [![](x.png)](url): a link line on the slide
 

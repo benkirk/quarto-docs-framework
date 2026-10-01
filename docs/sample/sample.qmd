@@ -124,6 +124,26 @@ draw an ordinary slide.
 - pptx shows the whole list at once
 :::
 
+## A short table, centered and scaled {.center scale="1.4"}
+
+| Control | Moves |
+|---|---|
+| `.hcenter` | the body, across |
+| `.vcenter` | the body, down |
+| `.center` | both |
+| `scale="S"` | its size |
+
+::: {.notes}
+`{.center scale="1.4"}` on the heading. Each control is independent; the
+title, these notes and any † footnote are left alone.
+:::
+
+## A short list, filled {.hcenter .fill scale="1.3"}
+
+- `.fill` grows the body until it just fits (HTML)
+- `scale="1.3"` is what the PDF and pptx use
+- `.hcenter` centers the list as a block
+
 # Code & Diagrams
 
 ## Static code blocks

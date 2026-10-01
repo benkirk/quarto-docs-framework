@@ -23,7 +23,7 @@ embedding.
   `Make.common` names the output after the directory (`OUT`) and auto-symlinks
   `_quarto.yml` and `_extensions`. The pptx recipe post-processes with
   `section_subtitle.py`, `enable_autofit.py`, `embed_poppins.py`,
-  `style_footnotes.py`, and `link_captions.py`.
+  `style_footnotes.py`, `link_captions.py`, and `slide_layout.py`.
 - **Slide footnotes** (a paragraph starting with `†`, or `‡` for a second): the
   theme (>= 2.4.0) lifts every one on a slide, columns included, to the slide's
   foot in HTML and PDF, under a short muted rule with the marker in the accent
@@ -34,6 +34,13 @@ embedding.
   `docs/common/linked-images.lua`, the pptx caption box from `link_captions.py`
   (after pandoc, because anything after an image splits a pptx slide). A deck
   should not hand-roll footers for this. README "Linked images".
+- **Short slides** (`{.hcenter}`, `{.vcenter}`, `{.center}`, `scale="S"`,
+  `{.fill}`, each independent): the theme (>= 2.5.0) centers and scales the
+  body in HTML and PDF. pptx drops slide classes, so `common/slide-layout.lua`
+  writes them as a notes line, `ncar-layout: vcenter scale=1.4`, which
+  `slide_layout.py` applies and deletes; it can't do `hcenter` or `fill`, and
+  centers a table by an estimated height. `.center` is the theme's, not
+  Quarto's (which moves the title). README "Centering and scaling a short slide".
 - **PDF** is `--to ncar-beamer`: the NCAR beamer theme, vendored from
   `benkirk/NCAR_beamer_template` into `docs/common/_extensions/benkirk/ncar/`.
   Don't edit the vendored copy. Change the theme repo, then re-vendor with
