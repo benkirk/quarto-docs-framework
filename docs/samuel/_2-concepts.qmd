@@ -106,7 +106,7 @@ current occupancy, not the TiB-year integral; the integral is what charges. Casp
 typed HPC, not DAV.
 :::
 
-## Facility, panel, allocation type, project
+## Facility, panel, allocation type, project {.vcenter}
 
 ```{mermaid}
 %%| fig-width: 9
@@ -177,7 +177,7 @@ The table is account_user (AccountUser, src/sam/accounting/accounts.py), a DateR
 model with no unique constraint. Account is unique on (project_id, resource_id).
 :::
 
-## SCSG0001: one project, ten accounts {.smaller}
+## SCSG0001: one project, ten accounts {.smaller .center .fill scale="1.2"}
 
 {{< include _out_accounts.qmd >}}
 
@@ -187,7 +187,7 @@ Frozen from the obfuscated test DB by concepts_data.py (get_detailed_allocation_
 allocation of 1 is an access grant. Disk is in TiB, compute in core-hours.
 :::
 
-## …and one roster. Almost.
+## …and one roster. Almost. {.vcenter .fill}
 
 - `sam-search project SCSG0001 --list-users`: "no access to Stratus" means no current row on
   that one account.
@@ -345,7 +345,7 @@ log_allocation_transaction in src/sam/manage/allocations.py. A NULL user_id mean
 integration wrote the row.
 :::
 
-## replay(history) == amount: SCSG0001 on Derecho
+## replay(history) == amount: SCSG0001 on Derecho {.center .fill scale="1.15"}
 
 {{< include _out_replay.qmd >}}
 
@@ -510,7 +510,7 @@ AUTO_RENEW_PANELS) and directory_access.py (the adhoc-member rule).
 docs/apis/SYSTEMS_INTEGRATION_APIs.md, "hpc-data kludge".
 :::
 
-## Who reads it: three frozen endpoints {.smaller}
+## Who reads it: three frozen endpoints {.smaller .center .fill scale="1.2"}
 
 | Endpoint | What it answers | Read by |
 |---|---|---|
@@ -578,7 +578,7 @@ allocation.parent_allocation_id; Allocation.is_inheriting and .root
 from the root (src/sam/manage/allocations.py).
 :::
 
-## Two conventions, one storage {.smaller}
+## Two conventions, one storage {.smaller .center .fill scale="1.15"}
 
 | | Shared pool | Subdivided award |
 |---|---|---|
@@ -593,7 +593,7 @@ table shows the same two projects in production. sam-admin project --audit-trees
 award convention: a parent must cover its carve-outs.
 :::
 
-## A subdivided award: 465M, with 442M carved out
+## A subdivided award: 465M, with 442M carved out {.vcenter}
 
 ::: {.notes}
 CESM0002 holds the whole award, 465M on Derecho. Fifteen children carve out 442M between them,
@@ -605,7 +605,7 @@ subtree.
 
 {{< include _tree_sam_award.qmd >}}
 
-## A shared pool: everyone shows 16.5M
+## A shared pool: everyone shows 16.5M {.vcenter}
 
 ::: {.notes}
 NMMM0003's 16.5M is shared by every linked child (yellow, parent_allocation_id set), and each
@@ -616,7 +616,7 @@ concepts_data.py, as above.
 
 {{< include _tree_sam_pool.qmd >}}
 
-## A subdivided award, as PBS sees it
+## A subdivided award, as PBS sees it {.vcenter}
 
 ::: {.notes}
 CESM0002 on Derecho, from the sam_and_pbs deck's fairshare tree. These numbers are PBS
@@ -640,7 +640,7 @@ legacy_sam/doc/data_structures/project_tree_charging.md §2 and
 docs/plans/implemented/ALLOCATION_TREE_EDITING.md.
 :::
 
-## Nothing checks a tree when it's written
+## Nothing checks a tree when it's written {.vcenter .fill}
 
 - `sam-admin project --audit-trees` checks it afterwards: does each parent cover its
   carve-outs?
@@ -652,7 +652,7 @@ src/sam/queries/tree_audit.py states the invariant (a parent covers every non-po
 write paths don't enforce it. Output from the obfuscated test copy, frozen by concepts_data.py.
 :::
 
-## Follow one job's hours
+## Follow one job's hours {.vcenter}
 
 ::: {.notes}
 Top row: where a Derecho job's hours go. Bottom row: why the user could submit it at all.

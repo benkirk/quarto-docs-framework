@@ -51,7 +51,7 @@ digraph DBs {
 }
 ```
 
-## Who owns what {.smaller}
+## Who owns what {.smaller .center .fill scale="1.15"}
 
 ::: {.notes}
 Every engine the webapp holds comes from one enumeration,
@@ -243,7 +243,7 @@ generalizes: a readiness check that depends on a shared external service fails e
 the same moment, and turns a blip into an outage.
 :::
 
-## Borrowed databases, read-only {.smaller}
+## Borrowed databases, read-only {.smaller .center .fill scale="1.2"}
 
 ::: {.notes}
 Both come from the hpc-usage-queries plugin, reach the CNPG read-only service, and connect as a

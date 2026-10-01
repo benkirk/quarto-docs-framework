@@ -45,7 +45,7 @@ SAM has run CISL's allocations for {{< var legacy.years >}} years:
 *† SAMuel is its extended lifecycle, not its obituary. Same database, same data, same people
 depending on it.*
 
-## Same database, new everything around it {.smaller}
+## Same database, new everything around it {.smaller .center .fill scale="1.15"}
 
 | | SAM | SAMuel |
 |---|---|---|
@@ -70,7 +70,7 @@ The legacy system still owns a few integrations (the LDAP identity mirror, AMIE)
 systems share one database while those move. Parts 4 and 5 and the appendix have the details.
 :::
 
-## One database, five audiences {.smaller}
+## One database, five audiences {.smaller .center .fill}
 
 | Who | What they do | Where |
 |---|---|---|
@@ -220,7 +220,7 @@ tests ({{< var size.test_lines >}}) are nearly as big as the code they test.
 
 ![](images/loc_progression.png){height="72%" fig-align="center"}
 
-## The Good, the Bad, the Murky {.smaller}
+## The Good, the Bad, the Murky {.smaller .center .fill}
 
 | The Good | The Bad | The Murky |
 |---|---|---|

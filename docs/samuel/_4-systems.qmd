@@ -61,7 +61,7 @@ digraph Map {
 }
 ```
 
-## Four flows, one database {.smaller}
+## Four flows, one database {.smaller .center .fill scale="1.1"}
 
 | Flow | Path | Cadence | Runs on |
 |--------------|------------------------------------------|--------------|------------|
@@ -453,7 +453,7 @@ sam_dev and does no job-history ingest. Part 5 covers how the lanes deploy.
 
 The API, and who calls it.
 
-## Four API families {.smaller}
+## Four API families {.smaller .center .fill scale="1.25"}
 
 | Family | Prefix | Routes | Who calls |
 |--------------|----------------------|--------|--------------------------------------|
@@ -470,7 +470,7 @@ directory_access 3, project_access 3, queue 3, wallclock_exemption 3, disk_quota
 mounted at /api/protected: those paths still belong to legacy SAM.
 :::
 
-## Same bytes, new address {.smaller}
+## Same bytes, new address {.smaller .center .fill}
 
 | SAMuel | Legacy SAM | Caller |
 |--------------------------------|------------------------------|-------------------|
@@ -543,7 +543,7 @@ the database changed a handful of times and the tree twice.
 
 The side-channels, and the overlap mapped.
 
-## Everything else SAMuel calls {.smaller}
+## Everything else SAMuel calls {.smaller .center .fill scale="1.15"}
 
 | Service | For | When |
 |---|---|---|
