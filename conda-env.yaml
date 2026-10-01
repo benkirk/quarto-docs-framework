@@ -8,6 +8,7 @@ dependencies:
   - gh
   - make
   - pip
+  - poppler      # pdftoppm / pdftotext, for `make qa`
   # Pure-python deps install much faster as wheels via pip than via the
   # conda solver, and don't add to the solve graph.
   - pip:
@@ -16,6 +17,8 @@ dependencies:
       - jupyter_client
       - nbclient
       - nbformat
+      - pillow        # `make qa` contact sheets
       - pipdeptree
+      - playwright    # `make qa` HTML checks (Makefile installs its headless Chromium)
       - python-pptx
       - pyyaml
