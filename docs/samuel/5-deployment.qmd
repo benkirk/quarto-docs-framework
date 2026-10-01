@@ -1,6 +1,6 @@
 ---
 title: "SAMuel, Part 5"
-subtitle: "Some Assembly Required"
+subtitle: "Deployment & Operations"
 author: "Ben Kirk, NCAR/CISL"
 date: last-modified
 ---

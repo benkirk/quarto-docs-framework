@@ -31,6 +31,7 @@ legacy:
 
 hosts:
   prod: "sam.hpc.ucar.edu"  # docs/AUTHENTICATION.md, 2026-09-29
+  dev: "samuel-dev.k8s.ucar.edu"   # helm/values-dev.yaml tls.fqdn, 2026-10-01
 
 milestones:
   xras_repoint: "August 2026"   # XRAS repointed its handoffs to SAMuel 2026-08-24 (docs/plans/XRAS_TRIAGE_WEEK.md)
@@ -46,3 +47,27 @@ schema:                      # legacy src/main/resources/db/migration CREATE TAB
   flyway_head: "V38"         # legacy's newest migration (V38__AddDeactivateToUsersTable, 2026-08-09)
   legacy_created: "92"       # modeled tables created by a legacy migration
   samuel_own: "16"           # modeled tables no legacy migration creates (scripts/sql/ DDL)
+
+ci:
+  workflows: "14"           # .github/workflows/*.yaml on origin/staging 1b624fc3, 2026-10-01
+
+image:                       # docs/plans/implemented/JOBS_IMAGE.md (#660-#672), 2026-09-30
+  size_before: "2.07 GB"     # uncompressed, arm64, the pre-change production image
+  size_after: "679 MB"       # same measure, slim runtime
+  build_min_before: "8"      # minutes, QEMU-era build
+  build_min_after: "3"       # minutes, native runners (approximate)
+
+k8s:                         # helm/values.yaml + values-dev.yaml on origin/staging, 2026-10-01
+  replicas_prod: "2"
+  replicas_dev: "1"
+  secrets_prod: "9"          # ExternalSecrets, templates/external_secret.yaml
+  secrets_dev: "7"           # dev disables xrasApi and jira
+
+redis:
+  mb: "192"                  # helm/values.yaml cache.maxmemoryMB (prod), 2026-10-01
+
+cnpg:                        # peer repo hpc-usage-queries helm/values.yaml + #114, 2026-10-01
+  instances: "2"
+  pg: "18.3"
+  switchover_gap: "1 s"      # measured 2026-09-13 (CNPG_ROLL_RESILIENCE.md)
+  failover: "16 s"           # same measurement

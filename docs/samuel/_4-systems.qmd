@@ -446,7 +446,7 @@ documented but unused. Why job history left SAM at all is Part 2's story.
 containers/ncar-hpc-deploy/etc/schedule, frozen by refresh_data.sh. Cron on the cron host says
 when each cadence fires (etc/crontab.prod, etc/crontab.dev); this file says what it runs. Prod
 daily runs at 01:07 on casper and 01:12 on derecho; weekly is Saturday evening. Dev writes
-sam_dev and does no job-history ingest. Part 5 covers how the lanes deploy.
+sam_dev and does no job-history ingest. Part 5 covers deployment.
 :::
 
 # Access out
