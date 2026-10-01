@@ -1,7 +1,0 @@
-# Some Assembly Required
-
-CI, GitOps on CIRRUS, dev vs prod, and the data-gathering lanes on NCAR HPC.
-
-## Placeholder: from commit to pod
-
-- PR to `staging`, image to GHCR, Argo CD to nwc1.

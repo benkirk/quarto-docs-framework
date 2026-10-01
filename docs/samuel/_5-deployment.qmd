@@ -1,0 +1,28 @@
+# Some Assembly Required
+
+From a commit to a pod: CI, the image, GitOps on CIRRUS, the runtime, and the HPC lanes.
+
+## Placeholder: from commit to image
+
+- Branch flow, fourteen workflows, the three-way test suite, one multi-arch `samuel` image.
+- PSAs: the GHCR prune (#670) and the squash trap (#406/#408).
+
+## Placeholder: GitOps on CIRRUS
+
+- CI's only edit is one `image:` line; two Argo apps, prod and dev.
+
+## Placeholder: runtime on nwc1
+
+- Two gthread pods, a PDB, nine ExternalSecrets, Redis, the tasks CronJob.
+
+## Placeholder: the companion CNPG cluster
+
+- What it hosts, how it rolls, and the backups plan. Part 3 has the 2026-09-13 PSA.
+
+## Placeholder: dev vs prod
+
+- Laptop compose, samuel-dev, prod; the `cirrus_*` watch scripts.
+
+## Placeholder: ncar-hpc-deploy as deployment
+
+- Lanes on casper and derecho; `update` pulls, smoke-tests, swaps, and keeps a rollback.

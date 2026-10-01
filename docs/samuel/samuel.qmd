@@ -11,7 +11,9 @@ date: last-modified
 
 {{< include _3-databases.qmd >}}
 
-{{< include _4-pieces.qmd >}}
+{{< include _4-systems.qmd >}}
+
+{{< include _5-deployment.qmd >}}
 
 {{< include _A-peers.qmd >}}
 

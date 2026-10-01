@@ -67,7 +67,7 @@ depending on it.*
 
 ::: {.notes}
 The legacy system still owns a few integrations (the LDAP identity mirror, AMIE); both
-systems share one database while those move. Part 4 and the appendix have the details.
+systems share one database while those move. Parts 4 and 5 and the appendix have the details.
 :::
 
 ## One database, five audiences {.smaller}

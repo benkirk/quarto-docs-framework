@@ -656,7 +656,7 @@ write paths don't enforce it. Output from the obfuscated test copy, frozen by co
 
 ::: {.notes}
 Top row: where a Derecho job's hours go. Bottom row: why the user could submit it at all.
-Every box is a concept from this part; Part 3 names the tables, Part 4 the pipelines.
+Every box is a concept from this part; Part 3 names the tables, Part 4 the flows, Part 5 the pipelines.
 :::
 
 ```{mermaid}
