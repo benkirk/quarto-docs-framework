@@ -69,10 +69,10 @@ casper_jobs) and fs_scans (campaign, destor). Prod MySQL is sam-sql.ucar.edu.
 | job_history | CNPG, read-only | jobhist-sync | My Jobs, charge rebuilds |
 | fs_scans | CNPG, read-only | disk scanners | disk-scan tabs |
 
-## SAM: the core in one picture
+## Part 2's concepts, as tables
 
 ::: {.notes}
-Generated from the ORM metadata by sam-queries' scripts/er_diagram.py, so it cannot drift from
+Part 2 introduced these as ideas; here they are as tables. Generated from the ORM metadata by sam-queries' scripts/er_diagram.py, so it cannot drift from
 the models. A project has one account per resource; allocations hang off the account;
 account_user rows say who may charge it. project and allocation each point at themselves: both
 are trees.
@@ -80,10 +80,10 @@ are trees.
 
 {{< include _er_core.qmd >}}
 
-## remaining = allocated − used
+## The balance, as tables
 
 ::: {.notes}
-Every term is a table. used = charges + adjustments. allocated is allocation.amount over [start_date, end_date]; charges come
+Part 2's remaining = allocated − used, term by term. Every term is a table. used = charges + adjustments. allocated is allocation.amount over [start_date, end_date]; charges come
 from one pre-aggregated daily summary table; adjustments are manual credits and debits. The
 dashboards, the API (AllocationWithUsageSchema), sam-search and fstree all compute it the same
 way. The invisible layout edges only stack the summaries in two rows.
@@ -106,25 +106,6 @@ mirrored in both tables. Guess what that did to its totals.
 src/sam/accounting/calculator.py, ACTIVITY_TYPE_TO_CHARGE_KEY. hpc_charge_summary carries the
 legacy HPC machines, so a resource_type-based sum also missed them. Fixed in sam-queries #570.
 :::
-
-## Allocations are trees
-
-- `project.parent_id` plus nested-set coordinates (`tree_left` / `tree_right`) make a subtree
-  query one `BETWEEN`.
-- `allocation.parent_allocation_id`: a child **inherits** its root's pool, and a parent's usage
-  is its whole subtree's, on every surface.
-- Two conventions, stored identically: a **shared pool** (every member carries the whole pool)
-  and a **subdivided award** (children carve their amounts out of the root's).
-
-## A subdivided award, as PBS sees it
-
-::: {.notes}
-CESM0002 on Derecho, from the sam_and_pbs deck's fairshare tree: blue interior nodes hold
-subtree totals, yellow self-leaves hold what a root kept for itself. That deck tells the whole
-SAM-to-PBS story.
-:::
-
-{{< include ../sam_and_pbs/_tree_cesm.qmd >}}
 
 ## is_active: one question, every model
 
@@ -296,6 +277,6 @@ the resources table are Bluefire and Yellowstone.
 
 - **Two owned** (`sam`, `system_status`), **two borrowed** (job_history, fs_scans).
 - SAM's schema belongs to the database, and legacy SAM still shares it.
-- Every balance is one equation over one summary table per resource.
+- Every balance is Part 2's one equation, over one summary table per resource.
 - `is_active` is the one way to ask "is this live?".
 - Secondary databases can degrade SAMuel; they must never take it down.
