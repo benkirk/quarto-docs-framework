@@ -8,8 +8,7 @@ From a commit to a pod, and keeping it there.
 Read it clockwise from the PR. CI's only deployment act is to rewrite one image tag on a
 machine-owned branch; everything after that is CIRRUS's GitOps. Argo CD notices the new pin and
 rolls the pods. Neither GitHub nor a laptop ever talks to the cluster directly. sam-queries
-docs/CIRRUS_PUBLISHING.md is the long form. Companion page, one stop at a time, prod or dev:
-https://claude.ai/artifact/Tp4XaBDH7BmvUbPT6UUbtS
+docs/CIRRUS_PUBLISHING.md is the long form; the next slide links a walkthrough.
 :::
 
 ```{dot}
@@ -39,6 +38,17 @@ digraph Pipeline {
   pods -> sql [label="SAM"];
 }
 ```
+
+## Walk the pipeline yourself
+
+::: {.notes}
+The companion page: the same six stops, one at a time, with a production / samuel-dev toggle.
+Each stop says what runs, what starts it and what keeps it safe, and links the workflow YAML and
+docs on sam-queries main. Shown here on the Pin stop. A snapshot as of 2026-10-01; the links
+track main.
+:::
+
+[![](images/companion-pipeline.png){height="72%" fig-align="center"}](https://claude.ai/artifact/Tp4XaBDH7BmvUbPT6UUbtS)
 
 # From commit to image
 
