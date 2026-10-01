@@ -83,9 +83,9 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 
 .cols ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
 .guard { background: var(--amber-soft); border-radius: 10px; padding: 12px 14px; }
 .guard h3 { color: var(--amber); }
-code { font-family: var(--font-mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+code { font-family: var(--font-mono); font-size: .9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; white-space: nowrap; }
 pre { margin: 0; background: var(--code-bg); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font: 13px/1.5 var(--font-mono); }
-pre code { background: none; padding: 0; }
+pre code { background: none; padding: 0; white-space: inherit; }
 .source { border-top: 1px solid var(--line); padding-top: 16px; min-width: 0; }
 .source h3 { font: 600 12px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
 .source ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -143,11 +143,11 @@ footer a { color: var(--brand); }
 <script>
 const T = {
   prod: { name: "production", base: "main", branch: "cirrus", app: "sam-query", ns: "sam-queries",
-          host: "sam.hpc.ucar.edu", replicas: "2, with a PodDisruptionBudget", db: "sam-sql (the MySQL VM)",
-          values: "values.yaml" },
+          host: "sam.hpc.ucar.edu", replicas: "2, with a PodDisruptionBudget", db: "<code>sam-sql</code> (the MySQL VM)",
+          values: "<code>values.yaml</code>" },
   dev:  { name: "samuel-dev", base: "staging", branch: "cirrus-dev", app: "sam-query-dev", ns: "sam-queries-dev",
-          host: "samuel-dev.k8s.ucar.edu", replicas: "1, no disruption budget", db: "sam_dev on csg-postgres",
-          values: "values.yaml + values-dev.yaml" }
+          host: "samuel-dev.k8s.ucar.edu", replicas: "1, no disruption budget", db: "<code>sam_dev</code> on <code>csg-postgres</code>",
+          values: "<code>values.yaml</code> + <code>values-dev.yaml</code>" }
 };
 
 const STOPS = [
@@ -171,7 +171,7 @@ const STOPS = [
     title: t => "A merge to " + t.base + " is the deploy decision",
     chip: t => t.base === "main" ? "promotion merged" : "feature merged",
     summary: t => t.base === "main"
-      ? "Merging the promotion PR pushes main. That push starts the production build, and sync-staging-to-main then resets staging onto main so the two never drift."
+      ? "Merging the promotion PR pushes main. That push starts the production build, and <code>sync-staging-to-main</code> then resets staging onto main so the two never drift."
       : "Merging a feature PR pushes staging. That push starts the dev build, and opens or refreshes the single staging-to-main promotion PR.",
     runs: t => t.base === "main"
       ? [ "<code>build-images-cirrus-deploy</code>, target prod", "<code>sync-staging-to-main</code> resets staging" ]
@@ -188,7 +188,7 @@ const STOPS = [
     title: () => "One image, built natively for two architectures",
     chip: () => "~3 min",
     summary: () => "The setup job resolves the target and pins the peer plugins to commit SHAs once, so both platform builds see identical inputs. Each platform builds on its own native runner and pushes by digest.",
-    runs: () => [ "<code>setup</code>: target, plugin SHAs, build date", "<code>build</code>: ubuntu-24.04 and ubuntu-24.04-arm, no emulation", "<code>merge</code>: <code>docker buildx imagetools create</code> joins the two digests", "<code>summary</code>: the run's summary page" ],
+    runs: () => [ "<code>setup</code>: target, plugin SHAs, build date", "<code>build</code>: <code>ubuntu-24.04</code> and <code>ubuntu-24.04-arm</code>, no emulation", "<code>merge</code>: <code>docker buildx imagetools create</code> joins the two digests", "<code>summary</code>: the run's summary page" ],
     trigger: () => [ "Every run of the deploy workflow; only <code>samuel</code> builds by default" ],
     guard: () => [ "The merge job fails unless it gets exactly two digests", "2.07 GB became 679 MB (uncompressed, arm64); 8 min became about 3" ],
     source: [".github/workflows/build-images-cirrus-deploy.yaml", "docs/CIRRUS_PUBLISHING.md#the-pipeline", "docs/plans/implemented/JOBS_IMAGE.md"] },
@@ -196,7 +196,7 @@ const STOPS = [
   { id: "ghcr", name: "Registry", where: () => "GHCR",
     title: () => "The tagged multi-arch index lands in GHCR",
     chip: () => "ghcr.io/benkirk/sam-queries/samuel",
-    summary: t => "The merged index is tagged with the short commit SHA and the branch name" + (t.base === "main" ? ", plus latest. A v* tag adds its semver components." : ". latest is reserved for main."),
+    summary: t => "The merged index is tagged with the short commit SHA and the branch name" + (t.base === "main" ? ", plus <code>latest</code>. A <code>v*</code> tag adds its semver components." : ". <code>latest</code> is reserved for main."),
     runs: t => [ "<code>sha-&lt;short&gt;</code>: the tag the cluster pins", "<code>" + t.base + "</code>: the moving branch tag", t.base === "main" ? "<code>latest</code>, and semver on tags" : "no <code>latest</code> from staging" ],
     trigger: () => [ "The merge job, after both platforms push" ],
     guard: () => [ "<code>clean-ghcr</code> prunes on Sundays, but keeps every manifest a kept index references", "It dry-runs anywhere but main" ],
@@ -205,7 +205,7 @@ const STOPS = [
   { id: "pin", name: "Pin", where: t => t.branch + " branch",
     title: t => "CI rewrites one line on " + t.branch,
     chip: () => "update-helm",
-    summary: t => "update-helm resets the " + t.branch + " branch to the triggering commit's tree, rewrites the image line, and force-pushes one commit. This is CI's only deployment act: it never talks to the cluster.",
+    summary: t => "<code>update-helm</code> resets the <code>" + t.branch + "</code> branch to the triggering commit's tree, rewrites the image line, and force-pushes one commit. This is CI's only deployment act: it never talks to the cluster.",
     code: t => "# helm/values.yaml on " + t.branch + "\nwebapp:\n  container:\n    image: ghcr.io/benkirk/sam-queries/samuel:sha-1b624fc",
     runs: () => [ "Reset to the ref's tree, <code>sed</code> the image line, force-push", "Pushes as a GitHub App, not as <code>github-actions[bot]</code>" ],
     trigger: () => [ "Runs only if the <code>samuel</code> image built" ],
@@ -215,8 +215,8 @@ const STOPS = [
   { id: "argo", name: "Argo to pods", where: t => t.ns,
     title: t => "Argo CD syncs " + t.app + " and rolls the pods",
     chip: t => t.host,
-    summary: t => "CIRRUS's Argo CD watches " + t.branch + ". A new pin rolls the " + t.name + " release in namespace " + t.ns + ", with " + t.values + ".",
-    runs: t => [ "Replicas: " + t.replicas, "SAM database: " + t.db, "gunicorn gthread pods behind <code>nginx-external</code>", "The <code>samuel-tasks</code> CronJob runs the same image" ],
+    summary: t => "CIRRUS's Argo CD watches <code>" + t.branch + "</code>. A new pin rolls the " + t.name + " release in namespace <code>" + t.ns + "</code>, with " + t.values + ".",
+    runs: t => [ "Replicas: " + t.replicas, "SAM database: " + t.db, "<code>gunicorn</code> <code>gthread</code> pods behind <code>nginx-external</code>", "The <code>samuel-tasks</code> CronJob runs the same image" ],
     trigger: t => [ "The new commit on " + t.branch ],
     guard: t => t.base === "main"
       ? [ "Rollout adds a pod before removing one (maxUnavailable 0, maxSurge 1)", "Readiness gates on the sam database only, so a secondary database roll degrades instead of emptying the Service" ]

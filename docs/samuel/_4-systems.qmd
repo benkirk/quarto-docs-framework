@@ -65,7 +65,7 @@ digraph Map {
 
 | Flow | Path | Cadence | Runs on |
 |--------------|------------------------------------------|--------------|------------|
-| Identity in | UCAR directory to sam-ldap-syncd to legacy SAM | per change | legacy SAM |
+| Identity in | UCAR directory to `sam-ldap-syncd` to legacy SAM | per change | legacy SAM |
 | Allocations, both ways | ARC to XRAS to SAMuel; SAMuel reads XRAS back | per approval; hourly | SAMuel |
 | Usage in | PBS to collectors, job history and charging | 5 min to daily | HPC lanes |
 | Access out | SAMuel's APIs to PBS, LDAP provisioning, disk quotas | polled | the callers |
@@ -114,7 +114,7 @@ and sam-ldap-syncd as rootless podman containers. Sources: sam-queries
 docs/plans/SAM_LDAP_SYNCD_REFERENCE.md §2.5 and docs/plans/LDAP_SYNC_API.md.
 :::
 
-## We don't own the schema (yet)
+## We don't own the schema (yet) {.vcenter scale="1.15"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -143,7 +143,7 @@ the database is the source of truth; don't modify the SAM schema. That is why th
 schema is not under Alembic (Part 3), and why Postgres in prod waits on legacy's retirement.
 :::
 
-## PSA - Don't let this happen to you… again
+## PSA - Don't let this happen to you… again {.vcenter scale="1.15"}
 
 - **2026-08-10, the schema edition:** the identity-sync cutover shipped legacy migration V37,
   dropping two columns from `users` and seven other tables.
@@ -165,8 +165,8 @@ same readiness reasoning as Part 3's CNPG PSA: degrade, don't vanish.
 
 | Caller | Calls | Status |
 |------------------------------|--------------------------|----------------------|
-| sam-ldap-syncd | legacy `…/ldapsync` | **live**, every identity change |
-| amie-sam-mediator (ACCESS AMIE) | legacy `…/amie` | idle, not ported |
+| `sam-ldap-syncd` | legacy `…/ldapsync` | **live**, every identity change |
+| `amie-sam-mediator` (ACCESS AMIE) | legacy `…/amie` | idle, not ported |
 | HEUV portal | legacy `…/heuv` | not ported |
 | XRAS | SAMuel `/api/xras/v1` | moved 2026-08-24 |
 | PBS, provisioning, disk quotas | SAMuel `/api/v1` | ported; both serve them |
@@ -216,7 +216,7 @@ digraph Identity {
 }
 ```
 
-## What the synchronizer writes
+## What the synchronizer writes {.vcenter scale="1.15"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -245,7 +245,7 @@ users anywhere in src/, no User.create(), nothing writes active or locked; the o
 SAMuel writes is primary_gid via User.set_primary_gid().
 :::
 
-## Next: SAMuel takes the ldapsync endpoints
+## Next: SAMuel takes the ldapsync endpoints {.vcenter scale="1.15"}
 
 - **Planned, not started:** scoped 2026-09-25, phases P1a to P2.
 - Mounted at legacy's own prefix, so the cutover is **one URL** in the daemon's config.
@@ -261,7 +261,7 @@ sam-queries docs/plans/LDAP_SYNC_API.md: the daemon keeps its SAM_URL; the new s
 reference doc carries a ~30-item census of client-side quirks to preserve or fix.
 :::
 
-## Signing in
+## Signing in {.vcenter scale="1.15"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -327,7 +327,7 @@ digraph Xras {
 }
 ```
 
-## Incoming: six verbs
+## Incoming: six verbs {.vcenter scale="1.15"}
 
 - XRAS POSTs `/api/xras/v1/actions`: **add, adjust, extend, supplement, transfer, update**.
 - It GETs back `people`, `requests` and `dates`, in legacy's byte shapes.
@@ -344,7 +344,7 @@ the Tomcat census shows zero XRAS calls on legacy from 08-28. Every action is lo
 xras_action_log, one of SAMuel's own tables.
 :::
 
-## Outgoing: the sweep and the writes
+## Outgoing: the sweep and the writes {.vcenter scale="1.15"}
 
 - **`xras_sweep`, hourly:** a light pass over active requests, plus a full "Approved" pass
   daily at 04:00 MT. It feeds the Allocations dashboard's work queue.
@@ -396,7 +396,7 @@ digraph InOut {
 }
 ```
 
-## Collectors: PBS to the status pages
+## Collectors: PBS to the status pages {.vcenter scale="1.15"}
 
 - On each host, a script snapshots PBS into a spool directory.
 - The same `samuel` image parses the spool and POSTs `/api/v1/status/…`: Casper and
@@ -410,7 +410,7 @@ container). The key is API_KEYS_COLLECTOR, granted the api_collector role (MANAG
 MANAGE_CHARGE_SUMMARIES; src/sam/security/rbac_defaults.py), enforced under RBAC_SOURCE=db.
 :::
 
-## Job history and charges: ORM, not REST
+## Job history and charges: ORM, not REST {.vcenter scale="1.15"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -456,7 +456,7 @@ The API, and who calls it.
 ## Four API families {.smaller .center .fill scale="1.25"}
 
 | Family | Prefix | Routes | Who calls |
-|--------------|----------------------|--------|--------------------------------------|
+|--------------|--------------------------|-------:|----------------------------------|
 | Core | `/api/v1` | 39 | dashboards, CLIs, collectors |
 | Legacy shapes | `/api/v1` | 21 | PBS, LDAP provisioning, disk quotas |
 | Fairshare | `/api/v1/fairshare` | 1 | the tree, built in-process |
@@ -523,7 +523,7 @@ digraph Loop {
 }
 ```
 
-## SAMuel to PBS, in one slide
+## SAMuel to PBS, in one slide {.vcenter scale="1.15"}
 
 - **Every 12 minutes**, `samuel2sql` and `fsparsetree_mr` read SAMuel's API and rebuild two
   artifacts per machine: an accounting database and the fairshare tree.
@@ -559,7 +559,7 @@ off everywhere but the prod chart); a failed Jira filing falls back to mail. The
 power sam-search awards. No test may open an SMTP socket or make an outbound request.
 :::
 
-## The overlap, mapped
+## The overlap, mapped {.vcenter scale="1.15"}
 
 - **Next:** the ldapsync endpoints move to SAMuel. Identity's grey box shrinks to the daemon.
 - **By decision:** AMIE (idle) and HEUV (not ported): port, replace, or retire.
@@ -574,7 +574,7 @@ docs/plans/implemented/POSTGRES_MIGRATION.md (prod on csg-postgres) is gated on 
 SAM; so is putting the SAM schema under Alembic. Part 5 is where SAMuel itself runs.
 :::
 
-## TL;DR - who talks to whom
+## TL;DR - who talks to whom {.vcenter scale="1.15"}
 
 - **Four flows:** identity in, allocations both ways, usage in, access out.
 - **Legacy SAM is still running,** and identity still flows through it.

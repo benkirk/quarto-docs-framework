@@ -2,7 +2,7 @@
 
 What SAM is, who uses it, and what SAMuel puts on top of it.
 
-## SAM in one slide
+## SAM in one slide {.vcenter}
 
 :::: {.columns}
 ::: {.column width="58%"}
@@ -31,7 +31,7 @@ The stakeholder one-liner: if you can run a job on Derecho, SAM is why, and SAM 
 also how we know how much of your allocation that job used.
 :::
 
-## A long and honorable career
+## A long and honorable career {.vcenter scale="1.15"}
 
 SAM has run CISL's allocations for {{< var legacy.years >}} years:
 
@@ -55,7 +55,7 @@ depending on it.*
 | Background work | cron + shell scripts | scheduled tasks with a run ledger |
 | Deployment | a Tomcat server | containers on CIRRUS (Kubernetes), via GitOps |
 
-## How we got here
+## How we got here {.vcenter scale="1.15"}
 
 - **Oct 2025:** a Python model of the production database, read as-is. *This led to…*
 - **Nov–Dec 2025:** a CLI, a REST API, the first dashboards. *This led to…*
@@ -114,7 +114,7 @@ flowchart TB
     classDef out fill:#FFF4E0,stroke:#FAA119,color:#00357A
 ```
 
-## By the numbers
+## By the numbers {.vcenter scale="1.15"}
 
 - **{{< var dashboards.count >}}** web dashboards: User, Admin, Allocations, Status.
 - **{{< var api.modules >}}** REST API modules. **{{< var api.legacy_compat >}}** answer
@@ -124,7 +124,7 @@ flowchart TB
 - **{{< var tasks.count >}}** scheduled tasks, checked every {{< var tasks.cadence >}}.
 - **{{< var tests.collected >}}** automated tests, run on every change.
 
-## More than a port
+## More than a port {.vcenter scale="1.15"}
 
 - **Invitations and account requests:** a sponsor invites; the request reaches NUSD as a ticket.
 - **Email that remembers:** expiration notices with previews and a ledger, so nobody is mailed
@@ -134,13 +134,13 @@ flowchart TB
 - **Roles and access** managed in the app, scoped by facility.
 - **Mobile and dark mode**, because PIs have phones too.
 
-## Plugins: optional by design
+## Plugins: optional by design {.vcenter scale="1.15"}
 
 Some features live in companion packages, loaded only where they are installed:
 
-- **Job history:** My Jobs, per-job drill-downs, charge ingest (hpc-usage-queries).
-- **Disk scans:** who is using which directories (fs-scans).
-- **Scheduling tools:** the PBS fairshare tree (hpc-scheduling-tools).
+- **Job history:** My Jobs, per-job drill-downs, charge ingest (`hpc-usage-queries`).
+- **Disk scans:** who is using which directories (`fs-scans`).
+- **Scheduling tools:** the PBS fairshare tree (`hpc-scheduling-tools`).
 
 Each has an off switch. A missing plugin shows a banner, never an error page, and the rest
 of SAMuel carries on.

@@ -78,23 +78,27 @@ def users():
     return fenced('\n'.join(keep))
 
 
+def nowrap(text):
+    return f'[{text}]{{style="white-space: nowrap"}}'  # .fill must not break dates at hyphens
+
+
 def replay(session):
     alloc = session.get(Allocation, LEDGER_ALLOCATION)
     txns = sorted(alloc.transactions, key=lambda t: (t.creation_time, t.allocation_transaction_id))
     lines = ['| Date | Type | Amount | Note | Replay |',
-             '|----------|-----------|-------------:|----------------|-------------:|']
+             '|--------------|------------|--------------:|----------------|-------------:|']
     for t in txns:
         amount = '—' if t.transaction_amount is None else f'{t.transaction_amount:+,.0f}'
         if t.transaction_type == 'NEW':
             amount = f'{t.transaction_amount:,.0f}'
         note = (t.transaction_comment or '').strip()
         if t.transaction_type == 'EXTENSION':
-            amount, note = '—', f'to {t.alloc_end_date:%Y-%m-%d}'
+            amount, note = '—', nowrap(f'to {t.alloc_end_date:%Y-%m-%d}')
         if t.transaction_type == 'NEW':
-            note = note or f'to {t.alloc_end_date:%Y-%m-%d}'
+            note = note or nowrap(f'to {t.alloc_end_date:%Y-%m-%d}')
 
         total = replay_amount(txns, until=t.creation_time)
-        lines.append(f'| {t.creation_time:%Y-%m-%d} | {t.transaction_type} | {amount} '
+        lines.append(f'| {nowrap(f"{t.creation_time:%Y-%m-%d}")} | {t.transaction_type} | {amount} '
                      f'| {note} | {total:,.0f} |')
     lines.append(f'| | **amount** | | | **{alloc.amount:,.0f}** |')
     assert abs(replay_amount(txns) - float(alloc.amount)) < 0.5, 'replay != amount'

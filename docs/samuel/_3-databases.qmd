@@ -64,10 +64,10 @@ casper_jobs) and fs_scans (campaign, destor). Prod MySQL is sam-sql.ucar.edu.
 
 | Database | Prod engine | Written by | Read by |
 |---|---|---|---|
-| sam | MySQL VM | SAMuel, legacy SAM, LDAP mirror | everything |
-| system_status | CNPG, read-write | collectors, task ledger, logins | status pages, admin |
-| job_history | CNPG, read-only | jobhist-sync | My Jobs, charge rebuilds |
-| fs_scans | CNPG, read-only | disk scanners | disk-scan tabs |
+| `sam` | MySQL VM | SAMuel, legacy SAM, LDAP mirror | everything |
+| `system_status` | CNPG, read-write | collectors, task ledger, logins | status pages, admin |
+| `job_history` | CNPG, read-only | `jobhist-sync` | My Jobs, charge rebuilds |
+| `fs_scans` | CNPG, read-only | disk scanners | disk-scan tabs |
 
 ## Part 2's concepts, as tables
 
@@ -91,7 +91,7 @@ way. The invisible layout edges only stack the summaries in two rows.
 
 {{< include _er_balance.qmd >}}
 
-## One resource, one summary table
+## One resource, one summary table {.vcenter scale="1.15"}
 
 - Five daily summary tables: `comp`, `dav`, `hpc`, `disk`, `archive`.
 - A resource's charges live in **exactly one** of them, named by its `activity_type`.
@@ -107,7 +107,7 @@ src/sam/accounting/calculator.py, ACTIVITY_TYPE_TO_CHARGE_KEY. hpc_charge_summar
 legacy HPC machines, so a resource_type-based sum also missed them. Fixed in sam-queries #570.
 :::
 
-## is_active: one question, every model
+## `is_active`: one question, every model {.vcenter}
 
 :::: {.columns}
 ::: {.column width="45%"}
@@ -132,7 +132,7 @@ classes answer it: 29 through one of the three mixins in src/sam/base.py, 9 with
 CLAUDE.md: never compare raw columns.
 :::
 
-## How many tables? Depends who you ask
+## How many tables? Depends who you ask {.vcenter scale="1.15"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -158,7 +158,7 @@ the script refuses anything else) against the ORM metadata. The /database browse
 tables and views". system_status adds {{< var tables.status >}} more.
 :::
 
-## MySQL today, Postgres tomorrow
+## MySQL today, Postgres tomorrow {.vcenter scale="1.15"}
 
 - **Prod:** MySQL on the VM, shared with legacy SAM. **samuel-dev:** Postgres on CNPG.
 - **One switch:** `SAM_DB_DRIVER=mysql|postgresql`; the same code, tests and CI run on both.
@@ -174,7 +174,7 @@ behavior with an ICU collation on 121 columns. Prod cannot flip while legacy SAM
 database.
 :::
 
-## Fourteen ways the engines disagree {.smaller}
+## Fourteen ways the engines disagree {.vcenter scale="1.15"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -202,7 +202,7 @@ Each has a write-up with the fix in POSTGRES_MIGRATION.md. Number 14 is still th
 CI flake: Postgres' now() is the transaction start, so two "nows" in one test are equal.
 :::
 
-## system_status: the pulse
+## `system_status`: the pulse {.vcenter scale="1.15"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -253,7 +253,7 @@ Postgres side names its pod and plugin: sam-webapp:<pod>:job_history:<machine> a
 sam-webapp:<pod>:fs_scans:<db>:<collection>.
 :::
 
-| | job_history | fs_scans |
+| | `job_history` | `fs_scans` |
 |---|---|---|
 | Databases | `derecho_jobs`, `casper_jobs` | `campaign`, `destor` |
 | Engines | one per machine | one per database × schema |
@@ -273,9 +273,9 @@ the resources table are Bluefire and Yellowstone.
 
 [![](images/database-resources.png){width="78%" fig-align="center"}](https://sam.hpc.ucar.edu/database/sam/resources)
 
-## TL;DR - where state lives
+## TL;DR - where state lives {.vcenter scale="1.15"}
 
-- **Two owned** (`sam`, `system_status`), **two borrowed** (job_history, fs_scans).
+- **Two owned** (`sam`, `system_status`), **two borrowed** (`job_history`, `fs_scans`).
 - SAM's schema belongs to the database, and legacy SAM still shares it.
 - Every balance is Part 2's one equation, over one summary table per resource.
 - `is_active` is the one way to ask "is this live?".

@@ -110,7 +110,7 @@ deploy-staging deployed the retired AWS ECS staging; its push trigger was remove
 clean-ghcr keeps anything a kept multi-arch index references (#670).
 :::
 
-## What a PR must pass
+## What a PR must pass {.vcenter scale="1.15"}
 
 - **Three test jobs, in parallel:** MySQL with coverage, Postgres, and the perf tier, on three
   runners that share one `test-stack` setup action.
@@ -127,7 +127,7 @@ MySQL+coverage 578 s, Postgres 496 s, perf 416 s; coverage gates at 85%. The Hel
 helm/tests/test-dev-render.sh, which proves dev shares nothing with prod (later in this part).
 :::
 
-## One image, two architectures
+## One image, two architectures {.vcenter scale="1.15"}
 
 :::: {.columns}
 ::: {.column width="55%"}
@@ -161,7 +161,7 @@ dispatch-only.
 
 CI writes one line; CIRRUS's Argo CD does the rest. Thanks, CIRRUS.
 
-## CI edits one line {.vcenter .fill}
+## CI edits one line {.vcenter .fill scale="1.15"}
 
 ```yaml
 # helm/values.yaml, on the cirrus branch
@@ -220,7 +220,7 @@ digraph Publish {
 }
 ```
 
-## Deploying to dev from any branch
+## Deploying to dev from any branch {.vcenter scale="1.15"}
 
 - **`workflow_dispatch`** builds any branch. The target is `dev` by default, and `prod` only
   when asked for by name.
@@ -235,13 +235,13 @@ update-helm resetting the cirrus branch to the triggering ref's tree: a branch c
 chart change deploys the chart without it. It bit #367. The next staging push puts dev back.
 :::
 
-## Two Argo apps {.smaller .center .fill}
+## Two Argo apps {.smaller .center .fill scale="1.1"}
 
 | | prod | dev |
 |------------------------|------------------------------|--------------------------------------|
 | App, namespace | `sam-query`, `sam-queries` | `sam-query-dev`, `sam-queries-dev` |
 | Chart values | `values.yaml` | `values.yaml` + `values-dev.yaml` |
-| SAM database | `sam-sql` (MySQL VM) | `sam_dev` on csg-postgres |
+| SAM database | `sam-sql` (MySQL VM) | `sam_dev` on `csg-postgres` |
 | Replicas | {{< var k8s.replicas_prod >}}, with a disruption budget | {{< var k8s.replicas_dev >}} |
 | Mail, XRAS, Jira | on | off |
 | Tasks switched off | 2 | 5 |
@@ -255,7 +255,7 @@ system_status_dev, so its task ledger never settles a prod slot. Same chart, sam
 pipeline: dev is prod with the levers pulled.
 :::
 
-## The HPC hosts, too
+## The HPC hosts, too {.vcenter scale="1.15"}
 
 - The same `samuel` image also runs on casper and derecho: the status collectors and the
   accounting jobs from Part 4.
@@ -309,12 +309,12 @@ digraph Namespace {
 }
 ```
 
-## Rolling without a gap
+## Rolling without a gap {.vcenter scale="1.15"}
 
 - **Two replicas.** A rollout adds one new pod before it removes an old one, and never drops
   below two Ready.
 - **A disruption budget** keeps one serving through node drains. The pods spread across nodes.
-- **Each pod:** gunicorn `gthread`, 9 workers × 8 threads. A slow scan holds a thread, not a
+- **Each pod:** `gunicorn` `gthread`, 9 workers × 8 threads. A slow scan holds a thread, not a
   process.
 - **Readiness gates on the `sam` database only.** A secondary database down reads `degraded`,
   still serving (Part 3).
@@ -326,7 +326,7 @@ minAvailable 1, topology spread maxSkew 1 on hostname (ScheduleAnyway). Workers 
 database failing every replica's /ready at once would empty the Service.
 :::
 
-## Ingress and secrets
+## Ingress and secrets {.vcenter scale="1.15"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -353,7 +353,7 @@ is deliberate: that key is write-provisioned, and a person merge deletes an acco
 production with no undo.
 :::
 
-## Redis: a cache you can lose
+## Redis: a cache you can lose {.vcenter scale="1.15"}
 
 - **{{< var redis.mb >}} MB,** least-recently-used eviction, **no persistence**: a restart
   starts cold, and nothing breaks.
@@ -367,7 +367,7 @@ Before changing the size, check evicted_keys: the eviction delta is the real cac
 the memory percentage. scripts/cirrus_redis_purge.sh dry-runs by default.
 :::
 
-## The tasks CronJob
+## The tasks CronJob {.vcenter scale="1.15"}
 
 - **`samuel-tasks`** wakes at `7,22,37,52` past each hour, UTC, and never overlaps itself.
 - It runs every task that is due: **{{< var tasks.count >}} tasks**, each on its own
@@ -381,7 +381,7 @@ activeDeadlineSeconds 840, backoffLimit 0. The wake minutes are arbitrary; the l
 each task's schedule. State machine: sam-queries docs/plans/implemented/SCHEDULED_TASKS.md.
 :::
 
-## The CronJob's three traps
+## The CronJob's three traps {.vcenter scale="1.15"}
 
 - **The off-list is fail-open.** A new task goes live in production on the next wake, unless
   it is named in `SAM_TASKS_DISABLED` in the same change.
@@ -403,7 +403,7 @@ whole-render grep passes on the Deployment's copy and proves nothing.
 
 csg-postgres: job history, scans, status, and samuel-dev.
 
-## csg-postgres at a glance
+## `csg-postgres` at a glance {.vcenter scale="1.15"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -412,7 +412,7 @@ csg-postgres: job history, scans, status, and samuel-dev.
 - CloudNativePG, PostgreSQL **{{< var cnpg.pg >}}**.
 - **{{< var cnpg.instances >}} instances:** a primary and a replica, 512Gi each.
 - A read-write service at the primary, and a read-only one at the replica.
-- Lives in the hpc-usage-queries repo; Argo renders its chart.
+- Lives in the `hpc-usage-queries` repo; Argo renders its chart.
 :::
 ::: {.column width="50%"}
 **Settings**
@@ -435,7 +435,7 @@ change rolls the cluster: #113 merged at 03:11Z and the pods were recreated at 0
 
 | Database | Written by | Read by |
 |------------------------------|------------------------------|------------------------------|
-| `derecho_jobs`, `casper_jobs` | job-history sync | My Jobs, via the replica |
+| `derecho_jobs`, `casper_jobs` | `jobhist-sync` | My Jobs, via the replica |
 | `campaign`, `destor` | the weekly scans rebuild | My Data, via the replica |
 | `system_status` | SAMuel and the collectors | the Status dashboard |
 | `system_status_dev`, `sam_dev` | samuel-dev; `make refresh-dev` | samuel-dev |
@@ -447,7 +447,7 @@ copies. It is also the one SAMuel writes on the primary, which is why Part 3's 2
 mattered.
 :::
 
-## How it rolls
+## How it rolls {.vcenter scale="1.15"}
 
 - **Switchover, not restart:** a planned roll promotes the replica first, then updates the old
   primary.
@@ -502,7 +502,7 @@ sam-queries compose.yaml. tests/conftest.py refuses any database but the allowli
 mysql-test container on 3307. The mysql image carries the snapshot as a Git LFS blob.
 :::
 
-## samuel-dev: prod's chart, none of its reach
+## samuel-dev: prod's chart, none of its reach {.vcenter scale="1.15"}
 
 - **The same chart and image pipeline,** with `values-dev.yaml` on top: one replica,
   Postgres, its own status database.
@@ -519,7 +519,7 @@ mute, on its own data and disjoint from prod, then proves each check can fail by
 with one prod value at a time. ci-staging runs it (make helm-test) on every PR to staging.
 :::
 
-## Watching it: the scripts
+## Watching it: the scripts {.vcenter scale="1.15"}
 
 - **`cirrus_healthcheck.sh`:** a read-only probe of the release, start to finish.
 - **`cirrus_watch.sh`:** a tick that prints only what changed since the last one: web,
@@ -555,12 +555,12 @@ driver, cirrus_watch --env dev, and cnpg_watch) and attributes each slow request
 per-database timing split.
 :::
 
-## TL;DR - deployment & operations
+## TL;DR - deployment & operations {.vcenter scale="1.15"}
 
 - **A merge is a deploy:** staging to samuel-dev, main to production, by one pinned image tag.
 - **CI never touches the cluster.** It edits one line on a locked branch; CIRRUS's Argo CD does
   the rest.
 - **One multi-arch image** for the pods, the CronJob, and the HPC hosts.
 - **Two pods, a cache you can lose,** and a ledger-backed CronJob with three known traps.
-- **csg-postgres** holds everything but production SAM, and rolls without a gap.
+- **`csg-postgres`** holds everything but production SAM, and rolls without a gap.
 - **Dev is prod's chart with the levers off,** and a test proves it.
