@@ -161,7 +161,7 @@ column the same cutover added. The columns were pdb_modified_time and idms_sync_
 same readiness reasoning as Part 3's CNPG PSA: degrade, don't vanish.
 :::
 
-## Who’s still on legacy
+## Who’s still on legacy {.center .fill scale="1.15"}
 
 | Caller | Calls | Status |
 |------------------------------|--------------------------|----------------------|
@@ -438,7 +438,7 @@ ORM, as the lane's database user; the REST path in docs/apis/CHARGING_INTEGRATIO
 documented but unused. Why job history left SAM at all is Part 2's story.
 :::
 
-## The schedule, verbatim
+## The schedule, verbatim {.center .fill scale="1.25"}
 
 {{< include _out_schedule.qmd >}}
 
