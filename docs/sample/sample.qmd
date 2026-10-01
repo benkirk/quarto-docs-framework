@@ -223,6 +223,11 @@ slide.
 - Drop images under `images/` and reference them as
   `![](images/foo.png)`.
 
+† A paragraph that starts with a dagger is a slide footnote: on the slide's
+foot under a short rule in HTML and PDF, muted in place in pptx.
+
+*‡ A second one stacks under the first, in order; emphasis is kept.*
+
 ## Thank you! {.closing}
 
 The `.closing` class makes the PDF and HTML decks a closing slide on the
