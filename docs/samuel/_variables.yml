@@ -41,3 +41,8 @@ tables:                      # data/table_counts.tsv (count_tables.py via refres
   sam_orm: "108"             # SAM models, excluding the 7 view models
   sam_unmapped: "6"          # in the DB, no model: legacy scratch/staging/Flyway tables
   status: "19"               # system_status models
+
+schema:                      # legacy src/main/resources/db/migration CREATE TABLEs vs the ORM, 2026-09-30
+  flyway_head: "V38"         # legacy's newest migration (V38__AddDeactivateToUsersTable, 2026-08-09)
+  legacy_created: "92"       # modeled tables created by a legacy migration
+  samuel_own: "16"           # modeled tables no legacy migration creates (scripts/sql/ DDL)

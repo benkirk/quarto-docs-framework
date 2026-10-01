@@ -54,6 +54,12 @@ SAMUEL_REPO=$repo python3 count_tables.py
 # Part 2 (Concepts): SCSG0001's accounts, users and ledger; two SAM-side trees; the tree audit.
 SAMUEL_REPO=$repo python3 concepts_data.py
 
+# Part 4: the ncar-hpc-deploy schedule, verbatim (comments dropped but the header). Read from the ref, no DB.
+{ printf '```\n'
+  git -C "$repo" show "$ref:containers/ncar-hpc-deploy/etc/schedule" | awk '/^# cadence/ || (!/^#/ && NF)'
+  printf '```\n'
+} > _out_schedule.qmd
+
 # ER fragments from the ORM metadata, one ```{dot} cell each.
 # er <name> <er_diagram.py args...>, then optional extra dot lines on stdin.
 er() {
