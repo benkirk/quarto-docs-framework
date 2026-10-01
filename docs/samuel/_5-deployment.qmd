@@ -539,9 +539,9 @@ not a fault.
 ## Claude on watch: the skills {.smaller .center .fill}
 
 | Skill | Load it | It drives | It reports |
-|---------------|--------------------------|----------------------------|--------------------------------|
+|----------------------|------------------------|------------------------------|------------------------------|
 | `watch-prod` | for a recurring prod watch | `cirrus_watch.sh` on a timer | changes only; a quiet hour is one line |
-| `watch-dev` | after a staging merge | `cirrus_watch.sh --env dev` | did the pin roll, is dev healthy |
+| `watch-dev` | after a staging merge | `cirrus_watch.sh`, with `--env dev` | did the pin roll, is dev healthy |
 | `profile-dev` | for a load or latency pass | a real signed-in session, at concurrency | where the time went: database, plugin, or Python |
 | `watch-cnpg` | for a cluster watch (peer repo) | `cnpg_watch.sh` | failovers, connections, lag, slow queries |
 
