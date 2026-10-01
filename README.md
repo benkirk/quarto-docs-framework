@@ -204,6 +204,31 @@ and keep `<deck>_files/` beside it.
 - **PDF from the browser:** open `<deck>.html?print-pdf` in Chrome and print
   with background graphics. `make pdf` is usually the better handout.
 
+## Checking a deck
+
+`make qa` builds every format, then checks the outputs (`docs/common/utils/deck_qa.py`):
+
+- **Failures:**
+  - slide counts that differ between pptx, PDF and HTML;
+  - PDF text past the right margin, into the footer, overlapping other text, or running into
+    the next table column;
+  - HTML content past the right edge.
+- **Hints:**
+  - short slides, with the share of the body they use;
+  - `.smaller` without `.fill`;
+  - slides the HTML autofit had to shrink.
+- **Plain names:** list names that belong in backticks in `qa-names.txt` (one per line) in
+  the deck directory, and every plain-text use is reported.
+
+Everything lands in `_qa/` (gitignored): `report.txt`, `usage.tsv`, a contact sheet per
+format, and per-slide PNGs. In a directory with several decks, `make qa DECKS=name`
+checks one.
+
+The checks need poppler, Pillow and Playwright, which are all in `conda-env.yaml`.
+`make conda-env` installs Playwright's headless Chromium; set `CHROME` to use another
+build. Without Playwright the HTML checks are skipped and the rest still run. For Claude
+Code, the `deck-polish` skill (`.claude/skills/`) covers what to do with the findings.
+
 ## Adding a new deck
 
 ```bash

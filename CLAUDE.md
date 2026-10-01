@@ -165,6 +165,9 @@ bit while building it:
   percentage is proportionally smaller.
 - **`chalkboard` blocks `embed-resources`**, and `-M chalkboard:false` does
   not override a format option; set it in the deck's `format:` block.
+- **`make qa` first** (README "Checking a deck"): it does the screenshots,
+  overflow and slide-count checks below. Load the `deck-polish` skill for a
+  format pass.
 - **Check it in a browser, not the source**: serve the deck directory
   (`python3 -m http.server`; Playwright blocks `file://`) and screenshot each
   slide type, at 16:9 and a letterboxed size, plus `?print-pdf`. Run

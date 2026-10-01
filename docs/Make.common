@@ -3,7 +3,7 @@
 # default, named after the directory (OUT); a directory holding several
 # decks lists them in DECKS (each <name>.qmd builds <name>.{pptx,html,pdf}).
 
-.PHONY: pptx html pdf all clean distclean
+.PHONY: pptx html pdf all qa clean distclean
 
 # Every deck in a directory shares one .quarto/ project cache.
 .NOTPARALLEL:
@@ -17,6 +17,7 @@ SECTION_SUBTITLE   := $(PRESENTATIONS_ROOT)common/utils/section_subtitle.py
 STYLE_FOOTNOTES    := $(PRESENTATIONS_ROOT)common/utils/style_footnotes.py
 LINK_CAPTIONS      := $(PRESENTATIONS_ROOT)common/utils/link_captions.py
 SLIDE_LAYOUT       := $(PRESENTATIONS_ROOT)common/utils/slide_layout.py
+DECK_QA            := $(PRESENTATIONS_ROOT)common/utils/deck_qa.py
 SHARED_QUARTO_YML  := $(PRESENTATIONS_ROOT)common/_quarto.yml
 SHARED_EXTENSIONS  := $(PRESENTATIONS_ROOT)common/_extensions
 
@@ -34,6 +35,11 @@ pptx: $(DECKS:=.pptx)
 html: $(DECKS:=.html)
 pdf:  $(DECKS:=.pdf)
 all:  pptx html pdf
+
+# Layout checks on the built decks: overflow, slide-count parity, short slides, contact
+# sheets in _qa/ (deck_qa.py). `make qa DECKS=name` checks one deck of a directory.
+qa: all
+	python3 $(DECK_QA) $(DECKS)
 
 # Auto-symlink the shared _quarto.yml into the deck dir. A deck that
 # needs custom config can commit a real _quarto.yml; make will see the
