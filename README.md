@@ -84,8 +84,10 @@ Per deck, `make pptx` runs:
      Pandoc strips these on reference-doc copy; the script puts them
      back so the font travels with the file.
 5. `python3 ../common/utils/style_footnotes.py <deck>.pptx`
-   - Restyles body paragraphs that start with `†` as footnotes (smaller,
-     muted), since pandoc ignores inline size and color in markdown.
+   - Restyles body paragraphs that start with `†` or `‡` as footnotes (smaller,
+     muted, the marker in accent orange), since pandoc ignores inline size and
+     color in markdown. HTML and PDF go further: the theme moves them to the
+     slide's foot under a short rule.
 6. `python3 ../common/utils/link_captions.py <deck>.pptx`
    - Captions each linked picture (see "Linked images" below) with its URL,
      bottom center, muted; the caption box is itself the link.

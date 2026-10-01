@@ -24,6 +24,11 @@ embedding.
   `_quarto.yml` and `_extensions`. The pptx recipe post-processes with
   `section_subtitle.py`, `enable_autofit.py`, `embed_poppins.py`,
   `style_footnotes.py`, and `link_captions.py`.
+- **Slide footnotes** (a paragraph starting with `†`, or `‡` for a second): the
+  theme (>= 2.4.0) lifts every one on a slide, columns included, to the slide's
+  foot in HTML and PDF, under a short muted rule with the marker in the accent
+  orange; pptx can't move content, so `style_footnotes.py` mutes them in place
+  in the same colors. `*† text*` works too.
 - **Linked images** (`[![](x.png)](url)`): the picture is the link in every
   format, and each shows the URL: the HTML footer and a PDF foot line come from
   `docs/common/linked-images.lua`, the pptx caption box from `link_captions.py`
