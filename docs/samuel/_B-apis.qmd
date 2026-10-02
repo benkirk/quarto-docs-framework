@@ -117,13 +117,14 @@ class DiskQuotaSchema(Schema):
 - **A new legacy-shaped endpoint starts here:** the shape is declared, and `data_key` makes
   the camelCase.
 - **ORM by default.** Raw SQL only for a measured cost, with a benchmark:
-  `directory_access` went from about 7 s in legacy to about 0.2 s.
+  `directory_access` became about 4× faster (Appendix C).
 
 ::: {.notes}
 src/sam/schemas/disk_quota.py:13-21 (allow_none trimmed), the reference (CLAUDE.md, "Output shaping"). Its consumer is
 DASG; legacy path dasg/diskquota. directory_access split-and-assemble: legacy's one join fanned
 each user out ~14x into ~135K rows; now one DISTINCT membership query plus small bulk lookups
-merged in Python. Benchmark: tests/perf/test_directory_access_latency.py, `make perf`. Deep
+merged in Python: 1.5 s to 0.38 s on a production copy; 6.9 s in prod before (2026-09-02).
+Benchmark: tests/perf/test_directory_access_latency.py, `make perf`. Deep
 nested trees (fstree, wallclock) stay hand-built: the documented exception.
 :::
 
@@ -217,7 +218,8 @@ curl -X POST -u "$SAM_API_USER:$SAM_API_PASS" \
 - **HSG's tools refresh, then download.** SAMuel's own queue edits clear that cache.
 - **Admins clear by category:** `sam-admin cache --refresh`.
 
-† The full fstree takes about 2.8 s to build, and comes back at once from the cache.
+† The fstree for every resource takes about 2.8 s to build, and comes back at once from the
+cache.
 
 ::: {.notes}
 CACHE_DEFAULT_TIMEOUT=300; Redis in production (CACHE_REDIS_URL), shared across workers and
@@ -227,6 +229,8 @@ is POST /api/v1/admin/cache/refresh?category=flask|chart|usage|scans|jobs (SYSTE
 invalidate_queue_cache() is called by the admin queue edits. hpc-scheduling-tools'
 fsparsetree_mr posts v1/fstree_access/refresh before it reads. Fairshare takes ?clear_cache=1.
 scripts/apis/systems_integration_apis.sh walks download, refresh, download again.
+The 2.8 s is docs/apis/SYSTEMS_INTEGRATION_APIs.md:572 (one resource ~0.7 s); Appendix C has
+the prod cold-miss and read-model numbers.
 :::
 
 ## Need more? Ask. {.vcenter scale="1.15"}
