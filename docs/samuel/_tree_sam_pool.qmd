@@ -1,13 +1,13 @@
 ```{mermaid}
 %%| fig-width: 6
 graph TD
-    NMMM0003["NMMM0003<br/>16.5M"]
-    NMMM0083["NMMM0083<br/>16.5M, detached"]
-    NMMM0004["NMMM0004<br/>16.5M, shared"]
-    NMMM0007["NMMM0007<br/>16.5M, shared"]
-    NMMM0008["NMMM0008<br/>16.5M, shared"]
-    NMMM0003_more(["(+8 more)"])
-    NMMM0003 --> NMMM0083
+    NMMM0003["NMMM0003<br/>750K"]
+    NMMM0080["NMMM0080<br/>75,000, detached"]
+    NMMM0004["NMMM0004<br/>750K, shared"]
+    NMMM0007["NMMM0007<br/>750K, shared"]
+    NMMM0008["NMMM0008<br/>750K, shared"]
+    NMMM0003_more(["(+9 more)"])
+    NMMM0003 --> NMMM0080
     NMMM0003 --> NMMM0004
     NMMM0003 --> NMMM0007
     NMMM0003 --> NMMM0008
@@ -18,6 +18,6 @@ graph TD
     classDef elided fill:#f3f3f3,stroke:#999999,stroke-dasharray:4 3,color:#666666
     class NMMM0003 root
     class NMMM0004,NMMM0007,NMMM0008 linked
-    class NMMM0083 detached
+    class NMMM0080 detached
     class NMMM0003_more elided
 ```

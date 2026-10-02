@@ -30,7 +30,7 @@ from sam.accounting.allocations import replay_amount  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 PROJCODE, RESOURCE, LEDGER_ALLOCATION = 'SCSG0001', 'Derecho', 21275
-AWARD_ROOT, POOL_ROOT = 'CESM0002', 'NMMM0003'
+AWARD_ROOT, POOL_ROOT, POOL_RESOURCE = 'CESM0002', 'NMMM0003', 'Casper'  # Derecho's pool has no unequal detach
 
 # The CLIs read SAM_DB_*; explicit values win over the .env they re-load.
 CLI_ENV = {**os.environ, 'COLUMNS': '80', 'SAM_DB_DRIVER': 'mysql', 'SAM_DB_SERVER': url.host,
@@ -112,10 +112,10 @@ def audit():
     return fenced('\n'.join(keep))
 
 
-def current_allocation(project):
+def current_allocation(project, resource=RESOURCE):
     now = datetime.now()
     for account in project.accounts:
-        if account.resource.resource_name != RESOURCE:
+        if account.resource.resource_name != resource:
             continue
         for a in account.allocations:
             if not a.deleted and a.start_date <= now and (a.end_date is None or a.end_date >= now):
@@ -123,17 +123,17 @@ def current_allocation(project):
     return None
 
 
-def tree(session, root_code, *, max_children, include=(), depth=2):
+def tree(session, root_code, *, max_children, include=(), depth=2, resource=RESOURCE):
     """A mermaid graph of one allocation tree in SAM amounts, styled like sam_and_pbs."""
     root = Project.get_by_projcode(session, root_code)
     nodes, edges, classes = [], [], {'root': [], 'own': [], 'linked': [], 'detached': [],
                                      'elided': []}
 
-    pool = any((a := current_allocation(k)) is not None and a.parent_allocation_id
+    pool = any((a := current_allocation(k, resource)) is not None and a.parent_allocation_id
                for k in root.children)
 
     def walk(project, level):
-        alloc = current_allocation(project)
+        alloc = current_allocation(project, resource)
         node, amount = project.projcode, fmt.number(float(alloc.amount))
         if project is root:
             kind, note = 'root', ''
@@ -147,7 +147,7 @@ def tree(session, root_code, *, max_children, include=(), depth=2):
         classes[kind].append(node)
         if level >= depth:
             return
-        kids = [(k, current_allocation(k)) for k in project.children]
+        kids = [(k, current_allocation(k, resource)) for k in project.children]
         kids = [(k, a) for k, a in kids if a is not None]
         kids.sort(key=lambda ka: (-(ka[0].projcode in include), -float(ka[1].amount),
                                   ka[0].projcode))
@@ -179,8 +179,8 @@ with Session(create_engine(url)) as session:
     write('_out_accounts.qmd', accounts(session))
     write('_out_replay.qmd', replay(session))
     write('_tree_sam_award.qmd', tree(session, AWARD_ROOT, max_children=5, include=('CESM0028',)))
-    write('_tree_sam_pool.qmd', tree(session, POOL_ROOT, max_children=4, include=('NMMM0083',),
-                                     depth=1))
+    write('_tree_sam_pool.qmd', tree(session, POOL_ROOT, max_children=4, include=('NMMM0080',),
+                                     depth=1, resource=POOL_RESOURCE))
 write('_out_users.qmd', users())
 write('_out_audit.qmd', audit())
 for name in ('_out_accounts.qmd', '_out_users.qmd', '_out_replay.qmd', '_out_audit.qmd'):
