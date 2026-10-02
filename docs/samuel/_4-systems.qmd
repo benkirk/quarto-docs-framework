@@ -143,7 +143,7 @@ the database is the source of truth; don't modify the SAM schema. That is why th
 schema is not under Alembic (Part 3), and why Postgres in prod waits on legacy's retirement.
 :::
 
-## PSA - Don't let this happen to you… again {.vcenter scale="1.15"}
+## `{\fontspec{DejaVuSans-Bold.ttf}\symbol{"26A0}}`{=latex}[⚠︎\ ]{.content-hidden when-format="beamer"} Don't let this happen to you… again {.vcenter scale="1.15"}
 
 - **2026-08-10, the schema edition:** the identity-sync cutover shipped legacy migration V37,
   dropping two columns from `users` and seven other tables.

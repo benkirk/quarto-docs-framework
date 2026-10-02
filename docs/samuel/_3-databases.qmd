@@ -132,6 +132,34 @@ classes answer it: 29 through one of the three mixins in src/sam/base.py, 9 with
 CLAUDE.md: never compare raw columns.
 :::
 
+## Every date is a timestamp {.vcenter scale="1.15"}
+
+- **Every window is a `DATETIME`:** allocations, memberships, contracts, queues. Only the
+  daily charge summaries use `DATE`.
+- **A window ends at 23:59:59** on its last day, so a job that finished at 2 pm that day is
+  still inside it. All 23,042 allocations follow the rule.
+- **Why not `DATE`?** It goes back to the first schema (2011), and nobody wrote down why. The
+  likely reasons: the ORM's default, and comparing job times to windows without wrapping
+  every column in `DATE()`, which would cost the index.
+- **MySQL rounds half-up,** so 23:59:59.999 became midnight the next day (fixed in 2016).
+  SAMuel floors "now" to the second, and ends a membership at now minus one second.
+
+† Memberships are the exception: they keep the exact moment, because the LDAP sync needs it.
+
+::: {.notes}
+Census on the obfuscated test copy (information_schema, columns named date or time): 146
+DATETIME, 68 TIMESTAMP (audit columns only: modified_time, creation_time, ...), 12 DATE (the
+activity_date keys of the *_charge_summary tables and account_allocation_state, plus two XRAS
+request dates). All are present in legacy's V2__BaselineSchema.sql; no migration changes a type.
+The column comments there say why the windows exist: "HPC usage by a user can only be charged
+if their use falls within these start and end dates". Legacy history: ACCT-558 (2014) dropped
+allocations ending today when the end wasn't 23:59:59; ACCT-1089 (2015, EndDateTimeUserType)
+fixed "sql-version-dependent rounding"; SAM-1370 (2016) stopped .999 rolling to the next day;
+SAM-1551 (2017) reverted AccountUser to exact times "so sync works". SAMuel: normalize_end_date
+and DateRangeMixin in src/sam/base.py; _end_membership in src/sam/manage/__init__.py (one more
+second back if it lands on midnight). The "why DATETIME" reasons are inferred, not documented.
+:::
+
 ## How many tables? Depends who you ask {.vcenter scale="1.15"}
 
 :::: {.columns}
@@ -194,12 +222,17 @@ database.
 12. `varchar(n)` is enforced
 13. The test suite's own MySQL-isms
 14. `now()` differs in zone, type and timing
+
+† CI runs the full suite on both engines for every PR, so the code stays bilingual.
 :::
 ::::
 
 ::: {.notes}
 Each has a write-up with the fix in POSTGRES_MIGRATION.md. Number 14 is still the most common
 CI flake: Postgres' now() is the transaction start, so two "nows" in one test are equal.
+CI: sam-ci-docker runs the default tier on MySQL and on a Postgres copy built from the same
+data, on every PR to staging and main. tests/postgres_expected_failures.txt is empty since
+2026-09-12; an entry there is a strict xfail.
 :::
 
 ## `system_status`: the pulse {.vcenter scale="1.15"}
@@ -225,7 +258,7 @@ src/system_status/models/; migrations/system_status/versions/. user_last_seen wa
 in prod back to 2011. SAM's own schema stays unmanaged by Alembic while legacy SAM shares it.
 :::
 
-## PSA - Don't let this happen to you… {.vcenter scale="1.15"}
+## `{\fontspec{DejaVuSans-Bold.ttf}\symbol{"26A0}}`{=latex}[⚠︎\ ]{.content-hidden when-format="beamer"} Don't let this happen to you… {.vcenter scale="1.15"}
 
 - **2026-09-13, 03:24 UTC:** a CPU-limit change made CNPG recreate both Postgres pods; the
   primary restarted in place.
@@ -253,6 +286,8 @@ Postgres side names its pod and plugin: sam-webapp:<pod>:job_history:<machine> a
 sam-webapp:<pod>:fs_scans:<db>:<collection>.
 :::
 
+:::: {.columns}
+::: {.column width="100%"}
 | | `job_history` | `fs_scans` |
 |---|---|---|
 | **Databases** | `derecho_jobs`, `casper_jobs` | `campaign`, `destor` |
@@ -260,6 +295,11 @@ sam-webapp:<pod>:fs_scans:<db>:<collection>.
 | **Timeout** | 60 s | 100 s |
 | **Pool** | 5 + 10 overflow | owned by the plugin |
 | **Off switch** | `JOB_HISTORY_MACHINES=` | `FS_SCANS_ENABLED=0` |
+
+† Both read from the replica, through the cluster's read-only service, so SAMuel's queries never
+compete with the writers on the primary (Part 5).
+:::
+::::
 
 ## /database: every engine, read-only
 
