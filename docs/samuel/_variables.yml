@@ -74,3 +74,7 @@ cnpg:                        # peer repo hpc-usage-queries helm/values.yaml + #1
   pg: "18.3"
   switchover_gap: "1 s"      # measured 2026-09-13 (CNPG_ROLL_RESILIENCE.md)
   failover: "16 s"           # same measurement
+
+peers:                       # peer repos, read 2026-10-01 (Appendix A)
+  huq_lines: "34K"           # hpc-usage-queries: Python lines incl. tests, job_history + fs_scans
+  huq_tests: "920"           # same repo, `def test_` count
