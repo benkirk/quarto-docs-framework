@@ -276,7 +276,7 @@ the resources table are Bluefire and Yellowstone.
 ## TL;DR - where state lives {.vcenter scale="1.15"}
 
 - **Two owned** (`sam`, `system_status`), **two borrowed** (`job_history`, `fs_scans`).
-- SAM's schema belongs to the database, and legacy SAM still shares it.
-- Every balance is Part 2's one equation, over one summary table per resource.
-- `is_active` is the one way to ask "is this live?".
-- Secondary databases can degrade SAMuel; they must never take it down.
+- **SAM's schema belongs to the database,** and legacy SAM still shares it.
+- **Every balance is Part 2's one equation,** over one summary table per resource.
+- **`is_active`** is the one way to ask "is this live?".
+- **Secondary databases can degrade SAMuel;** they must never take it down.

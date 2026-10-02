@@ -237,6 +237,6 @@ tests ({{< var size.test_lines >}}) are nearly as big as the code they test.
 
 | The Good | The Bad | The Murky |
 |---|---|---|
-| One database, no migration: people saw a new interface, not a new system. | Legacy SAM still owns a few integrations, so two systems share one database for now. | Postgres: both engines work today; an all-Postgres production is a decision, not a task. |
-| Every change is tested ({{< var tests.collected >}} tests) and deployed through GitOps. | A lot of surface for a small team to own. | Much of this was written with an AI agent. What does that mean for the next maintainer? |
-| Features ship in days, not release cycles: {{< var size.prs_merged >}} merged pull requests. | | |
+| **One database, no migration:** people saw a new interface, not a new system. | **Legacy SAM still owns a few integrations,** so two systems share one database for now. | **Postgres:** both engines work today; an all-Postgres production is a decision, not a task. |
+| **Every change is tested** ({{< var tests.collected >}} tests) and deployed through GitOps. | **A lot of surface** for a small team to own. | **Much of this was written with an AI agent.** What does that mean for the next maintainer? |
+| **Features ship in days,** not release cycles: {{< var size.prs_merged >}} merged pull requests. | | |

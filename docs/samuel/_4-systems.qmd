@@ -579,6 +579,6 @@ SAM; so is putting the SAM schema under Alembic. Part 5 is where SAMuel itself r
 - **Four flows:** identity in, allocations both ways, usage in, access out.
 - **Legacy SAM is still running,** and identity still flows through it.
 - **One database, two apps:** we don't own the schema yet, and it has bitten us once.
-- Usage comes in from the HPC lanes through the ORM; access goes out through legacy-shaped
-  APIs.
-- Every grey box has a planned exit, in a fixed order, ending with the schema.
+- **Usage comes in** from the HPC lanes through the ORM; **access goes out** through
+  legacy-shaped APIs.
+- **Every grey box has a planned exit,** in a fixed order, ending with the schema.
