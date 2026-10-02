@@ -43,7 +43,7 @@ digraph Map {
   lanes   [label="ncar-hpc-deploy\ncasper, derecho", pos="3.6,-0.4!"];
   pg      [label="csg-postgres.k8s.ucar.edu\n(CNPG on CIRRUS)", pos="7.2,-0.4!", shape=cylinder,
            fillcolor="#E6F0FA", color="#0057C2"];
-  pbs     [label="PBS scheduling\nhpc-scheduling-tools", pos="10.8,-0.4!"];
+  pbs     [label="PBS scheduling\nHSG cron", pos="10.8,-0.4!"];
 
   dir -> helpers [label="syncrepl"];
   helpers -> tomcat [label="ldapsync"];
@@ -192,6 +192,8 @@ transformer turns its changes into .jsl files on a 60-second poll; the daemon PU
 legacy SAM on sam-tomcat, which reads and writes MySQL on sam-sql. SAMuel reads the result.
 :::
 
+:::: {.columns}
+::: {.column width="100%"}
 ```{dot}
 //| fig-width: 10
 digraph Identity {
@@ -213,7 +215,11 @@ digraph Identity {
   }
   sql    [label="sam-sql.ucar.edu\nMySQL VM", shape=cylinder, fillcolor="#FFF4E0",
           color="#FAA119", fontcolor="#00357A"];
-  samuel [label="SAMuel", fillcolor="#0057C2", color="#00357A", fontcolor="#FFFFFF"];
+  subgraph cluster_cirrus {
+    label="CIRRUS, Kubernetes pods"; labelloc=b; style="rounded,dashed"; color="#0057C2";
+    fontcolor="#00357A";
+    samuel [label="SAMuel", fillcolor="#0057C2", color="#00357A", fontcolor="#FFFFFF"];
+  }
   {rank=same; dir; repl; xf; syncd}
   {rank=same; samuel; sql; tomcat}
   dir -> repl [label="syncrepl"];
@@ -223,8 +229,14 @@ digraph Identity {
   samuel -> sql [dir=back, label="reads"];
   sql -> tomcat [dir=both, label="reads, writes"];
   dir -> samuel [style=invis];
+  repl -> sql [style=invis];
+  syncd -> tomcat [style=invis, weight=5];
 }
 ```
+
+† Adhoc groups, organizations and institutions take the same path into SAM.
+:::
+::::
 
 ## What the synchronizer writes {.vcenter scale="1.15"}
 
@@ -377,10 +389,9 @@ From PBS logs to charges, and back out to PBS.
 ## Data in, data out
 
 ::: {.notes}
-In: PBS on casper and derecho feeds three pipelines into SAMuel. Out: SAMuel's API feeds HSG's
-cron processes (hpc-scheduling-tools scripts), which build the accounting hooks' database and
-PBS's fairshare tree. The loop takes a
-day for charges and minutes for status.
+In: PBS on casper and derecho feeds three pipelines into SAMuel. Out: HSG's cron processes
+download from SAMuel's API: the accounting hooks' data, and the fairshare tree, which SAMuel
+builds itself. The loop takes a day for charges and minutes for status.
 :::
 
 ```{dot}
@@ -436,10 +447,11 @@ MANAGE_CHARGE_SUMMARIES; src/sam/security/rbac_defaults.py), enforced under RBAC
 
 - `sam-admin accounting --comp` rolls jobs into daily summaries, hourly (2 days) and daily
   (7 days).
-- Disk: the daily `acct.<fs>` files, from casper.
-- Archive: not yet.
+- Disk: the daily `acct.<fs>` files, from casper. Tracks Campaign, Destor, Quasar.
+- Archive: none currently (deprecated).
 
-† The REST route `POST /api/v1/charge-summaries/…` exists too. Nobody calls it.
+† Foo
+†† The REST route `POST /api/v1/charge-summaries/…` exists too. Nobody calls it.
 :::
 ::::
 
@@ -470,7 +482,7 @@ The API, and who calls it.
 |--------------|--------------------------|-------:|----------------------------------|
 | **Core** | `/api/v1` | 39 | dashboards, CLIs, collectors |
 | **Legacy shapes** | `/api/v1` | 21 | PBS, LDAP provisioning, disk quotas |
-| **Fairshare** | `/api/v1/fairshare` | 1 | the tree, built in-process |
+| **Fairshare** | `/api/v1/fairshare` | 1 | HSG's cron |
 | **XRAS** | `/api/xras/v1` | 11 | the XRAS broker |
 
 ::: {.notes}
@@ -536,16 +548,21 @@ digraph Loop {
 
 ## SAMuel to PBS, in one slide {.vcenter scale="1.15"}
 
-- **HSG cron processes** run `samuel2sql` and `fsparsetree_mr` against SAMuel's API and
-  rebuild two artifacts per machine: the accounting hooks' database and the `fairshare` tree.
-- **They publish only on change.** Most cycles publish nothing.
+- **HSG's cron processes call SAMuel's API.** None of our Python runs on their hosts.
+- **Accounting hooks:** projects, users, status, queues and exemptions, from the
+  legacy-shaped endpoints.
+- **`fairshare`:** `/api/v1/fairshare/<machine>` returns the PBS tree ready-made.
+  `fsparsetree_mr` runs inside the API, so nobody installs it on a scheduler host.
 - HSG installs: swapping the database is free; a new tree costs a scheduler pause.
 
 † The full story, with the trees, is the *SAM & PBS* deck, in this same repo.
 
 ::: {.notes}
-The outbound half of data in / data out. hpc-scheduling-tools (NCAR, private) owns both
-scripts; CSG builds, HSG deploys. The sam_and_pbs deck covers the fairshare model, the
+The outbound half of data in / data out. HSG's cron downloads from SAMuel; it does not run
+SAMuel code. The hooks' database is built from fstree_access, queue and wallclock_exemption
+(hpc-scheduling-tools docs/PBS_HOOKS.md). fsparsetree_mr lives in hpc-scheduling-tools (NCAR,
+private) and is loaded as the HPC_SCHEDULING_TOOLS plugin behind /api/v1/fairshare
+(src/webapp/api/v1/fairshare.py), which reads the fstree data straight from SAM's database. The sam_and_pbs deck covers the fairshare model, the
 queue-stuffing work, and "When Something Looks Wrong".
 :::
 

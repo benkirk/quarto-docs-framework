@@ -149,7 +149,8 @@ Some features live in companion packages, loaded only where they are installed:
 
 - **Job history:** My Jobs, per-job drill-downs, charge ingest (`hpc-usage-queries`).
 - **Disk scans:** who is using which directories (`fs-scans`).
-- **Scheduling tools:** the PBS fairshare tree (`hpc-scheduling-tools`).
+- **Scheduling tools:** the PBS fairshare tree, served ready-made by the API
+  (`hpc-scheduling-tools`).
 
 Each has an off switch. A missing plugin shows a banner, never an error page, and the rest
 of SAMuel carries on.

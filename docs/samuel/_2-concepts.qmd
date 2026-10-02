@@ -560,7 +560,7 @@ docs/apis/SYSTEMS_INTEGRATION_APIs.md, "hpc-data kludge".
 |---|---|---|
 | `directory_access` | users and groups, per branch | the LDAP populator |
 | `project_access` | each project's status, per branch | systems integration |
-| `fstree_access` | the facility, type, project and user tree, with amounts | `hpc-scheduling-tools`, then PBS |
+| `fstree_access` | the facility, type, project and user tree, with amounts | HSG's cron, then PBS |
 
 ::: {.notes}
 Legacy-compatible, frozen byte for byte: their consumers predate SAMuel.
