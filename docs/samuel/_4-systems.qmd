@@ -459,8 +459,10 @@ MANAGE_CHARGE_SUMMARIES; src/sam/security/rbac_defaults.py), enforced under RBAC
 - Disk: the daily `acct.<fs>` files, from casper. Tracks Campaign, Destor, Quasar.
 - Archive: none currently (deprecated).
 
-† Foo
-†† The REST route `POST /api/v1/charge-summaries/…` exists too. Nobody calls it.
+† The rapid sync looks at today's scheduler log. The infrequent longer sweeps fill in holes
+over midnight or around downtimes.
+
+‡ The REST route `POST /api/v1/charge-summaries/…` exists too. Nobody calls it.
 :::
 ::::
 
