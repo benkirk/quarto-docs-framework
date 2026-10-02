@@ -189,31 +189,40 @@ SAM never originates a user.
 Everything grey is legacy-side and George's: the replica, the transformer and the daemon
 (NCAR/sam-ldap-syncd). The UCAR directory is replicated into an OpenLDAP copy on sam-app; the
 transformer turns its changes into .jsl files on a 60-second poll; the daemon PUTs them to
-legacy SAM, which writes MySQL. SAMuel reads the result.
+legacy SAM on sam-tomcat, which reads and writes MySQL on sam-sql. SAMuel reads the result.
 :::
 
 ```{dot}
 //| fig-width: 10
 digraph Identity {
-  graph [layout=neato, splines=true, bgcolor="transparent"];
+  graph [rankdir=TB, newrank=true, nodesep=0.55, ranksep=0.7, bgcolor="transparent",
+         fontname="Helvetica", fontsize=13, fontcolor="#374151"];
   node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=14,
          fillcolor="#E5E7EB", color="#6B7280", fontcolor="#374151", margin="0.18,0.08"];
   edge  [fontname="Helvetica", fontsize=12, color="#6B7280", fontcolor="#6B7280"];
-  dir    [label="UCAR directory", pos="0,2.2!", fillcolor="#FFFFFF", fontcolor="#00357A"];
-  repl   [label="LDAP replica\non sam-app", pos="3,2.2!"];
-  xf     [label="transformer\n60 s poll", pos="6,2.2!"];
-  syncd  [label="sam-ldap-syncd", pos="9,2.2!"];
-  tomcat [label="legacy SAM\nldapsync API", pos="9,0!"];
-  sql    [label="sam-sql", pos="6,0!", shape=cylinder, fillcolor="#FFF4E0", color="#FAA119",
-          fontcolor="#00357A"];
-  samuel [label="SAMuel", pos="3,0!", fillcolor="#0057C2", color="#00357A",
-          fontcolor="#FFFFFF"];
+  dir    [label="UCAR directory\nldap.ucar.edu", fillcolor="#FFFFFF", fontcolor="#00357A"];
+  subgraph cluster_app {
+    label="sam-app VM"; style="rounded,dashed"; color="#6B7280";
+    repl  [label="LDAP replica"];
+    xf    [label="transformer\n60 s poll"];
+    syncd [label="sam-ldap-syncd"];
+  }
+  subgraph cluster_tomcat {
+    label="sam-tomcat VM"; labelloc=b; style="rounded,dashed"; color="#6B7280";
+    tomcat [label="legacy SAM\nldapsync API"];
+  }
+  sql    [label="sam-sql.ucar.edu\nMySQL VM", shape=cylinder, fillcolor="#FFF4E0",
+          color="#FAA119", fontcolor="#00357A"];
+  samuel [label="SAMuel", fillcolor="#0057C2", color="#00357A", fontcolor="#FFFFFF"];
+  {rank=same; dir; repl; xf; syncd}
+  {rank=same; samuel; sql; tomcat}
   dir -> repl [label="syncrepl"];
   repl -> xf;
   xf -> syncd [label=".jsl files"];
   syncd -> tomcat [label="PUT"];
-  tomcat -> sql [label="writes"];
-  sql -> samuel [label="reads"];
+  samuel -> sql [dir=back, label="reads"];
+  sql -> tomcat [dir=both, label="reads, writes"];
+  dir -> samuel [style=invis];
 }
 ```
 
