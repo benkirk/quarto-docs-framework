@@ -377,8 +377,9 @@ From PBS logs to charges, and back out to PBS.
 ## Data in, data out
 
 ::: {.notes}
-In: PBS on casper and derecho feeds three pipelines into SAMuel. Out: SAMuel's API feeds
-hpc-scheduling-tools, which feeds PBS's fairshare and queue configuration. The loop takes a
+In: PBS on casper and derecho feeds three pipelines into SAMuel. Out: SAMuel's API feeds HSG's
+cron processes (hpc-scheduling-tools scripts), which build the accounting hooks' database and
+PBS's fairshare tree. The loop takes a
 day for charges and minutes for status.
 :::
 
@@ -392,7 +393,7 @@ digraph InOut {
   pbs    [label="PBS\ncasper, derecho", fillcolor="#FFF4E0", color="#FAA119"];
   coll   [label="collectors\nevery 5 min"];
   jhs    [label="jobhist-sync\n5 min to weekly"];
-  hst    [label="hpc-scheduling-tools\nevery 12 min"];
+  hst    [label="HSG cron processes\naccounting hooks & fairshare"];
   acct   [label="sam-admin\naccounting"];
   samuel [label="SAMuel", fillcolor="#0057C2", color="#00357A", fontcolor="#FFFFFF"];
   {rank=same; coll; jhs; hst}
@@ -535,8 +536,8 @@ digraph Loop {
 
 ## SAMuel to PBS, in one slide {.vcenter scale="1.15"}
 
-- **Every 12 minutes**, `samuel2sql` and `fsparsetree_mr` read SAMuel's API and rebuild two
-  artifacts per machine: an accounting database and the fairshare tree.
+- **HSG cron processes** run `samuel2sql` and `fsparsetree_mr` against SAMuel's API and
+  rebuild two artifacts per machine: the accounting hooks' database and the `fairshare` tree.
 - **They publish only on change.** Most cycles publish nothing.
 - HSG installs: swapping the database is free; a new tree costs a scheduler pause.
 
@@ -545,8 +546,7 @@ digraph Loop {
 ::: {.notes}
 The outbound half of data in / data out. hpc-scheduling-tools (NCAR, private) owns both
 scripts; CSG builds, HSG deploys. The sam_and_pbs deck covers the fairshare model, the
-queue-stuffing work, and "When Something Looks Wrong". First day in production: ~70 cycles,
-the database changed a handful of times and the tree twice.
+queue-stuffing work, and "When Something Looks Wrong".
 :::
 
 # Everything else
