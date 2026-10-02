@@ -186,8 +186,9 @@ by user; click a bar to open that day.
 ## Allocations across every facility
 
 ::: {.notes}
-The Allocations dashboard: totals by facility and allocation type, per resource, with an
-Excel export.
+The Allocations dashboard, Derecho tab: allocated (annual rate) and used, as two-ring charts
+(inner ring facilities, outer ring their allocation types), over a facility tree that opens to
+types and projects. Clicking a wedge opens its row. Per resource, with an Excel export.
 :::
 
 [![](images/tour-allocations.png){height="72%" fig-align="center"}](https://sam.hpc.ucar.edu/allocations/projects?resources=Derecho)
