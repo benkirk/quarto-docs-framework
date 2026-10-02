@@ -255,11 +255,11 @@ sam-webapp:<pod>:fs_scans:<db>:<collection>.
 
 | | `job_history` | `fs_scans` |
 |---|---|---|
-| Databases | `derecho_jobs`, `casper_jobs` | `campaign`, `destor` |
-| Engines | one per machine | one per database × schema |
-| Timeout | 60 s | 100 s |
-| Pool | 5 + 10 overflow | owned by the plugin |
-| Off switch | `JOB_HISTORY_MACHINES=` | `FS_SCANS_ENABLED=0` |
+| **Databases** | `derecho_jobs`, `casper_jobs` | `campaign`, `destor` |
+| **Engines** | one per machine | one per database × schema |
+| **Timeout** | 60 s | 100 s |
+| **Pool** | 5 + 10 overflow | owned by the plugin |
+| **Off switch** | `JOB_HISTORY_MACHINES=` | `FS_SCANS_ENABLED=0` |
 
 ## /database: every engine, read-only
 

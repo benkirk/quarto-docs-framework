@@ -1,10 +1,10 @@
 # Concepts
 
-Users, projects, resources, allocations, and the ledger that keeps them honest.
+Users, projects, resources, allocations, and usage tracking.
 
 ## SAM in one sentence {.vcenter scale="1.15"}
 
-- **Who** may compute, **on what**, **how much**, and **who pays** for it.
+- **Who** may compute, **on what**, **how much** they can use, and **where did usage come from**.
 - Everything else is a view of those answers: the dashboards, the APIs, the scheduled tasks,
   the LDAP feed, PBS's fairshare tree.
 - This part is the model, in words and pictures. Part 3 shows the tables.
@@ -59,6 +59,8 @@ digraph Concepts {
 - **Active** means active *and* not locked.
 - Registration and invitations create an account *request*. The person is created upstream,
   and the mirror brings them in.
+- An **event** (a workshop, a tutorial) gathers many requests under one code and one project.
+  Each person joins that project once their account exists.
 
 † A request is fulfilled when its email shows up in `users`. SAM notices; it doesn't decide.
 
@@ -67,6 +69,8 @@ docs/xras/PROJECT_AND_ACCOUNT_LIFECYCLE.md: SAM never originates users. The mirr
 sam-ldap-syncd, which still talks to legacy SAM on the shared database (Appendix A). User.is_active
 is active AND NOT locked (src/sam/core/users.py). Account requests: AccountRequest, with
 fulfilled derived by email and stamped only by reconcile_account_requests(), every 15 minutes.
+Events: AccountRequestEvent (event_code, project_id); reconcile enrolls each fulfilled
+request into the event's project (enroll_user_in_event, src/sam/manage/account_requests.py).
 :::
 
 ## Projects: the unit of accountability {.vcenter scale="1.15"}
@@ -92,11 +96,11 @@ src/sam/projects/projects.py. Project.lead / Project.admin; the admin is optiona
 ::: {.column width="65%"}
 | Type | Examples | Allocated in |
 |----------------|----------------------------------|------------------------|
-| HPC | Derecho, Derecho GPU, Gust | core-hours |
-| DAV | Casper | core-hours |
-| DISK | Campaign_Store, Stratus | TiB-years ("TiB") |
-| ARCHIVE | HPSS | TiB-years |
-| DATA ACCESS | Data_Access | access only |
+| **HPC** | Derecho, Derecho GPU, Gust | core-hours |
+| **DAV** | Casper | core-hours |
+| **DISK** | Campaign_Store, Stratus | TiB-years ("TiB") |
+| **ARCHIVE** | HPSS | TiB-years |
+| **DATA ACCESS** | Data_Access | access only |
 :::
 ::::
 
@@ -123,6 +127,34 @@ Panel, PanelSession) and AllocationType in src/sam/accounting/allocations.py. Ac
 the obfuscated test copy: 6 facilities, 16 panels, 22 allocation types. Panel names and
 allocation-type names are different vocabularies (CSL vs CSLAP). The sam_and_pbs deck draws
 the same hierarchy as PBS consumes it.
+:::
+
+## Who, where, and who pays {.vcenter}
+
+- Charges land on a **project**. The reporting metadata hangs off the project and its people.
+- **Organizations:** NCAR and UCAR units from the directory, as a tree (UCAR to NCAR to lab to
+  group). Users and projects both link to them, with dates.
+- **Institutions:** universities and outside research organizations. Users link to them; a
+  project's institution is its PI's.
+- **Contracts:** the funding behind a project: an award number, a source (NSF for ~97%), a PI
+  and a program officer.† A project can cite several.
+- **Area of interest:** the research field. XRAS fills it from the request.
+
+† Both must be SAM users today, so outside PIs and NSF officers get user rows they never use.
+The plan: a separate external-contacts table, so a contract can name someone without an account.
+
+::: {.notes}
+Organization: src/sam/core/organizations.py; parent_org_id is the real tree (the nested-set
+columns are empty), level_code runs 0100 UCAR to 0600. user_organization, project_organization
+and user_institution all carry start/end dates. A projcode's 3-letter mnemonic comes from the
+PI's institution or NCAR lab (MnemonicCode). Contracts: src/sam/projects/contracts.py,
+contract_source and nsf_program; 2,162 of 2,225 contracts are NSF
+(docs/plans/implemented/CONTRACT_IMPORTING_PLAN.md). project_contract is many-to-many. Area of
+interest: src/sam/projects/areas.py. External contacts: sam-queries
+docs/plans/EXTERNAL_CONTACTS.md, a proposal that needs a coordinated change with legacy SAM
+(107 PI-only users; 325 of 388 monitors never had an account). `sam-search awards` asks NSF and
+USAspending directly and checks each award against SAM. Usage reports and the xlsx export slice by facility and
+allocation type; nothing rolls usage up by organization or contract yet.
 :::
 
 ## "Users on a project"… mostly {.vcenter scale="1.15"}
@@ -594,10 +626,10 @@ from the root (src/sam/manage/allocations.py).
 
 | | Shared pool | Subdivided award |
 |---|---|---|
-| Example (Derecho) | NMMM0003, 16.5M | CESM0002, 465M |
-| Children's allocations | linked: each shows the whole pool | their own, carved out of the root |
-| Children add up to | n × the pool (meaningless) | 442M; the root keeps 23M |
-| Who edits | the root only | each child, within the root |
+| **Example (Derecho)** | NMMM0003, 16.5M | CESM0002, 465M |
+| **Children's allocations** | linked: each shows the whole pool | their own, carved out of the root |
+| **Children add up to** | n × the pool (meaningless) | 442M; the root keeps 23M |
+| **Who edits** | the root only | each child, within the root |
 
 ::: {.notes}
 Amounts from the obfuscated test copy (current Derecho allocations); the sam_and_pbs deck's

@@ -239,13 +239,13 @@ chart change deploys the chart without it. It bit #367. The next staging push pu
 
 | | prod | dev |
 |------------------------|------------------------------|--------------------------------------|
-| App, namespace | `sam-query`, `sam-queries` | `sam-query-dev`, `sam-queries-dev` |
-| Chart values | `values.yaml` | `values.yaml` + `values-dev.yaml` |
-| SAM database | `sam-sql` (MySQL VM) | `sam_dev` on `csg-postgres` |
-| Replicas | {{< var k8s.replicas_prod >}}, with a disruption budget | {{< var k8s.replicas_dev >}} |
-| Mail, XRAS, Jira | on | off |
-| Tasks switched off | 2 | 5 |
-| Redis | {{< var redis.mb >}} MB | 64 MB |
+| **App, namespace** | `sam-query`, `sam-queries` | `sam-query-dev`, `sam-queries-dev` |
+| **Chart values** | `values.yaml` | `values.yaml` + `values-dev.yaml` |
+| **SAM database** | `sam-sql` (MySQL VM) | `sam_dev` on `csg-postgres` |
+| **Replicas** | {{< var k8s.replicas_prod >}}, with a disruption budget | {{< var k8s.replicas_dev >}} |
+| **Mail, XRAS, Jira** | on | off |
+| **Tasks switched off** | 2 | 5 |
+| **Redis** | {{< var redis.mb >}} MB | 64 MB |
 
 ::: {.notes}
 sam-queries docs/plans/implemented/K8S_DEV_ENVIRONMENT.md and helm/values-dev.yaml. Dev's tasks
@@ -471,12 +471,12 @@ A laptop, samuel-dev, production, and who watches them.
 
 | | Laptop | samuel-dev | Production |
 |--------------|--------------------------|--------------------------|--------------------------|
-| Where | Docker Compose | CIRRUS, `sam-queries-dev` | CIRRUS, `sam-queries` |
-| Address | `localhost:5050` | {{< var hosts.dev >}} | {{< var hosts.prod >}} |
-| SAM data | obfuscated MySQL snapshot | `sam_dev`, a copy | the real thing |
-| Sign-in | stub login | Entra ID | Entra ID |
-| Mail out | never | never | yes |
-| Follows | your working tree | staging | main |
+| **Where** | Docker Compose | CIRRUS, `sam-queries-dev` | CIRRUS, `sam-queries` |
+| **Address** | `localhost:5050` | {{< var hosts.dev >}} | {{< var hosts.prod >}} |
+| **SAM data** | obfuscated MySQL snapshot | `sam_dev`, a copy | the real thing |
+| **Sign-in** | stub login | Entra ID | Entra ID |
+| **Mail out** | never | never | yes |
+| **Follows** | your working tree | staging | main |
 
 ::: {.notes}
 compose.yaml; helm/values-dev.yaml. Every dev environment runs an obfuscated production

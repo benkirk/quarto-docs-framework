@@ -64,11 +64,11 @@ digraph Map {
 ## Four flows, one database {.smaller .center .fill scale="1.1"}
 
 | Flow | Path | Cadence | Runs on |
-|--------------|------------------------------------------|--------------|------------|
-| Identity in | UCAR directory to `sam-ldap-syncd` to legacy SAM | per change | legacy SAM |
-| Allocations, both ways | ARC to XRAS to SAMuel; SAMuel reads XRAS back | per approval; hourly | SAMuel |
-| Usage in | PBS to collectors, job history and charging | 5 min to daily | HPC lanes |
-| Access out | SAMuel's APIs to PBS, LDAP provisioning, disk quotas | polled | the callers |
+|--------------------|--------------------------------------|--------------|------------|
+| **Identity in** | UCAR directory to `sam-ldap-syncd` to legacy SAM | per change | legacy SAM |
+| **Allocations, both ways** | ARC to XRAS to SAMuel; SAMuel reads XRAS back | per approval; hourly | SAMuel |
+| **Usage in** | PBS to collectors, job history and charging | 5 min to daily | HPC lanes |
+| **Access out** | SAMuel's APIs to PBS, LDAP provisioning, disk quotas | polled | the callers |
 
 ::: {.notes}
 Read the "Runs on" column as the overlap: one of the four flows still lives entirely on the
@@ -175,7 +175,7 @@ same readiness reasoning as Part 3's CNPG PSA: degrade, don't vanish.
 From the Tomcat access-log census in sam-queries docs/plans/LDAP_SYNC_API.md Appendix B. AMIE
 was 99.6% of legacy's historical traffic but made 7 calls in the 30 days to 2026-09-26, the last
 on 09-04. XRAS made zero legacy calls from 08-28. PeopleDB sync was superseded; its controllers
-were deleted from legacy in July. Extended lifecycle, not obituary: the overlap is the plan.
+were deleted from legacy in July. The overlap is the plan.
 :::
 
 # Identity in
@@ -457,10 +457,10 @@ The API, and who calls it.
 
 | Family | Prefix | Routes | Who calls |
 |--------------|--------------------------|-------:|----------------------------------|
-| Core | `/api/v1` | 39 | dashboards, CLIs, collectors |
-| Legacy shapes | `/api/v1` | 21 | PBS, LDAP provisioning, disk quotas |
-| Fairshare | `/api/v1/fairshare` | 1 | the tree, built in-process |
-| XRAS | `/api/xras/v1` | 11 | the XRAS broker |
+| **Core** | `/api/v1` | 39 | dashboards, CLIs, collectors |
+| **Legacy shapes** | `/api/v1` | 21 | PBS, LDAP provisioning, disk quotas |
+| **Fairshare** | `/api/v1/fairshare` | 1 | the tree, built in-process |
+| **XRAS** | `/api/xras/v1` | 11 | the XRAS broker |
 
 ::: {.notes}
 Route counts are decorator counts on origin/staging, 2026-09-30, over 7 core modules, 6
@@ -547,11 +547,11 @@ The side-channels, and the overlap mapped.
 
 | Service | For | When |
 |---|---|---|
-| UCAR mail relay | notices, invitations, receipts | per event; weekly expiration notices |
-| ithelp (Jira Service Management) | one ticket per account request | on submit; reconciled every 15 min |
-| XRAS (`api.xras.org`) | reports, merges, withdrawals | hourly; by hand |
-| NSF and USAspending | award lookups | on demand, cached 8 days |
-| Cloudflare Turnstile | the human check on `/register` | per submit |
+| **UCAR mail relay** | notices, invitations, receipts | per event; weekly expiration notices |
+| **ithelp (Jira Service Management)** | one ticket per account request | on submit; reconciled every 15 min |
+| **XRAS (`api.xras.org`)** | reports, merges, withdrawals | hourly; by hand |
+| **NSF and USAspending** | award lookups | on demand, cached 8 days |
+| **Cloudflare Turnstile** | the human check on `/register` | per submit |
 
 ::: {.notes}
 All configured in sam-queries helm/values.yaml. Mail is fail-closed (NOTIFY_ENABLED defaults

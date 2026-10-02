@@ -35,6 +35,9 @@ hosts:
 
 milestones:
   xras_repoint: "August 2026"   # XRAS repointed its handoffs to SAMuel 2026-08-24 (docs/plans/XRAS_TRIAGE_WEEK.md)
+  charge_ingest: "May 2026"    # SAMuel takes over the daily charge ingest (Ben, 2026-10-01)
+  read_write: "June 2026"       # webapp switched to the SAM write credential 2026-06-18 (sam-queries #320)
+  fy27_renewals: "September 2026"  # NCAR divisional trees renewed 2026-09-07..16 (FY27_PROD_RENEW_HANDOFF.md)
 
 tables:                      # data/table_counts.tsv (count_tables.py via refresh_data.sh), 2026-09-30
   sam_db: "114"              # information_schema BASE TABLE on the obfuscated test DB (3307)

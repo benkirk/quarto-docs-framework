@@ -12,6 +12,7 @@ SAM is the system of record for **who** may compute, **on what**, and **how much
 - **Users** belong to projects, and their jobs are **charged** against those allocations.
 - University awards arrive through **XRAS**; NCAR, WNA and CSL have their own paths.
 - People come from NCAR's identity system. SAM never creates users; it mirrors them.
+- Lots of organizational and grant-related metadata, tying usage to funding agencies etc... for reporting purposes.
 :::
 ::: {.column width="42%"}
 **Resources it accounts for**
@@ -22,6 +23,7 @@ SAM is the system of record for **who** may compute, **on what**, and **how much
 
 **Facilities**
 
+- Distinct "communities" served.
 - NCAR, UNIV, WNA, CSL, CISL, …
 :::
 ::::
@@ -31,54 +33,60 @@ The stakeholder one-liner: if you can run a job on Derecho, SAM is why, and SAM 
 also how we know how much of your allocation that job used.
 :::
 
-## A long and honorable career {.vcenter scale="1.15"}
+## Deep roots {.vcenter scale="1.15"}
 
 SAM has run CISL's allocations for {{< var legacy.years >}} years:
 
-- A web interface for users and administrators.
-- Back-end processing for identity management and accounting.
-- A web API feeding the batch scheduler, storage quotas, and friends.
-- A MySQL database gluing all of it together.
+- A **web interface** for users and administrators.
+- **Back-end processing** for identity management and accounting.
+- A **web API** feeding the batch scheduler, storage quotas, and friends.
+- A **MySQL database** gluing all of it together.
 - {{< var legacy.loc >}} lines of Java (Spring, Hibernate, JSF/PrimeFaces, Flyway), plus a
   plethora of shell scripts and cron jobs.
 
-*† SAMuel is its extended lifecycle, not its obituary. Same database, same data, same people
-depending on it.*
+*† SAMuel is its extended lifecycle, a modernization and refactoring effort to support another generation. Same database, same data, same groups depending on it.*
 
 ## Same database, new everything around it {.smaller .center .fill scale="1.15"}
 
 | | SAM | SAMuel |
 |---|---|---|
-| Code | Java: Spring, Hibernate | Python: SQLAlchemy 2, Flask |
-| Web UI | JSF / PrimeFaces | htmx + Bootstrap 5, mobile and dark mode |
-| Database | MySQL | **the same MySQL** (Postgres-ready) |
-| Background work | cron + shell scripts | scheduled tasks with a run ledger |
-| Deployment | a Tomcat server | containers on CIRRUS (Kubernetes), via GitOps |
+| **Code** | Java: Spring, Hibernate | Python: SQLAlchemy 2, Flask |
+| **Web UI** | JSF / PrimeFaces | htmx + Bootstrap 5, mobile and dark mode |
+| **Database** | MySQL | **the same MySQL** (Postgres-ready) |
+| **Background work** | cron + shell scripts | scheduled tasks with a run ledger |
+| **Deployment** | a Tomcat server | containers on CIRRUS (Kubernetes), via GitOps |
 
-## How we got here {.vcenter scale="1.15"}
+## How we got here {.vcenter}
 
 - **Oct 2025:** a Python model of the production database, read as-is. *This led to…*
 - **Nov–Dec 2025:** a CLI, a REST API, the first dashboards. *This led to…*
 - **Early 2026:** allocations dashboard, charging, expiration emails. *This led to…*
 - **Apr 2026:** legacy-compatible APIs for the systems that call SAM, and a home on CIRRUS.
   *This led to…*
-- **{{< var milestones.xras_repoint >}}:** XRAS hands its awards to SAMuel directly.
+- **{{< var milestones.charge_ingest >}}:** SAMuel takes over the daily charge ingest. *This led to…*
+- **{{< var milestones.read_write >}}:** the web app goes read/write: edits land in the shared database. *This led to…*
+- **{{< var milestones.xras_repoint >}}:** XRAS hands its awards to SAMuel directly. *This led to…*
+- **{{< var milestones.fy27_renewals >}}:** FY27 renewals run in SAMuel.
 - *…Which leads to today:* SAMuel is production SAM, at **{{< var hosts.prod >}}**.
 
 ::: {.notes}
 The legacy system still owns a few integrations (the LDAP identity mirror, AMIE); both
 systems share one database while those move. Parts 4 and 5 and the appendix have the details.
+Read/write: the webapp switched to the SAM write credential 2026-06-18 (sam-queries #320).
+FY27: the NCAR divisional trees were renewed 2026-09-07 to 09-16
+(docs/plans/implemented/FY27_PROD_RENEW_HANDOFF.md). Charge ingest: SAMuel's daily ingest took over
+in May 2026; it moved to the ncar-hpc-deploy prod lane on 2026-09-30.
 :::
 
 ## One database, five audiences {.smaller .center .fill}
 
 | Who | What they do | Where |
 |---|---|---|
-| Users and PIs | check balances and usage, manage members, invite collaborators | User dashboard |
-| CISL staff | run projects and allocations, work the account-request queue | Admin and Allocations dashboards |
-| Everyone | see what Derecho, Casper and JupyterHub are doing | Status dashboard (public) |
-| Operators | report, audit, fix in bulk | `sam-search`, `sam-admin` |
-| Other systems | provisioning, PBS scheduling, XRAS | REST API |
+| **Users and PIs** | check balances and usage, manage members, invite collaborators | User dashboard |
+| **Support staff** | manage projects and allocations, work the account-request queue | Admin and Allocations dashboards |
+| **Everyone** | see what Derecho, Casper and JupyterHub are doing | Status dashboard (public) |
+| **Operators** | report, audit, fix in bulk | `sam-search`, `sam-admin` |
+| **Other systems** | provisioning, PBS scheduling, XRAS | REST API |
 
 ## The big picture
 
@@ -90,15 +98,15 @@ hourly, which the diagram leaves out to stay legible.
 ```{mermaid}
 %%| fig-width: 10
 flowchart TB
-    XRAS["ARC / XRAS<br/>allocation awards"]:::inb
-    LDAP["NCAR identity<br/>people, groups"]:::inb
-    COL["PBS collectors<br/>system status"]:::inb
+    XRAS["ARC / XRAS<br/>NSF API<br/>allocation awards"]:::inb
+    LDAP["NCAR identity<br/>people, groups,<br/>organizations,<br/>institutions"]:::inb
+    COL["PBS queue status<br/>system usage metrics"]:::inb
     JOBS["PBS job history<br/>finished jobs"]:::inb
     SAM[("SAMuel<br/>+ SAM database")]:::core
-    WEB["Dashboards<br/>users, PIs, staff"]:::out
+    WEB["Dashboards<br/>users, support staff"]:::out
     CLI["CLIs<br/>operators"]:::out
     PBS["PBS scheduling<br/>fairshare, queues"]:::out
-    PROV["Provisioning<br/>unix groups"]:::out
+    PROV["Provisioning<br/>UNIX users & groups"]:::out
     MAIL["Email<br/>notices, invites"]:::out
     XRAS -->|awards| SAM
     LDAP -->|identities| SAM
@@ -124,17 +132,18 @@ flowchart TB
 - **{{< var tasks.count >}}** scheduled tasks, checked every {{< var tasks.cadence >}}.
 - **{{< var tests.collected >}}** automated tests, run on every change.
 
-## More than a port {.vcenter scale="1.15"}
+## More than a port - new capabilities {.vcenter scale="1.15"}
 
 - **Invitations and account requests:** a sponsor invites; the request reaches NUSD as a ticket.
+- **Events** for managing large project rosters for e.g. workshops and tutorials.
 - **Email that remembers:** expiration notices with previews and a ledger, so nobody is mailed
   twice.
 - **Live system status** for Derecho, Casper and JupyterHub, every 5 minutes.
 - **Usage drill-downs:** per project, per user, per day; export to Excel.
 - **Roles and access** managed in the app, scoped by facility.
-- **Mobile and dark mode**, because PIs have phones too.
+- **Mobile and dark mode**, because it is worth the flexibility.
 
-## Plugins: optional by design {.vcenter scale="1.15"}
+## Plugins: optional by design {.vcenter}
 
 Some features live in companion packages, loaded only where they are installed:
 
@@ -145,13 +154,17 @@ Some features live in companion packages, loaded only where they are installed:
 Each has an off switch. A missing plugin shows a banner, never an error page, and the rest
 of SAMuel carries on.
 
+Theoretically a site-specific plugin would make it easier to deploy at another site.
+
+*† Plugins are especially useful for things tied to a machine lifecycle (per-job history) or likely to change through time (scheduler implementation).*
+
 ::: {.notes}
 Registry: src/sam/plugins.py. CLI: BaseCommand.require_plugin. Webapp: PluginExtension
 loads each once at startup and logs a warning when one is missing. Kill switches:
 JOB_HISTORY_MACHINES, FS_SCANS_ENABLED, HPC_SCHEDULING_TOOLS_ENABLED.
 :::
 
-## A PI's view: where did my hours go?
+## A user's view: projects and resource balances
 
 ::: {.notes}
 The User dashboard: every project a person belongs to, each allocation's balance, and the
@@ -195,7 +208,7 @@ copy's "no updates" banner is hidden in this shot.)
 
 [![](images/tour-status.png){height="72%" fig-align="center"}](https://sam.hpc.ucar.edu/status/derecho)
 
-## Also on your phone. In the dark.
+## Mobile and dark mode
 
 :::: {.columns}
 ::: {.column width="55%"}
