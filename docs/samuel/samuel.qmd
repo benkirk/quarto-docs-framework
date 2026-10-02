@@ -21,6 +21,8 @@ date: last-modified
 
 {{< include _C-performance.qmd >}}
 
+{{< include _D-security.qmd >}}
+
 ## Questions? {.closing}
 
 benkirk@ucar.edu
