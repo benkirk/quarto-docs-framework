@@ -18,8 +18,8 @@ slide". Don't restate them; use them.
 1. `make -C docs/<deck> qa` (or `make qa DECKS=<name>` in a multi-deck directory). It
    builds every format, then writes `_qa/report.txt`, `usage.tsv`, `<deck>-html.png`
    and `<deck>-pdf.png` contact sheets, and per-slide PNGs.
-2. Fix the failures (`PDF ...`, `HTML ...`, a slide-count MISMATCH) first. Then read
-   both contact sheets yourself: the checks find overflow, not ugliness.
+2. Fix the failures (`source ...`, `PDF ...`, `HTML ...`, a slide-count MISMATCH)
+   first. Then read both contact sheets yourself: the checks find overflow, not ugliness.
 3. Work through the `hint` lines.
 4. Rebuild and rerun until the report is clean. Then look at the sheets once more.
 5. pptx is only counted. For a look, `soffice --headless --convert-to pdf deck.pptx`
@@ -36,6 +36,9 @@ slide". Don't restate them; use them.
 | table past the right margin, or a cell running into the next column | give the pipe table explicit dash widths, e.g. `\|------------\|----------------------\|`. Pandoc only honors them when the separator row is longer than 72 characters, so pad the dashes past that |
 | a date or hyphenated token breaking across lines in HTML | `[2024-08-27]{style="white-space: nowrap"}`. Beamer and pptx drop the span attributes |
 | HTML autofit shrank a slide (hint) | the content overflowed at its scale. Lower `scale=` or trim; check that PDF page |
+| a dot diagram whose text is squashed in the PDF | `fig-width` and `fig-height` disagree with the graph's own aspect. Set only `fig-width`, or reshape: a vertical chain in a 40% column beside the bullets |
+| pptx count one higher, with content after a `.columns` block | move that content into the last column. `single-body.lua` handles content after a table or diagram, but leaves slides that already hold columns alone |
+| `source ... bare <tag>` | put the placeholder in backticks. Unquoted, revealjs reads it as a tag, and `<code>` swallows every slide after it |
 | a diagram that is a thin strip | reshape toward 2–3:1. A wide chain becomes a snake or a grid: Graphviz `layout=neato` with pinned `pos="x,y!"` (clusters are lost under neato). A column holding a diagram wants one taller than wide |
 
 ## Rules

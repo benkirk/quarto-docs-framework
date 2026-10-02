@@ -7,7 +7,8 @@ Reads the already-built <deck>.{html,pdf,pptx} and writes to _qa/:
   names.txt         plain-text names from qa-names.txt (one per line), if the file exists
   <deck>-html.png   contact sheet of every HTML slide; <deck>-pdf.png the same for the PDF
 Failures (exit 1): slide counts that differ between formats, PDF text past the right margin,
-into the footer band or overlapping other text, HTML content past the right edge.
+into the footer band or overlapping other text, HTML content past the right edge, and a bare
+`<word>` in the sources (revealjs reads it as a tag, and `<code>` swallows the slides after it).
 Hints (never fail): short slides, `.smaller` without `.fill`, slides the HTML autofit shrank.
 Needs poppler (pdftoppm, pdftotext) and Pillow; the HTML checks need Playwright for Python
 (`python -m playwright install chromium`, or set CHROME to a Chromium binary) and are skipped
@@ -325,6 +326,51 @@ def plain_names(names):
     return hits
 
 
+# ------------------------------------------------------------------- sources
+
+INCLUDE = re.compile(r"\{\{<\s*include\s+(\S+)\s*>\}\}")
+FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
+CODE_SPAN = re.compile(r"(`+).+?\1")
+BARE_TAG = re.compile(r"</?[a-z_]+>")
+
+
+def deck_sources(deck):
+    """<deck>.qmd and every file it includes, recursively, in reading order."""
+    seen, order = set(), []
+
+    def visit(path):
+        if path in seen or not os.path.exists(path):
+            return
+        seen.add(path)
+        order.append(path)
+        for line in open(path, encoding="utf-8"):
+            for inc in INCLUDE.findall(line):
+                visit(os.path.normpath(os.path.join(os.path.dirname(path), inc)))
+    visit(deck + ".qmd")
+    return order
+
+
+def bare_tags(path):
+    """file:line hits of `<word>` outside code fences, code spans and raw-HTML lines."""
+    hits, fence, front = [], None, False
+    for n, line in enumerate(open(path, encoding="utf-8"), 1):
+        if n == 1 and line.strip() == "---":
+            front = True
+            continue
+        if front:
+            front = line.strip() not in ("---", "...")
+            continue
+        m = FENCE.match(line)
+        if m and (fence is None or m.group(1).startswith(fence)):
+            fence = m.group(1) if fence is None else None
+            continue
+        if fence or line.lstrip().startswith("<"):
+            continue
+        for tag in BARE_TAG.findall(CODE_SPAN.sub("", line)):
+            hits.append("%s:%d: bare %s; put it in backticks" % (path, n, tag))
+    return hits
+
+
 # -------------------------------------------------------------------------- main
 
 def main():
@@ -342,6 +388,11 @@ def main():
         html_res = {}
     for deck in args.decks:
         report.append("== %s ==" % deck)
+        # an included .yml or .py is shown inside a code fence, not read as markdown
+        tags = [h for f in deck_sources(deck) if f.endswith((".qmd", ".md"))
+                for h in bare_tags(f)]
+        failed |= bool(tags)
+        report += ["source " + h for h in tags]
         html_n, slides = html_res.get(deck, (None, []))
         pdf_n, pdf_lines = check_pdf(deck, qa, slides)
         counts = {"pptx": pptx_count(deck), "pdf": pdf_n, "html": html_n}

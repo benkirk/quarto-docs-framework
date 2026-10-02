@@ -212,7 +212,9 @@ and keep `<deck>_files/` beside it.
   - slide counts that differ between pptx, PDF and HTML;
   - PDF text past the right margin, into the footer, overlapping other text, or running into
     the next table column;
-  - HTML content past the right edge.
+  - HTML content past the right edge;
+  - a bare `<word>` in the sources, outside code and backticks: revealjs reads it as a tag
+    (reported as `file:line`).
 - **Hints:**
   - short slides, with the share of the body they use;
   - `.smaller` without `.fill`;
