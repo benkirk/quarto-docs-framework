@@ -14,8 +14,6 @@ hpc_activity 11.5, comp_activity 8.1, dav_activity 6.8, hpc_charge 4.9, dav_char
 dataset_activity 6.6 GB, also retiring (Ben, 2026-10-02): 58 GB in all. sam_dev on Postgres, without those rows, is 0.4 GB.
 :::
 
-:::: {.columns}
-::: {.column width="100%"}
 ```{dot}
 //| fig-width: 10
 digraph DBs {
@@ -59,8 +57,6 @@ digraph DBs {
 
 † 58 GB of it is legacy's per-job and dataset-activity tables. SAMuel doesn't write them; they
 go when legacy SAM retires.
-:::
-::::
 
 ## Who owns what {.smaller .center .fill scale="1.15"}
 
@@ -269,7 +265,7 @@ src/system_status/models/; migrations/system_status/versions/. user_last_seen wa
 in prod back to 2011. SAM's own schema stays unmanaged by Alembic while legacy SAM shares it.
 :::
 
-## `{\fontspec{DejaVuSans-Bold.ttf}\symbol{"26A0}}`{=latex}[⚠︎\ ]{.content-hidden when-format="beamer"} Don't let this happen to you… {.vcenter scale="1.15"}
+## ⚠︎ Don't let this happen to you… {.vcenter scale="1.15"}
 
 - **2026-09-13, 03:24 UTC:** a CPU-limit change made CNPG recreate both Postgres pods; the
   primary restarted in place.
@@ -297,8 +293,6 @@ Postgres side names its pod and plugin: `sam-webapp:<pod>:job_history:<machine>`
 `sam-webapp:<pod>:fs_scans:<db>:<collection>`.
 :::
 
-:::: {.columns}
-::: {.column width="100%"}
 | | `job_history` | `fs_scans` |
 |---|---|---|
 | **Databases** | `derecho_jobs`, `casper_jobs` | `campaign`, `destor` |
@@ -309,8 +303,6 @@ Postgres side names its pod and plugin: `sam-webapp:<pod>:job_history:<machine>`
 
 † Both read from the replica, through the cluster's read-only service, so SAMuel's queries never
 compete with the writers on the primary (Part 5).
-:::
-::::
 
 ## /database: every engine, read-only
 

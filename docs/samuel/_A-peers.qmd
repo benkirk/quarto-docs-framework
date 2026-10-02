@@ -157,8 +157,6 @@ Part 4: "Two apps, one database" and "Who's still on legacy".
 
 ## The container zoo {.smaller .center .fill}
 
-:::: {.columns}
-::: {.column width="100%"}
 | Group | Repos | Calls SAM? |
 |------------------|--------------------------------------------------|----------------|
 | **Identity** | `ucarldap`, `sam-idms-ldap`, `sam-ldap-transformer`, `sam-ldap-syncd` | syncd |
@@ -167,8 +165,6 @@ Part 4: "Two apps, one database" and "Who's still on legacy".
 | **Host config** | `sam-app` | no |
 
 † All run on the `sam-app` VM. Only two of them call legacy SAM's API.
-:::
-::::
 
 ::: {.notes}
 legacy_sam/container_zoo/: "Repos for all the helper / synchronizers SAM uses." Each is its own

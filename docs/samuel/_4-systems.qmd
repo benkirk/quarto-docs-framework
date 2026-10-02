@@ -144,7 +144,7 @@ the database is the source of truth; don't modify the SAM schema. That is why th
 schema is not under Alembic (Part 3), and why Postgres in prod waits on legacy's retirement.
 :::
 
-## `{\fontspec{DejaVuSans-Bold.ttf}\symbol{"26A0}}`{=latex}[⚠︎\ ]{.content-hidden when-format="beamer"} Don't let this happen to you… again {.vcenter scale="1.15"}
+## ⚠︎ Don't let this happen to you… again {.vcenter scale="1.15"}
 
 - **2026-08-10, the schema edition:** the identity-sync cutover shipped legacy migration V37,
   dropping two columns from `users` and seven other tables.
@@ -192,8 +192,6 @@ transformer turns its changes into .jsl files on a 60-second poll; the daemon PU
 legacy SAM on sam-tomcat, which reads and writes MySQL on sam-sql. SAMuel reads the result.
 :::
 
-:::: {.columns}
-::: {.column width="100%"}
 ```{dot}
 //| fig-width: 10
 digraph Identity {
@@ -235,8 +233,6 @@ digraph Identity {
 ```
 
 † Adhoc groups, organizations and institutions take the same path into SAM.
-:::
-::::
 
 ## What the synchronizer writes {.vcenter scale="1.15"}
 

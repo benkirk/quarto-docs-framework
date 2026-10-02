@@ -59,8 +59,6 @@ path.
 
 ## Hand-built, on purpose {.vcenter scale="1.15"}
 
-:::: {.columns}
-::: {.column width="100%"}
 ```python
 by_resource.setdefault(rname, []).append({
     'queueName':           queue.queue_name,
@@ -76,8 +74,6 @@ by_resource.setdefault(rname, []).append({
 
 † Not every legacy shape is even consistent: `directory_access` is camelCase on the outside
 and snake_case inside. We match it anyway.
-:::
-::::
 
 ::: {.notes}
 src/sam/queries/queue_access.py:67-73, behind GET /api/v1/queue. The five frozen query modules
@@ -108,8 +104,6 @@ differences are acceptable now".
 
 ## The bridge: legacy shape, schema inside {.vcenter scale="1.15"}
 
-:::: {.columns}
-::: {.column width="100%"}
 ```python
 class DiskQuotaSchema(Schema):
     projcode = fields.String()
@@ -124,8 +118,6 @@ class DiskQuotaSchema(Schema):
   the camelCase.
 - **ORM by default.** Raw SQL only for a measured cost, with a benchmark:
   `directory_access` went from about 7 s in legacy to about 0.2 s.
-:::
-::::
 
 ::: {.notes}
 src/sam/schemas/disk_quota.py:13-21 (allow_none trimmed), the reference (CLAUDE.md, "Output shaping"). Its consumer is
@@ -214,8 +206,6 @@ charge-summaries, the status collectors.
 
 ## Cached, and how to refresh {.vcenter scale="1.15"}
 
-:::: {.columns}
-::: {.column width="100%"}
 - **Responses live for 5 minutes** in a shared cache, one entry per query string.
 - **Need it fresh?** Each legacy-shaped endpoint has `POST …/refresh`:
 
@@ -228,8 +218,6 @@ curl -X POST -u "$SAM_API_USER:$SAM_API_PASS" \
 - **Admins clear by category:** `sam-admin cache --refresh`.
 
 † The full fstree takes about 2.8 s to build, and comes back at once from the cache.
-:::
-::::
 
 ::: {.notes}
 CACHE_DEFAULT_TIMEOUT=300; Redis in production (CACHE_REDIS_URL), shared across workers and
