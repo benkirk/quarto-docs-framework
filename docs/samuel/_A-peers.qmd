@@ -7,9 +7,9 @@ The repos SAMuel loads, feeds, or replaces.
 | Repo | Visibility | What it is | How SAMuel uses it |
 |------------------------------|-----------|--------------------------|--------------------------|
 | **`hpc-usage-queries`** | [yes](https://github.com/benkirk/hpc-usage-queries) | job history, charges, disk scans | two plugins; the Postgres cluster |
-| **`hpc-scheduling-tools`** | private | SAM to PBS: fairshare tree, hooks' DB | one plugin: `/api/v1/fairshare` |
+| **`hpc-scheduling-tools`** | private | SAM to PBS: the fairshare tree | one plugin: `/api/v1/fairshare` |
 | **`pbsparse`** | [yes](https://github.com/NCAR/pbsparse) | PBS log parser | via `hpc-usage-queries` |
-| **`PBS_hooks`** | private | PBS submit hooks | fed from our APIs |
+| **`PBS_hooks`** | private | HSG's PBS submit hooks | fed from our APIs |
 | **legacy `sam`** | private | the Java original | same database; retiring |
 | **the container zoo** | mostly private | LDAP and AMIE helpers | identity comes through it |
 
@@ -107,17 +107,22 @@ sam-search --jobs off, rather than failing.
 ## `hpc-scheduling-tools`: SAM to PBS, kept apart {.vcenter scale="1.15"}
 
 - *"These tools sit between two production systems and translate one into the other."*
-- **The fairshare tree** (`fsparsetree_mr`): PBS's `resource_group` file.
-- **The hooks' database** (`samuel2sql`): what the `accounting` and `wallclock` hooks check
-  at submit.
+- **The fairshare tree** (`fsparsetree_mr`): PBS's `resource_group` file. This repo owns it.
+- **The hooks and their database** (`samuel2sql`): HSG's. This repo keeps copies to test
+  against and iterate on.
 - **Read-only against SAM,** through three legacy-shaped endpoints: fstree, queues,
   wallclock exemptions.
 - Casper, Derecho and Gust. A private NCAR repo.
 
+† HSG runs and maintains their own hooks and `samuel2sql`; ours have moved on from theirs.
+
 ::: {.notes}
 github.com/NCAR/hpc-scheduling-tools (private). The accounting hook rejects a bad -A account at
-submit; the wallclock hook applies exemptions, then queue limits (NCAR/PBS_hooks, private). The
-database layout is a contract (docs/PBS_HOOKS.md). capacities.json is the operator-tuned input.
+submit; the wallclock hook applies exemptions, then queue limits. The deployed hooks live in
+NCAR/PBS_hooks (private, branch production), and HSG maintains their own samuel2sql; this repo's
+sample_hooks/ and samuel2sql are reference copies Ben has iterated on since (Ben, 2026-10-02).
+The database layout is a contract (docs/PBS_HOOKS.md). capacities.json is the operator-tuned
+input.
 :::
 
 ## Packaged once, served by the API {.vcenter scale="1.15"}
@@ -132,7 +137,7 @@ database layout is a contract (docs/PBS_HOOKS.md). capacities.json is the operat
 The [hpc] extra installs it from git; the HPC_SCHEDULING_TOOLS plugin backs
 src/webapp/api/v1/fairshare.py, which reads SAM's database directly (no HTTP round trip) and
 returns JSON or ?format=text. 503 unless HPC_SCHEDULING_TOOLS_ENABLED. ncar_accounting.db is not
-served by the API today. Same story as Part 4's "SAMuel to PBS, in one slide".
+served by the API: HSG builds it with their own samuel2sql from the legacy-shaped endpoints. Same story as Part 4's "SAMuel to PBS, in one slide".
 :::
 
 ## Legacy SAM: the original {.vcenter scale="1.15"}
@@ -204,7 +209,8 @@ Order of the "soon" column follows Part 4's "The overlap, mapped".
 
 - **`hpc-usage-queries`:** job history, charging rules and filesystem scans; two plugins and
   the Postgres cluster.
-- **`hpc-scheduling-tools`:** SAM to PBS, kept in its own repo and **served by our API**.
+- **`hpc-scheduling-tools`:** the fairshare tree, kept in its own repo and **served by our
+  API**; the hooks stay HSG's.
 - **Legacy SAM:** the Java original, sharing our database until it retires.
 - **The container zoo:** identity and AMIE helpers; **syncd** is the one still in daily use.
 - **Retired or retiring:** one list, shrinking.
