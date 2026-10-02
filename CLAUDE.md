@@ -68,8 +68,9 @@ embedding.
 - **Format conditionals**: `when-format="beamer"` matches the custom
   `ncar-beamer` format; `when-format="ncar-beamer"` matches nothing. Always
   write `beamer`.
-- **Poppins has no arrows**: `→` renders as a missing-glyph box in the PDF
-  (XeLaTeX has no fallback font). Write "to", or keep the arrow in code.
+- **Poppins has no arrows or ⚠**: theme 2.6 borrows ⚠ → ← ↔ ⇒ from DejaVu
+  Sans in the PDF, so `## ⚠︎ Title` and `A → B` work in every format. Any other
+  missing symbol still drops out of the PDF, with a warning in the log.
 - **Divider subtitles**: a paragraph right after a `#` divider becomes that
   divider's subtitle in every format: `section_subtitle.py` for pptx, the
   theme's `\sectionsubtitle` (via its Lua filter) for beamer, and
@@ -94,9 +95,11 @@ embedding.
 ## pandoc pptx gotchas (hard-won — read before restructuring slides)
 
 - **Content after a table or image splits the slide** into an untitled
-  continuation. Order: bullets *before* tables; use `:::: {.columns}` to put a
-  diagram beside text. Verified template-independent (pandoc writer behavior).
-  Tables and code blocks *inside* a column are fine.
+  continuation. `docs/common/single-body.lua` (shared `_quarto.yml`,
+  pptx-only) wraps such a slide's body in one 100% column, so a footnote after
+  a table or diagram needs no hand wrapper. It skips slides that already hold
+  a columns div: content *after* `.columns` still splits, so put it inside the
+  last column. Code blocks are text and never split.
 - **Speaker notes can go anywhere.** Pandoc only picks Two Content when the
   body *starts* with the columns div, so notes written before columns split the
   slide; `docs/common/notes-last.lua` (shared `_quarto.yml`, pptx-only) moves

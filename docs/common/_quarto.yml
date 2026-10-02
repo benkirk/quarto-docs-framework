@@ -12,10 +12,13 @@ date-format: "MMMM D, YYYY"
 # slide-layout.lua: carries the per-slide layout controls to utils/slide_layout.py.
 # notes-last.lua: speaker notes before a columns div split the pptx slide;
 # moving every slide's notes to its end makes any placement safe.
+# single-body.lua: content after a table or diagram splits the pptx slide;
+# one 100% column around the body keeps it whole.
 filters:
   - ../common/strip-raw-figure.lua
   - ../common/slide-layout.lua   # pptx: the theme's .center/scale= etc. as a notes line
   - ../common/notes-last.lua
+  - ../common/single-body.lua    # pptx: after notes-last
   - ../common/linked-images.lua   # [![](x.png)](url): a link line on the slide
 
 format:
