@@ -8,7 +8,8 @@ Identity in, allocations both ways, usage in, access out, and the legacy SAM sti
 Blue is SAMuel, grey is legacy SAM (still running), orange is the shared database, white is
 everyone else. Dashed edges are legacy-only traffic or deployment rather than data. Every box
 gets its own slide in this part except GitHub, which is Part 5's. Appendix A lists the repos
-behind these boxes.
+behind these boxes. Three VMs on the legacy side: sam-app (the identity helpers), sam-tomcat
+(legacy SAM, behind sam.ucar.edu) and sam-sql (MySQL).
 :::
 
 ```{dot}
@@ -22,15 +23,15 @@ digraph Map {
          fillcolor="#FFFFFF", color="#6B7280", fontcolor="#00357A", margin="0.15,0.07"];
   edge  [fontname="Helvetica", fontsize=12, color="#6B7280", fontcolor="#6B7280"];
 
-  dir     [label="UCAR directory\n(LDAP)", pos="0,4.2!"];
-  helpers [label="sam-app: LDAP replica,\ntransformer, sam-ldap-syncd", pos="3.6,4.2!",
+  dir     [label="UCAR directory (LDAP)\nldap.ucar.edu", pos="0,4.2!"];
+  helpers [label="sam-app VM: LDAP replica,\ntransformer, sam-ldap-syncd", pos="3.6,4.2!",
            fillcolor="#E5E7EB", fontcolor="#374151"];
-  tomcat  [label="legacy SAM (Java)\nsam.ucar.edu", pos="7.2,4.2!",
+  tomcat  [label="legacy SAM (Java)\nsam-tomcat VM", pos="7.2,4.2!",
            fillcolor="#E5E7EB", fontcolor="#374151"];
   other   [label="AMIE, HEUV", pos="10.8,4.2!", fillcolor="#E5E7EB", fontcolor="#374151"];
 
   entra   [label="Entra ID\nsign-in", pos="0,2.7!"];
-  sql     [label="sam-sql\nMySQL VM", pos="10.8,2.7!", shape=cylinder,
+  sql     [label="sam-sql.ucar.edu\nMySQL VM", pos="10.8,2.7!", shape=cylinder,
            fillcolor="#FFF4E0", color="#FAA119"];
 
   xras    [label="XRAS\n(ACCESS)", pos="3.6,1.2!"];
@@ -40,7 +41,7 @@ digraph Map {
 
   gh      [label="GitHub Actions\n+ GHCR", pos="0,-0.4!"];
   lanes   [label="ncar-hpc-deploy\ncasper, derecho", pos="3.6,-0.4!"];
-  pg      [label="csg-postgres\n(CNPG on CIRRUS)", pos="7.2,-0.4!", shape=cylinder,
+  pg      [label="csg-postgres.k8s.ucar.edu\n(CNPG on CIRRUS)", pos="7.2,-0.4!", shape=cylinder,
            fillcolor="#E6F0FA", color="#0057C2"];
   pbs     [label="PBS scheduling\nhpc-scheduling-tools", pos="10.8,-0.4!"];
 
