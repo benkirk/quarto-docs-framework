@@ -20,9 +20,9 @@ minutes), the collectors and XRAS. Fstree Derecho averaged 1.1 s; the GPU varian
 
 ## The same tree, two builds {.vcenter scale="1.15"}
 
-- **Legacy SAM refreshes the Derecho fairshare tree in about 200–300 s.**
-- **SAMuel builds it live in about 4 s,** and serves it from the read model in under 1 s.
-- **The directory export:** legacy's query shape took about 7 s; ours takes 0.4 s on a copy.
+- Legacy SAM refreshes the Derecho fairshare tree in about 200–300 s.
+- SAMuel builds it live in about 4 s, and serves it from the read model in under 1 s.
+- The directory export: legacy's query shape took about 7 s; ours takes 0.4 s on a copy.
 - That was the bar callers were used to.
 
 ::: {.notes}
@@ -52,9 +52,9 @@ GET /api/v1/users/… → 200  (15.0 ms cpu=12.0ms sam=4.0ms/18q …)
 GET …/jobs/…/by-user → 200  (2600 ms cpu=161ms jobhistory=2420ms/4q …)
 ```
 
-- **One line per request:** CPU, then time and query count per database it touched.
-- **What's left over is waiting:** `rest = total − cpu − databases − pool`.
-- **Over 5 s,** the line is repeated as a warning.
+- One line per request: CPU, then time and query count per database it touched.
+- What's left over is waiting: `rest = total − cpu − databases − pool`.
+- Over 5 s, the line is repeated as a warning.
 
 ::: {.notes}
 src/webapp/run.py:271-282 (the format) and src/webapp/request_timing.py:130-151 (the fields).
@@ -100,9 +100,9 @@ def _key_matches(username, password, stored_hash):
     return True
 ```
 
-- **Every API-key request spent about 260 ms checking the key.** That was all its CPU.
-- **Now a good key is remembered for 5 minutes;** a wrong one always pays.
-- **32 clients, on dev:** 12.5 → 180 requests a second, median 2.0 s → 0.16 s.
+- Every API-key request spent about 260 ms checking the key. That was all its CPU.
+- Now a good key is remembered for 5 minutes; a wrong one always pays.
+- 32 clients, on dev: 12.5 → 180 requests a second, median 2.0 s → 0.16 s.
 
 ::: {.notes}
 src/webapp/utils/api_auth.py:114-130, trimmed (the TTL switch and the size bound removed).
@@ -122,11 +122,11 @@ database, where it belongs.
 }
 ```
 
-- **`make perf`** fails a page that issues more queries than its ceiling. Each ceiling is
+- `make perf` fails a page that issues more queries than its ceiling. Each ceiling is
   measured, never guessed.
-- **Production counts too:** the watch flags any request over 200 queries. That is how this
+- In production, the watch flags any request over 200 queries. That is how this
   page was found.
-- **The biggest catch:** the allocations dashboard went from 52,923 queries in 348 s to 42 in
+- The biggest catch: the allocations dashboard went from 52,923 queries in 348 s to 42 in
   18 s.
 
 ::: {.notes}
@@ -153,9 +153,9 @@ if len(stale) > cfg.patch_max_trees:
 # else: recompute the changed trees in memory, serve the rest
 ```
 
-- **One row per allocation:** used, remaining and charges, rebuilt every hour.
-- **Rebuilt by the same function the live path calls,** so the two cannot disagree.
-- **Each log line says which:** `rm=served`, `rm=patched:2`, `rm=live:too-old`.
+- One row per allocation: used, remaining and charges, rebuilt every hour.
+- Rebuilt by the same function the live path calls, so the two cannot disagree.
+- Each log line says which: `rm=served`, `rm=patched:2`, `rm=live:too-old`.
 
 ::: {.notes}
 src/sam/queries/allocation_state.py:378-396, trimmed. Table account_allocation_state in SAM
@@ -216,11 +216,11 @@ can lose".
 
 ## Static files: one rule {.vcenter scale="1.15"}
 
-- **Every link to a static file carries a hash of its content:** `dashboard.css?v=…`
-- **With the hash,** the browser keeps it for a year. **Without,** for an hour.
-- **Before, 2026-08-17:** 87.5% of all requests were static files, and 96% of those only
+- Every link to a static file carries a hash of its content: `dashboard.css?v=…`
+- With the hash, the browser keeps it for a year. Without, for an hour.
+- Before, 2026-08-17: 87.5% of all requests were static files, and 96% of those only
   asked "unchanged?".
-- **After:** static requests per page request fell from 7 to under 1 (0.3 by 2026-09-02).
+- After: static requests per page request fell from 7 to under 1 (0.3 by 2026-09-02).
 
 ::: {.notes}
 CLAUDE.md §11; src/webapp/utils/static_assets.py; #453. Before: nwc1, one pod, 4h37m; Bootstrap
@@ -232,10 +232,10 @@ Gate: tests/unit/gates/test_static_assets.py.
 
 ## ⚠︎ Cache traps {.vcenter scale="1.15"}
 
-- **No targeted invalidation for a cached page:** any database commit clears them all.
-- **Charts are keyed by their data, not their code.** After a visual change, refresh them.
-- **After a deploy, refresh the narrowest category:** `sam-admin cache --refresh`.
-- **A refresh under load is a stampede:** 32 cold chart renders took 16.5 s each (median).
+- No targeted invalidation for a cached page: any database commit clears them all.
+- Charts are keyed by their data, not their code. After a visual change, refresh them.
+- After a deploy, refresh the narrowest category: `sam-admin cache --refresh`.
+- A refresh under load is a stampede: 32 cold chart renders took 16.5 s each (median).
   Nothing yet stops two requests building the same entry.
 
 † Next: invalidation that follows the deploy, so nobody has to remember.
@@ -252,12 +252,12 @@ single-flight lock per key, pre-warming hot keys, targeted view invalidation.
 
 ## The shape of a query: split and assemble {.vcenter scale="1.15"}
 
-- **The directory export was one join.** Each user fanned out 14 ways: accounts, allocations,
+- The directory export was one join. Each user fanned out 14 ways: accounts, allocations,
   phones, institutions, organizations. About 135,000 rows, grouped back down.
-- **Now it is 12 small queries,** one per kind of fact, stitched together in Python.
-- **About 4× faster** (1.5 s → 0.38 s on a production copy), and the same plan on every
+- Now it is 12 small queries, one per kind of fact, stitched together in Python.
+- About 4× faster (1.5 s → 0.38 s on a production copy), and the same plan on every
   database.
-- **Same answer out,** checked by the parity harness.
+- Same answer out, checked by the parity harness.
 
 ::: {.notes}
 src/sam/queries/directory_access.py:115-125 and 364-405: one DISTINCT membership query, then
@@ -293,10 +293,10 @@ work_mem 1 GB (#112).
 
 ## Still slow, and known {.vcenter scale="1.15"}
 
-- **The all-facility pace chart:** 9–11 s cold, 0.25 s warm. Accepted.
-- **A year of jobs over a wide project tree:** 2.6 s the first time.
-- **Deploys refresh the caches by hand,** and a cold refresh under load stampedes.
-- **Disk-scan queries run in worker threads,** so their time shows as waiting.
+- The all-facility pace chart: 9–11 s cold, 0.25 s warm. Accepted.
+- A year of jobs over a wide project tree: 2.6 s the first time.
+- Deploys refresh the caches by hand, and a cold refresh under load stampedes.
+- Disk-scan queries run in worker threads, so their time shows as waiting.
 
 ::: {.notes}
 Pace chart: #691, prod 2026-10-01. Jobs: DEV_LOAD_CAMPAIGN.md:170-176; 30 days is ~160 ms, and
