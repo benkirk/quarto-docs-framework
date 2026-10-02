@@ -391,13 +391,15 @@ From PBS logs to charges, and back out to PBS.
 ::: {.notes}
 In: PBS on casper and derecho feeds three pipelines into SAMuel. Out: HSG's cron processes
 download from SAMuel's API: the accounting hooks' data, and the fairshare tree, which SAMuel
-builds itself. The loop takes a day for charges and minutes for status.
+builds itself. SAMuel talks to both databases: MySQL sam on sam-sql, and csg-postgres for
+system_status (written through the status API) and the jobs databases jobhist-sync fills.
+sam-admin accounting reads the jobs and writes charge summaries into sam. The loop takes a day for charges and minutes for status.
 :::
 
 ```{dot}
 //| fig-width: 10
 digraph InOut {
-  graph [rankdir=LR, nodesep=0.45, ranksep=0.9, bgcolor="transparent"];
+  graph [rankdir=LR, nodesep=0.45, ranksep=0.8, bgcolor="transparent"];
   node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=14,
          fillcolor="#FFFFFF", color="#6B7280", fontcolor="#00357A", margin="0.18,0.08"];
   edge  [fontname="Helvetica", fontsize=12, color="#6B7280", fontcolor="#6B7280"];
@@ -406,13 +408,20 @@ digraph InOut {
   jhs    [label="jobhist-sync\n5 min to weekly"];
   hst    [label="HSG cron processes\naccounting hooks & fairshare"];
   acct   [label="sam-admin\naccounting"];
+  pg     [label="csg-postgres (CNPG)\nsystem_status,\nderecho_jobs, casper_jobs", shape=cylinder,
+          fillcolor="#E6F0FA", color="#0057C2"];
+  sql    [label="sam-sql (MySQL)\nsam", shape=cylinder, fillcolor="#FFF4E0", color="#FAA119"];
   samuel [label="SAMuel", fillcolor="#0057C2", color="#00357A", fontcolor="#FFFFFF"];
   {rank=same; coll; jhs; hst}
+  {rank=same; pg; sql}
   pbs -> coll [label="status"];
   pbs -> jhs [label="logs"];
-  jhs -> acct [label="jobs DBs"];
-  coll -> samuel [label="status"];
-  acct -> samuel [label="charges"];
+  coll -> samuel [label="status API"];
+  jhs -> pg [label="jobs"];
+  pg -> acct [label="jobs"];
+  acct -> sql [label="charges"];
+  samuel -> pg [dir=both];
+  samuel -> sql [dir=both];
   samuel -> hst [label="fairshare, queues", constraint=false];
   hst -> pbs [label="tree, DB", constraint=false];
 }
