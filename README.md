@@ -76,6 +76,10 @@ Per deck, `make pptx` runs:
    - Merges the paragraph after a `#` section heading back onto the
      Section Header slide as its subtitle. Pandoc otherwise drops it onto
      a separate untitled slide.
+   - Then dresses every divider as the HTML and PDF decks draw it: a
+     "SECTION n" label, the orange tab, and the label, title and subtitle
+     centered as one block. The blue field, logo and waves come from the
+     template's Section Header layout (see "Template constraints").
 3. `python3 ../common/utils/enable_autofit.py <deck>.pptx`
    - Flips every body placeholder's autofit dropdown from "Do not Autofit"
      to "Shrink text on overflow." See "About text autofit" below.
@@ -95,8 +99,13 @@ Per deck, `make pptx` runs:
    - Applies a slide's layout controls (see "Centering and scaling a short
      slide" below), which `common/slide-layout.lua` leaves as a speaker-notes
      line because pandoc drops slide classes; the line is removed.
+8. `python3 ../common/utils/style_tables.py <deck>.pptx`
+   - Styles every table as the HTML theme does: a bold capitalized header
+     over an NCAR Blue rule, thin rules between rows, every second row light
+     gray. Pandoc always writes PowerPoint's "Medium Style 2", so the look is
+     set cell by cell. Evenly split columns are re-split by content.
 
-`make html` (revealjs) and `make pdf` (beamer) bypass steps 2 through 7 — the
+`make html` (revealjs) and `make pdf` (beamer) bypass steps 2 through 8 — the
 template, fonts, autofit, and the other pptx fix-ups are pptx-specific.
 
 ### Linked images
@@ -339,6 +348,13 @@ must stay pandoc-compliant. Two things pandoc is strict about:
   break the build but trigger a `Couldn't find layout named …` warning
   and fall back to pandoc's bundled layout (losing NCAR styling for that
   slide).
+
+- **The Section Header layout is generated** by
+  `docs/common/branding/ncar/build_divider_layout.py`: the NCAR Blue field
+  (`tx2`), the white logo, and the brand waves (`accent1`), drawn from the
+  same curves as the revealjs theme. Rerun it after editing the template in
+  PowerPoint, rather than editing that layout by hand. Pandoc keeps only
+  template media named `ppt/media/image*`, so the logo is stored under that name.
 
 Verify after any template edit:
 
