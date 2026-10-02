@@ -187,7 +187,7 @@ the chart at that commit, plus the new tag.
 ::: {.notes}
 .github/workflows/build-images-cirrus-deploy.yaml has five jobs: setup, build (a matrix of
 image × platform), merge, summary and update-helm. Prod is never inferred: only a push to main
-or a v* tag selects it on its own. GHCR tags are sha-<short>, the branch, semver on tags, and
+or a v* tag selects it on its own. GHCR tags are `sha-<short>`, the branch, semver on tags, and
 latest on main only. (CIRRUS_PUBLISHING.md says "four jobs"; it is on the fix-later list.)
 :::
 

@@ -293,8 +293,8 @@ the same moment, and turns a blip into an outage.
 Both come from the hpc-usage-queries plugin, reach the CNPG read-only service, and connect as a
 read-only role; separate writer roles fill them. The application_name tag and statement
 timeout are set in a connect listener (src/webapp/plugins/base.py), so a slow query on the
-Postgres side names its pod and plugin: sam-webapp:<pod>:job_history:<machine> and
-sam-webapp:<pod>:fs_scans:<db>:<collection>.
+Postgres side names its pod and plugin: `sam-webapp:<pod>:job_history:<machine>` and
+`sam-webapp:<pod>:fs_scans:<db>:<collection>`.
 :::
 
 :::: {.columns}

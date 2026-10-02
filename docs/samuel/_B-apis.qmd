@@ -37,6 +37,26 @@ blueprints — DO NOT REFACTOR". The one XRAS relaxation: masters[] is sorted ra
 HashMap order. Repointed: XRAS (2026-08-24, no legacy calls since 08-28).
 :::
 
+## The legacy-shaped endpoints {.smaller .center .fill}
+
+| `/api/v1/…` | Returns | Caller | Built |
+|--------------------------|------------------------------|------------------|----------|
+| **`fstree_access`** | projects, allocations, usage, users | PBS fairshare | by hand |
+| **`queue`** | queues and wallclock limits | PBS hooks | by hand |
+| **`wallclock_exemption`** | users' exemptions | PBS hooks | by hand |
+| **`directory_access`** | unix groups and accounts | LDAP provisioning | by hand |
+| **`project_access`** | project groups and status | LDAP provisioning | by hand |
+| **`disk_quota`** | project quotas and paths | disk quotas | schema |
+| **XRAS** (`/api/xras/v1`) | people, requests; actions in | XRAS broker | by hand |
+
+::: {.notes}
+21 legacy-shaped routes in six modules, plus 11 XRAS routes in five. Most take a resource or a
+branch in the path: fstree_access also answers `/projects/<projcode>` and `/users/<username>`;
+directory_access and project_access take a `<branch>` (hpc, hpc-dev, ...). Each legacy-shaped
+family also has POST .../refresh. Part 4's "Same bytes, new address" maps each to its legacy
+path.
+:::
+
 ## Hand-built, on purpose {.vcenter scale="1.15"}
 
 :::: {.columns}
@@ -129,7 +149,7 @@ return jsonify({
 })
 ```
 
-- **snake_case, ISO dates, paged.** Every shape is declared in a schema.
+- **snake_case, ISO dates, paged.** Shapes are declared in schemas.
 :::
 ::: {.column width="45%"}
 ```json
@@ -149,6 +169,31 @@ return jsonify({
 GET /api/v1/projects/ (src/webapp/api/v1/projects.py:108), trimmed; per_page max 1000. Schemas: src/sam/schemas/, ProjectSchema /
 ProjectListSchema / ProjectSummarySchema, the same for users. AllocationWithUsageSchema adds used,
 remaining, percent_used and charges_by_type, matching the CLI and the dashboards.
+:::
+
+## The new endpoints {.smaller .center .fill}
+
+| `/api/v1/…` | Serves | Methods |
+|------------------------------|--------------------------------------|----------------|
+| **`projects`** | list, detail, members, allocations, jobs | GET; members POST, DELETE |
+| **`users`** | list, search, detail, projects, `me` | GET |
+| **`allocations/<id>`** | one allocation, and edits | GET, PUT |
+| **`projects/<code>/charges`** | detailed and summary charges | GET |
+| **`charge-summaries/…`** | daily charges in | POST |
+| **`status`** | collectors in; status and outages out | POST, GET, PATCH |
+| **`fairshare/<machine>`** | the PBS fairshare tree, ready-made | GET |
+| **`health`** | liveness, readiness | GET |
+| **`admin/cache/refresh`** | clear the caches, by category | POST |
+
+::: {.notes}
+39 core routes in seven modules, plus fairshare: projects 10, status 11, users 6, charges 5,
+health 4, allocations 2, admin 1 (src/webapp/run.py:437-453). Also: projects/expiring and
+recently_expired, PUT `projects/<code>/admin`, status reservations and outage DELETE,
+health/db-pool. Charge summaries: comp, disk, archive. Callers: the dashboards and CLIs, the
+status collectors (by API key, MANAGE_SYSTEM_STATUS), HSG (fairshare), Kubernetes probes
+(health). Projects, allocations and charges take a session login only; users take a session or
+a key. Health, the cache refresh and fairshare are small hand-built replies; the rest dump
+schemas.
 :::
 
 ## Writes follow the web app's rules {.vcenter scale="1.15"}
