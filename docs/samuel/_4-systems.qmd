@@ -84,6 +84,8 @@ legacy side. The rest of this part takes them in order, then the outbound side-c
 - **SAMuel:** Python on CIRRUS, at **{{< var hosts.prod >}}**. Production SAM.
 - **Both** read and write `sam-sql`: one MySQL VM, run by CISL, with no replica.
 - They will overlap for a while, by design.
+- **Until legacy retires, SAMuel gives way:** it keeps the rows legacy reads, rather than
+  deleting them.
 
 † `sam-app` is a third host: it runs the identity helpers, not the Java app.
 :::
@@ -113,6 +115,10 @@ sam.ucar.edu is a load-balanced address in front of two Apache proxies that forw
 on sam-tomcat.ucar.edu (SAM 2.0.4). sam-app.ucar.edu runs the LDAP replica, the transformer
 and sam-ldap-syncd as rootless podman containers. Sources: sam-queries
 docs/plans/SAM_LDAP_SYNCD_REFERENCE.md §2.5 and docs/plans/LDAP_SYNC_API.md.
+Giving way, 2026-10-02: unsetting a fair-share override deleted a facility_resource row, and
+legacy's fair-share tree for Derecho came back empty (#698). The row now stays, with a NULL value.
+An audit of every SAMuel delete on a table legacy reads followed (#699, docs/plans/HARD_DELETE_AUDIT.md):
+a superseded allocation is shortened rather than left live, and the disk-root hard delete is gone.
 :::
 
 ## We don't own the schema (yet) {.vcenter scale="1.15"}
