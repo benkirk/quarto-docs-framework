@@ -8,8 +8,14 @@ Four databases, two engines, one browser.
 SAMuel owns two databases and borrows two. It reads and writes sam and system_status; it only
 reads job_history and fs_scans, which other pipelines fill. Legacy SAM and the LDAP mirror
 still write the sam database directly: same database, two applications.
+Sizes are production, read 2026-10-01: data plus indexes from information_schema on sam-sql,
+pg_database_size on the csg-postgres replica. sam's per-job tables: comp_job 15.8 GB,
+hpc_activity 11.5, comp_activity 8.1, dav_activity 6.8, hpc_charge 4.9, dav_charge 4.1 (51 GB in
+all); dataset_activity adds 6.6 GB. sam_dev on Postgres, without those rows, is 0.4 GB.
 :::
 
+:::: {.columns}
+::: {.column width="100%"}
 ```{dot}
 //| fig-width: 10
 digraph DBs {
@@ -29,13 +35,13 @@ digraph DBs {
 
   subgraph cluster_mysql {
     label="MySQL VM (sam-sql)"; style="rounded"; color="#C9D3E0";
-    sam [label="sam", shape=cylinder, fillcolor="#FFF4E0", color="#FAA119"];
+    sam [label="sam\n60 GB†", shape=cylinder, fillcolor="#FFF4E0", color="#FAA119"];
   }
   subgraph cluster_cnpg {
     label="CNPG csg-postgres (Kubernetes)"; style="rounded"; color="#C9D3E0";
-    status [label="system_status", shape=cylinder, fillcolor="#FFF4E0", color="#FAA119"];
-    jobs   [label="derecho_jobs\ncasper_jobs", shape=cylinder];
-    fs     [label="campaign\ndestor", shape=cylinder];
+    status [label="system_status\n1.2 GB", shape=cylinder, fillcolor="#FFF4E0", color="#FAA119"];
+    jobs   [label="derecho_jobs 37 GB\ncasper_jobs 54 GB", shape=cylinder];
+    fs     [label="campaign 166 GB\ndestor 2.2 GB", shape=cylinder];
   }
 
   xras -> samuel [label="handoffs"];
@@ -50,6 +56,10 @@ digraph DBs {
   scan -> fs   [label="file metadata"];
 }
 ```
+
+† 51 GB of it is legacy's per-job tables. SAMuel no longer writes them; they go when legacy SAM retires.
+:::
+::::
 
 ## Who owns what {.smaller .center .fill scale="1.15"}
 
