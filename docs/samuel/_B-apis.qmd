@@ -1,0 +1,41 @@
+# Two Dialects
+
+The APIs in detail: the legacy shapes we match, and how we build new ones.
+
+## Placeholder: four families, one front door
+
+- **Core** `/api/v1`, **legacy shapes**, **fairshare**, **XRAS**: Part 4 has the table. This
+  appendix adds the routes, the auth and the callers.
+- **Auth:** a browser session, or an API key. Under `RBAC_SOURCE=db`, a key is held to each
+  route's permission.
+
+::: {.notes}
+FIXME: route inventory per family (Part 4's "Four API families" counts), the callers, and
+docs/apis/SYSTEMS_INTEGRATION_APIs.md for the field-level contracts.
+:::
+
+## Placeholder: the old dialect, matching legacy
+
+- **Five frozen blueprints** (`directory_access`, `project_access`, `fstree_access`, `queue`,
+  `wallclock_exemption`) build their camelCase JSON by hand, for byte-shape reasons.
+- **Byte-identical was the porting proof.** Now that they are live, an explainable difference
+  beats reproducing a legacy bug.
+
+::: {.notes}
+CLAUDE.md § API, "Output shaping". Ben, 2026-09-02: "explainable differences are acceptable
+now" (the directory_access duplicate-phone quirk). Additive changes only, e.g.
+invalidate_queue_cache() in queue.py.
+:::
+
+## Placeholder: the new dialect, schemas and the ORM
+
+- **Output through a schema:** a new endpoint, even a legacy-shaped one, declares its output in
+  Marshmallow, with `data_key` for camelCase. `disk_quota` is the reference.
+- **ORM by default** (`queue_access`). Raw SQL only for a measured cost, split-and-assemble,
+  with a `make perf` benchmark (`directory_access`).
+- **Deep nested trees** (fstree, wallclock) stay hand-built: the documented exception.
+
+::: {.notes}
+FIXME: a side-by-side of one hand-built dict and one schema; the rule exists so the frozen
+style does not become normative as more legacy APIs are ported.
+:::

@@ -1,5 +1,5 @@
 ---
-title: "SAMuel, Appendix"
+title: "SAMuel, Appendix A"
 subtitle: "The Neighbors"
 author: "Ben Kirk, NCAR/CISL"
 date: last-modified

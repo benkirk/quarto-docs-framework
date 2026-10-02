@@ -17,6 +17,10 @@ date: last-modified
 
 {{< include _A-peers.qmd >}}
 
+{{< include _B-apis.qmd >}}
+
+{{< include _C-performance.qmd >}}
+
 ## Questions? {.closing}
 
 benkirk@ucar.edu

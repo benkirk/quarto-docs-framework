@@ -1,0 +1,51 @@
+# Keeping It Snappy
+
+The read model, the caches, and how we know where the time goes.
+
+## Placeholder: measure first
+
+- **Every request** logs its database time, CPU time and query count, so a slow page is
+  either the database, the code, or waiting.
+- **`make perf`** pins query counts per page in CI, so an N+1 shows up before production.
+
+::: {.notes}
+FIXME: request db=/cpu=/q= triad (src/webapp/request_timing.py, #531); tests/perf/baselines.json;
+scripts/cirrus_watch.sh latency lines. docs/plans/implemented/PROD_PERF_WATCH.md.
+:::
+
+## Placeholder: the read model
+
+- **One row per allocation** (`account_allocation_state`), rebuilt hourly by the same code the
+  live path runs, so it cannot drift.
+- **Slow paths read it when fresh,** and fall back to computing live when not.
+
+::: {.notes}
+FIXME: docs/plans/implemented/READ_MODEL.md (live: READ_MODEL_ENABLED=1; #534, #543, #546) and
+FSTREE_LATENCY_INVESTIGATION.md. Before: fstree ~3.3 s of DB on a cold cache, the project
+deep-dive ~5.7 s. Add the after numbers.
+:::
+
+## Placeholder: the caches
+
+- **Page fragments** in Redis: 5 minutes by default; hours or days only for outside data
+  (awards, XRAS, disk scans).
+- **Charts** are cached by their input data, per layout and theme.
+- **Static assets** carry a content hash and a one-year lifetime. Before, 87.5% of all requests
+  were browsers asking "unchanged?".
+
+::: {.notes}
+FIXME: CLAUDE.md §11 (static assets, nwc1 2026-08-17); docs/plans/REDIS_CACHE_PREFIXES.md;
+GLOBAL_CACHE_REFRESH_API.md and sam-admin cache --refresh after a deploy. Cache traps: no
+targeted invalidation for cached views.
+:::
+
+## Placeholder: the shape of a query
+
+- **Split and assemble:** `directory_access` was one join fanning each user 14 ways (~6.9 s).
+  Now it is a few small queries stitched in Python.
+- **Indexes for the jobs pages,** and batched queries in place of per-row lookups.
+
+::: {.notes}
+FIXME: after numbers for directory_access; the jobs end-composite indexes (hpc-usage-queries);
+the CNPG temp-spill fix.
+:::

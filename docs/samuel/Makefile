@@ -1,3 +1,3 @@
-DECKS := samuel 1-overview 2-concepts 3-databases 4-systems 5-deployment A-peers
+DECKS := samuel 1-overview 2-concepts 3-databases 4-systems 5-deployment A-peers B-apis C-performance
 
 include ../Make.common
