@@ -67,9 +67,9 @@ digraph Map {
 | Flow | Path | Cadence | Runs on |
 |--------------------|--------------------------------------|--------------|------------|
 | **Identity in** | UCAR directory to `sam-ldap-syncd` to legacy SAM | per change | legacy SAM |
-| **Allocations, both ways** | ARC to XRAS to SAMuel; SAMuel reads XRAS back | per approval; hourly | SAMuel |
+| **Allocations, both ways** | ARC → XRAS → SAMuel; SAMuel reads XRAS back | per approval; hourly | SAMuel |
 | **Usage in** | PBS to collectors, job history and charging | 5 min to daily | HPC lanes |
-| **Access out** | SAMuel's APIs to PBS, LDAP provisioning, disk quotas | polled | the callers |
+| **Access out** | SAMuel's APIs → PBS, LDAP provisioning, disk quotas | polled | the callers |
 
 ::: {.notes}
 Read the "Runs on" column as the overlap: one of the four flows still lives entirely on the
@@ -310,7 +310,7 @@ during the overlap. RBAC: docs/plans/implemented/RBAC_DB_ROLES.md.
 
 Awards in by POST, reports back by sweep.
 
-## ARC to XRAS to SAMuel
+## ARC → XRAS → SAMuel
 
 ::: {.notes}
 docs/xras/PROJECT_AND_ACCOUNT_LIFECYCLE.md §1. Most university projects take this path; staff

@@ -7,7 +7,7 @@ The repos SAMuel loads, feeds, or replaces.
 | Repo | Visibility | What it is | How SAMuel uses it |
 |------------------------------|-----------|--------------------------|--------------------------|
 | **`hpc-usage-queries`** | [yes](https://github.com/benkirk/hpc-usage-queries) | job history, charges, disk scans | two plugins; the Postgres cluster |
-| **`hpc-scheduling-tools`** | private | SAM to PBS: the fairshare tree | one plugin: `/api/v1/fairshare` |
+| **`hpc-scheduling-tools`** | private | SAM → PBS: the fairshare tree | one plugin: `/api/v1/fairshare` |
 | **`pbsparse`** | [yes](https://github.com/NCAR/pbsparse) | PBS log parser | via `hpc-usage-queries` |
 | **`PBS_hooks`** | private | HSG's PBS submit hooks | fed from our APIs |
 | **legacy `sam`** | private | the Java original | same database; retiring |

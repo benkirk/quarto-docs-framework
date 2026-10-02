@@ -132,7 +132,7 @@ the same hierarchy as PBS consumes it.
 ## Who, where, and who pays {.vcenter}
 
 - Charges land on a **project**. The reporting metadata hangs off the project and its people.
-- **Organizations:** NCAR and UCAR units from the directory, as a tree (UCAR to NCAR to lab to
+- **Organizations:** NCAR and UCAR units from the directory, as a tree (UCAR → NCAR → lab →
   group). Users and projects both link to them, with dates.
 - **Institutions:** universities and outside research organizations. Users link to them; a
   project's institution is its PI's.
