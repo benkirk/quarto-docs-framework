@@ -10,8 +10,8 @@ reads job_history and fs_scans, which other pipelines fill. Legacy SAM and the L
 still write the sam database directly: same database, two applications.
 Sizes are production, read 2026-10-01: data plus indexes from information_schema on sam-sql,
 pg_database_size on the csg-postgres replica. sam's per-job tables: comp_job 15.8 GB,
-hpc_activity 11.5, comp_activity 8.1, dav_activity 6.8, hpc_charge 4.9, dav_charge 4.1 (51 GB in
-all); dataset_activity adds 6.6 GB. sam_dev on Postgres, without those rows, is 0.4 GB.
+hpc_activity 11.5, comp_activity 8.1, dav_activity 6.8, hpc_charge 4.9, dav_charge 4.1 (51 GB);
+dataset_activity 6.6 GB, also retiring (Ben, 2026-10-02): 58 GB in all. sam_dev on Postgres, without those rows, is 0.4 GB.
 :::
 
 :::: {.columns}
@@ -57,7 +57,8 @@ digraph DBs {
 }
 ```
 
-† 51 GB of it is legacy's per-job tables. SAMuel no longer writes them; they go when legacy SAM retires.
+† 58 GB of it is legacy's per-job and dataset-activity tables. SAMuel doesn't write them; they
+go when legacy SAM retires.
 :::
 ::::
 
