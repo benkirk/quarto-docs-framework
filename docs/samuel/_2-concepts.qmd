@@ -731,12 +731,13 @@ digraph Job {
 
 ## TL;DR - the concepts {.vcenter scale="1.15"}
 
-- Users come from upstream. Projects, accounts and allocations are SAM's.
-- A project has an account per resource, and each account its own users. Think "users on a
+- **Users** come from upstream. **Projects**, **accounts** and **allocations** are SAM's.
+- A project has an **account per resource**, and each account its own users. Think "users on a
   project", but check the rows.
-- An allocation is an amount over a window, and replaying its ledger must land on that amount.
-- Access is derived: from account rows, through resources and branches, to logins and project
-  groups.
-- Usage always rolls up the tree, and a root's amount already is its subtree's total.
+- An allocation is an **amount over a window**, and replaying its **ledger** must land on that
+  amount.
+- **Access is derived:** from account rows, through resources and branches, to logins and
+  project groups.
+- **Usage always rolls up the tree**, and a root's amount already is its subtree's total.
 
 Part 3 shows where each of these lives.
