@@ -103,7 +103,9 @@ Per deck, `make pptx` runs:
    - Styles every table as the HTML theme does: a bold capitalized header
      over an NCAR Blue rule, thin rules between rows, every second row light
      gray. Pandoc always writes PowerPoint's "Medium Style 2", so the look is
-     set cell by cell. Evenly split columns are re-split by content.
+     set cell by cell. Evenly split columns are re-split by content. The PDF
+     gets the same look from the beamer theme itself, apart from the rules
+     between rows.
 
 `make html` (revealjs) and `make pdf` (beamer) bypass steps 2 through 8 — the
 template, fonts, autofit, and the other pptx fix-ups are pptx-specific.
