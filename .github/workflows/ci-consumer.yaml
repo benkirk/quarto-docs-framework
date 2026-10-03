@@ -1,0 +1,111 @@
+name: Check the Framework from Another Repo
+
+# A project can take this framework as a git submodule and keep its decks in
+# its own tree (README "Using the framework from another repo"). This checks
+# that layout: the framework checked out one level down, as a submodule would
+# be, and a hello-world deck beside it that only includes Make.common.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, staging]
+    paths-ignore:
+      - 'README.md'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+# Login shell, so setup-miniconda's activation applies to every step
+# (see ci-build-sample.yaml).
+defaults:
+  run:
+    shell: bash -el {0}
+
+env:
+  FRAMEWORK: consumer/docs/presentations/framework
+  DECK: consumer/docs/presentations/hello
+
+jobs:
+  consumer:
+    name: Build a Deck Outside the Framework
+    if: >-
+      !contains(github.event.head_commit.message, '[skip ci]')
+      && !contains(github.event.head_commit.message, '[ci skip]')
+      && !contains(github.event.head_commit.message, '[no ci]')
+      && !contains(github.event.pull_request.title, '[skip ci]')
+      && !contains(github.event.pull_request.title, '[ci skip]')
+      && !contains(github.event.pull_request.title, '[no ci]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out the framework where a submodule would be
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.FRAMEWORK }}
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: ./${{ env.FRAMEWORK }}/conda-env/
+          environment-file: ${{ env.FRAMEWORK }}/conda-env.yaml
+          miniforge-version: latest
+          use-mamba: true
+
+      # what a consumer commits: a one-line Makefile and its deck
+      - name: Write the hello-world deck
+        run: |
+          mkdir -p "$DECK"
+          echo 'include ../framework/docs/Make.common' > "$DECK/Makefile"
+          cat > "$DECK/hello.qmd" <<'EOF'
+          ---
+          title: "Hello"
+          subtitle: "A deck outside the framework"
+          author: "CI"
+          date: last-modified
+          ---
+
+          # Section
+
+          The deck lives in the consumer's tree.
+
+          ## A table
+
+          | Format | Built by |
+          |--------|----------|
+          | pptx | pandoc and the post-render steps |
+          | HTML | the NCAR revealjs theme |
+          | PDF | the NCAR beamer theme |
+          EOF
+
+      - name: Build pptx and HTML
+        run: timeout 600 make -C "$DECK" pptx html
+
+      # each format really came from the framework: the pptx template's
+      # divider layout (through _ncar), and the revealjs theme (_extensions)
+      - name: Check the framework was applied
+        run: |
+          set -e   # the login shell has no -e: without it only the last line gates
+          cd "$DECK"
+          ls -l _quarto.yml _extensions _ncar
+          unzip -l hello.pptx | grep -q 'ppt/media/image-divider-logo.png'
+          unzip -p hello.pptx 'ppt/slides/*.xml' | grep -q 'ncar-section-label'
+          grep -q 'ncar-revealjs.css' hello.html
+
+      - name: Install TinyTeX (beamer PDF)
+        run: quarto install tinytex --no-prompt
+
+      - name: Build PDF
+        run: timeout 600 make -C "$DECK" pdf
+
+      - name: Upload the hello-world deck
+        uses: actions/upload-artifact@v4
+        with:
+          name: consumer-hello
+          path: |
+            ${{ env.DECK }}/hello.pptx
+            ${{ env.DECK }}/hello.pdf
+          if-no-files-found: error
+          retention-days: 14

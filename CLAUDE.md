@@ -13,6 +13,12 @@ utilities) and `docs/Make.common`. `docs/sample/sample.qmd` is the cookbook —
 copy it for new decks; the README covers layout, template constraints, and font
 embedding.
 
+Other repos can take the framework as a submodule and keep their decks in their
+own tree (README "Using the framework from another repo"); the deck Makefile
+includes `../framework/docs/Make.common`. So nothing may assume a deck sits in
+`docs/<deck>/`: the shared `_quarto.yml` reaches `common/` as `_ncar/`, a link
+Make creates in each deck directory. `ci-consumer.yaml` builds a deck that way.
+
 ## Environment & build
 
 - **Env**: `source etc/config_env.sh` (or `conda activate ./conda-env`; build it

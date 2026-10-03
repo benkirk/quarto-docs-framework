@@ -14,16 +14,18 @@ date-format: "MMMM D, YYYY"
 # moving every slide's notes to its end makes any placement safe.
 # single-body.lua: content after a table or diagram splits the pptx slide;
 # one 100% column around the body keeps it whole.
+# Paths go through _ncar/, Make.common's link to this directory, so they hold
+# wherever the deck directory is (here, or in a repo using this as a submodule).
 filters:
-  - ../common/strip-raw-figure.lua
-  - ../common/slide-layout.lua   # pptx: the theme's .center/scale= etc. as a notes line
-  - ../common/notes-last.lua
-  - ../common/single-body.lua    # pptx: after notes-last
-  - ../common/linked-images.lua   # [![](x.png)](url): a link line on the slide
+  - _ncar/strip-raw-figure.lua
+  - _ncar/slide-layout.lua   # pptx: the theme's .center/scale= etc. as a notes line
+  - _ncar/notes-last.lua
+  - _ncar/single-body.lua    # pptx: after notes-last
+  - _ncar/linked-images.lua   # [![](x.png)](url): a link line on the slide
 
 format:
   pptx:
-    reference-doc: ../common/branding/ncar/template.pptx
+    reference-doc: _ncar/branding/ncar/template.pptx
     slide-level: 2
     toc: false
   ncar-beamer:           # NCAR beamer theme, vendored in common/_extensions

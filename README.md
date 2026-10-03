@@ -54,6 +54,7 @@ quarto-docs-framework/
 │       ├── Makefile        (3-line include of ../Make.common)
 │       ├── _quarto.yml     (symlink → ../common/_quarto.yml)
 │       ├── _extensions     (symlink → ../common/_extensions, made by make)
+│       ├── _ncar           (symlink → ../common, made by make)
 │       ├── sample.qmd      (the cookbook)
 │       ├── old.qmd         (richer real-world example, kept for reference)
 │       └── images/         (drop your PNGs / JPGs here)
@@ -69,7 +70,7 @@ drop in as sibling subdirs without disturbing existing decks.
 Per deck, `make pptx` runs:
 
 1. `quarto render <deck>.qmd --to pptx -o <deck>.pptx`
-   - Uses `reference-doc: ../common/branding/ncar/template.pptx` from the
+   - Uses `reference-doc: _ncar/branding/ncar/template.pptx` from the
      deck's `_quarto.yml`, so the output inherits NCAR theme colors,
      title slide layout, masters, etc.
 2. `python3 ../common/utils/section_subtitle.py <deck>.pptx`
@@ -278,6 +279,45 @@ A deck that needs custom Quarto config (a different reference template,
 extra extensions, etc.) can replace the symlinked `_quarto.yml` with a
 real file — `make` sees the file already exists and skips the symlink
 recipe.
+
+## Using the framework from another repo
+
+A project can keep its decks in its own tree and take this framework as a git
+submodule, pinned to a commit. Its decks then live wherever it likes, and
+nothing of the project's goes into this repo.
+
+```bash
+git submodule add https://github.com/benkirk/quarto-docs-framework.git docs/presentations/framework
+mkdir docs/presentations/roadmap && cd docs/presentations/roadmap
+echo 'include ../framework/docs/Make.common' > Makefile
+# author roadmap.qmd, then
+make -C ../framework conda-env    # once: the framework's own environment
+make pptx
+```
+
+- **Include `Make.common`, by a path relative to the deck directory.** It finds
+  everything else from that path. A symlink to it would not work: the path
+  would be the link's own directory.
+- **Make links the rest into the deck directory on the first build:**
+  `_quarto.yml`, `_extensions` and `_ncar` (this repo's `docs/common/`, which
+  the shared `_quarto.yml` reaches its filters and pptx template through). The
+  consumer gitignores those three links, and its build outputs.
+- **Everything else works as it does here:** `DECKS`, `_*.qmd` fragments,
+  `make qa` (with the deck's own `qa-names.txt`), and a deck's own
+  `_quarto.yml` in place of the link.
+- **Activate the framework's environment to build**, as in Quick start:
+  `conda activate <path>/framework/conda-env`. It lives in the submodule and is
+  gitignored there.
+- **A framework fix goes here first.** Merge it here, then move the
+  consumer's pin (`git -C docs/presentations/framework pull`, then commit the
+  new pointer). The NCAR beamer theme follows the same path one level down.
+- **The deck-polish skill:** a consumer can link
+  `.claude/skills/deck-polish` to `docs/presentations/framework/.claude/skills/deck-polish`.
+
+CI checks this layout on every pull request
+(`.github/workflows/ci-consumer.yaml`). It checks the framework out at
+`consumer/docs/presentations/framework`, writes a hello-world deck beside it,
+and builds all three formats from there.
 
 ## Executable shell chunks
 
