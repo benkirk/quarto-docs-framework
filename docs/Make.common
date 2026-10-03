@@ -1,7 +1,11 @@
-# Shared recipes for the decks under docs/<deck>/ (pptx, revealjs, beamer).
-# A deck Makefile is `include ../Make.common`. One deck per directory by
-# default, named after the directory (OUT); a directory holding several
-# decks lists them in DECKS (each <name>.qmd builds <name>.{pptx,html,pdf}).
+# Shared recipes for decks (pptx, revealjs, beamer). A deck Makefile includes
+# this file by a path relative to the deck directory: `include ../Make.common`
+# for docs/<deck>/ here, `include ../framework/docs/Make.common` in a repo that
+# has this framework as a submodule (README "Using the framework from another
+# repo"). Include it; a symlink to it would point PRESENTATIONS_ROOT at the
+# link's own directory. One deck per directory by default, named after the
+# directory (OUT); a directory holding several decks lists them in DECKS (each
+# <name>.qmd builds <name>.{pptx,html,pdf}).
 
 .PHONY: pptx html pdf all qa clean distclean
 
@@ -21,6 +25,7 @@ STYLE_TABLES       := $(PRESENTATIONS_ROOT)common/utils/style_tables.py
 DECK_QA            := $(PRESENTATIONS_ROOT)common/utils/deck_qa.py
 SHARED_QUARTO_YML  := $(PRESENTATIONS_ROOT)common/_quarto.yml
 SHARED_EXTENSIONS  := $(PRESENTATIONS_ROOT)common/_extensions
+SHARED_COMMON      := $(PRESENTATIONS_ROOT)common
 
 OUT   ?= $(notdir $(CURDIR))
 DECKS ?= $(OUT)
@@ -30,7 +35,7 @@ QFILE ?= $(OUT).qmd
 # ![](...) and filters: are invisible to make, so an edit to any of them rebuilds
 # every deck in the directory.
 FRAGMENTS := $(wildcard _*.qmd) $(wildcard data/*) $(wildcard images/*) $(wildcard *.lua)
-DEPS      := $(FRAGMENTS) _quarto.yml _extensions
+DEPS      := $(FRAGMENTS) _quarto.yml _extensions _ncar
 
 pptx: $(DECKS:=.pptx)
 html: $(DECKS:=.html)
@@ -54,6 +59,11 @@ _quarto.yml:
 # resolves all listed formats even when rendering pptx.
 _extensions:
 	ln -s $(SHARED_EXTENSIONS) $@
+
+# And common/ itself, which the shared _quarto.yml reaches as _ncar/ (its
+# filters, the pptx template), so a deck works wherever its directory is.
+_ncar:
+	ln -s $(SHARED_COMMON) $@
 
 define render_pptx
 	quarto render $< --to pptx -o $@
