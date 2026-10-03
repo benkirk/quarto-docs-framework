@@ -23,7 +23,8 @@ embedding.
   `Make.common` names the output after the directory (`OUT`) and auto-symlinks
   `_quarto.yml` and `_extensions`. The pptx recipe post-processes with
   `section_subtitle.py`, `enable_autofit.py`, `embed_poppins.py`,
-  `style_footnotes.py`, `link_captions.py`, and `slide_layout.py`.
+  `style_footnotes.py`, `link_captions.py`, `slide_layout.py`, and
+  `style_tables.py` (tables drawn as in the HTML theme).
 - **Slide footnotes** (a paragraph starting with `†`, or `‡` for a second): the
   theme (>= 2.4.0) lifts every one on a slide, columns included, to the slide's
   foot in HTML and PDF, under a short muted rule with the marker in the accent
@@ -76,6 +77,9 @@ embedding.
   theme's `\sectionsubtitle` (via its Lua filter) for beamer, and
   `ncar-revealjs.lua` for HTML. Only plain
   paragraphs qualify; anything else after a divider stays a slide of its own.
+  In pptx the blue field, logo and waves are the template's Section Header
+  layout, built by `branding/ncar/build_divider_layout.py` (rerun it after any
+  template edit); `section_subtitle.py` adds "SECTION n", the tab and placement.
 - **Front matter must be line 1** of every deck `.qmd`: anything above the
   opening `---` (an editor mode-line, a comment) hides it from Quarto, and
   `date: last-modified` renders literally (#7). CI checks this; set editor
