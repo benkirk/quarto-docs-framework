@@ -4,8 +4,9 @@
 Pandoc's pptx writer ignores inline font size/color from markdown, so a
 "footnote" authored in the `.qmd` renders at full body size and the brand
 text color — indistinguishable from an ordinary paragraph. This script
-finds every body paragraph whose text begins with a footnote marker
-(`†`, or `‡` for a second one) and restyles it to read as a footnote: the
+finds every paragraph whose text begins with a footnote marker (`†`, or
+`‡` for a second one), or a caption line that does, and restyles it to read
+as a footnote, left-aligned: the
 theme's muted gray, a smaller size, a little space above to set it off from
 the bullets, and the marker itself in the brand accent orange (the HTML and
 PDF themes draw the same, and also move footnotes to the slide's foot, which
@@ -24,6 +25,8 @@ import sys
 from pathlib import Path
 
 from pptx import Presentation
+from pptx.enum.text import PP_ALIGN
+from pptx.oxml.ns import qn
 from pptx.util import Pt
 from pptx.dml.color import RGBColor
 
@@ -34,17 +37,38 @@ MARK_COLOR  = RGBColor(0xFA, 0xA1, 0x19)   # BrandOrange, the theme's accent
 FOOT_BEFORE = Pt(10)                   # vertical gap above the footnote
 
 
-def _split_marker(para):
-    """The first run, cut so the marker is a run of its own (idempotent)."""
-    first = para.runs[0]
+def _footnote_start(para):
+    """Index of the run a footnote starts at: the first, or the first after a line
+    break (single-body.lua folds a footnote into a table's caption, which pandoc
+    joins with line breaks). None when the paragraph holds no footnote."""
+    runs = para.runs
+    if not runs:
+        return None
+    if runs[0].text.lstrip().startswith(MARKERS):
+        return 0
+    after_break, index = False, -1
+    for child in para._p:
+        if child.tag == qn("a:br"):
+            after_break = True
+        elif child.tag == qn("a:r"):
+            index += 1
+            if after_break and runs[index].text.lstrip().startswith(MARKERS):
+                return index
+            after_break = False
+    return None
+
+
+def _split_marker(para, start):
+    """The run at start, cut so the marker is a run of its own (idempotent)."""
+    first = para.runs[start]
     text = first.text.lstrip()
     marker = text[0]
     if text.rstrip() != marker:
         mark = copy.deepcopy(first._r)
         first._r.addprevious(mark)
         first.text = text[1:].lstrip()
-        para.runs[0].text = marker + " "
-    return para.runs[0]
+        para.runs[start].text = marker + " "
+    return para.runs[start]
 
 
 def main() -> int:
@@ -63,11 +87,15 @@ def main() -> int:
             if not shape.has_text_frame:
                 continue
             for para in shape.text_frame.paragraphs:
-                if not para.runs or not para.runs[0].text.lstrip().startswith(MARKERS):
+                start = _footnote_start(para)
+                if start is None:
                     continue
-                para.space_before = FOOT_BEFORE
-                mark = _split_marker(para)
-                for run in para.runs:          # every run — the code span too
+                if start == 0:
+                    # a caption is centered; a footnote reads from the left, as in HTML and PDF
+                    para.space_before = FOOT_BEFORE
+                    para.alignment = PP_ALIGN.LEFT
+                mark = _split_marker(para, start)
+                for run in para.runs[start:]:  # every run — the code span too
                     run.font.size = FOOT_SIZE
                     run.font.color.rgb = MARK_COLOR if run._r is mark._r else FOOT_COLOR
                 styled += 1
