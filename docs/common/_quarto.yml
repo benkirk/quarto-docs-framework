@@ -13,7 +13,7 @@ date-format: "MMMM D, YYYY"
 # notes-last.lua: speaker notes before a columns div split the pptx slide;
 # moving every slide's notes to its end makes any placement safe.
 # single-body.lua: content after a table or diagram splits the pptx slide;
-# one 100% column around the body keeps it whole.
+# the paragraphs after one move into its caption, at the slide's foot.
 # Paths go through _ncar/, Make.common's link to this directory, so they hold
 # wherever the deck directory is (here, or in a repo using this as a submodule).
 filters:

@@ -106,10 +106,14 @@ Make creates in each deck directory. `ci-consumer.yaml` builds a deck that way.
 
 - **Content after a table or image splits the slide** into an untitled
   continuation. `docs/common/single-body.lua` (shared `_quarto.yml`,
-  pptx-only) wraps such a slide's body in one 100% column, so a footnote after
-  a table or diagram needs no hand wrapper. It skips slides that already hold
-  a columns div: content *after* `.columns` still splits, so put it inside the
-  last column. Code blocks are text and never split.
+  pptx-only) moves the paragraphs after one table or image (a † footnote, a
+  remark) into its caption, which pandoc draws at the slide's foot;
+  `style_footnotes.py` then styles a footnote there, left-aligned. Anything
+  else after it (a list, code, a second table) still splits, on purpose. Never
+  wrap such a body in a 100% column: pandoc gives the table the whole
+  placeholder and silently drops the text after it (the slide count doesn't
+  change, so `make qa` can't see it). Content *after* `.columns` still splits,
+  so put it inside the last column. Code blocks are text and never split.
 - **Speaker notes can go anywhere.** Pandoc only picks Two Content when the
   body *starts* with the columns div, so notes written before columns split the
   slide; `docs/common/notes-last.lua` (shared `_quarto.yml`, pptx-only) moves
