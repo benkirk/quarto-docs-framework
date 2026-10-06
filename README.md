@@ -8,7 +8,7 @@ env, copy the quickstart deck, write Markdown.
 
 Two example decks ship with the framework:
 
-- **`docs/quickstart/`** is about ten slides, one of each headline feature. It is the deck to
+- **`docs/quickstart/`** is eleven slides, one of each headline feature. It is the deck to
   copy when you start your own (see "What you get" below).
 - **`docs/sample/`** is a **cookbook** showing one
   example of every capability you're likely to need: text formatting, math,

@@ -59,12 +59,11 @@ $$
   - \left(\nabla\cdot\mathbf{v}\,W\right)_\zeta + F_W \\
 \frac{\partial \Theta_m}{\partial t} &= -\left(\nabla\cdot\mathbf{V}\,\theta_m\right)_\zeta + F_{\Theta_m} \\
 \frac{\partial \tilde\rho_d}{\partial t} &= -\left(\nabla\cdot\mathbf{V}\right)_\zeta \\
-\frac{\partial Q_j}{\partial t} &= -\left(\nabla\cdot\mathbf{V}\,q_j\right)_\zeta
-  + \tilde\rho_d\,S_j + F_{Q_j}
+\frac{\partial Q_j}{\partial t} &= -\left(\nabla\cdot\mathbf{V}\,q_j\right)_\zeta + F_{Q_j}
 \end{aligned}
 $$
 
-† Skamarock et al. (2012), *Mon. Wea. Rev.* 140, 3090–3105; curvature and mixing are in the *F*s.
+† Skamarock et al. (2012), *Mon. Wea. Rev.* 140, 3090–3105, eqs. (3)–(7), without the curvature and cos-latitude Coriolis terms.
 
 ::: {.notes}
 Nonhydrostatic, fully compressible equations in flux form on the
@@ -72,8 +71,11 @@ terrain-following height coordinate $\zeta$. $\tilde\rho_d = \rho_d/\zeta_z$;
 the prognostic fluxes are $\mathbf{V} = \tilde\rho_d\,\mathbf{v}$ (horizontal
 part $\mathbf{V}_H$, vertical $W$), $\Theta_m = \tilde\rho_d\,\theta_m$ and
 $Q_j = \tilde\rho_d\,q_j$. $\theta_m = \theta\,(1 + (R_v/R_d)\,q_v)$, $\eta$
-is the absolute vertical vorticity, $K$ the kinetic energy, $\Omega$ the
-vertical mass flux through $\zeta$ surfaces.
+is the absolute vertical vorticity, $K = |\mathbf{v}_H|^2/2$ the horizontal
+kinetic energy, $\Omega$ the vertical mass flux through $\zeta$ surfaces,
+$\rho_m$ the density of moist air and $\mathbf{z}_H = -\nabla_H\zeta/\zeta_z$.
+The $F$ terms are physics, subgrid mixing and filters. The slide leaves out
+the curvature terms ($1/r_e$) and the Coriolis terms in $e = 2\Omega_e\cos\psi$.
 
 The math is ordinary LaTeX between `$$`: OMML equations in pptx, MathJax in
 HTML, a serif math font beside Poppins in the PDF.
