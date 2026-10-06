@@ -1,0 +1,155 @@
+---
+title: "Quarto Docs Framework"
+subtitle: "One Markdown file, three NCAR-branded decks"
+author: "Your Name, NCAR/CISL"
+date: last-modified
+engine: jupyter
+jupyter: bash
+---
+
+# Write Markdown
+
+`make pptx`, `make html` and `make pdf` turn one `.qmd` into all three.
+
+## One source, three formats {.vcenter scale="1.2"}
+
+- `##` starts a slide, `#` a section divider like the one before this
+- **Bold**, *italic*, `inline code` and [links](https://quarto.org) as usual
+- `make pptx`: PowerPoint on the NCAR template, Poppins embedded
+- `make html`: a revealjs deck with speaker view and a whiteboard
+- `make pdf`: the NCAR beamer theme, for handouts
+
+† A paragraph that starts with a dagger becomes a slide footnote.
+
+::: {.notes}
+Speaker notes live in a `::: {.notes}` div: the PowerPoint notes pane, the
+revealjs speaker view (`s`), never on the slide itself.
+:::
+
+## Columns: a list beside a table {.vcenter scale="1.4"}
+
+:::: {.columns}
+::: {.column width="45%"}
+- `.columns` splits a slide
+- Each `.column` sets its width
+- Any content fits in either side
+:::
+::: {.column width="55%"}
+| System  | Role |  Cores/node |
+|:--------|:----:|------------:|
+| Derecho | HPC  |         128 |
+| Casper  | DAV  |          36 |
+| Gust    | Test |         128 |
+:::
+::::
+
+## The MPAS-A dynamical core {.shrink}
+
+$$
+\begin{aligned}
+\frac{\partial \mathbf{V}_H}{\partial t} &=
+  -\frac{\rho_d}{\rho_m}\left[\nabla_\zeta\!\left(\frac{p}{\zeta_z}\right)
+  - \frac{\partial (\mathbf{z}_H\, p)}{\partial \zeta}\right]
+  - \eta\,\mathbf{k}\times\mathbf{V}_H
+  - \mathbf{v}_H\,\nabla_\zeta\!\cdot\mathbf{V}
+  \\ &\quad - \frac{\partial(\Omega\,\mathbf{v}_H)}{\partial\zeta}
+  - \rho_d\,\nabla_\zeta K + \mathbf{F}_{V_H} \\
+\frac{\partial W}{\partial t} &=
+  -\frac{\rho_d}{\rho_m}\left[\frac{\partial p}{\partial\zeta} + g\,\tilde\rho_m\right]
+  - \left(\nabla\cdot\mathbf{v}\,W\right)_\zeta + F_W \\
+\frac{\partial \Theta_m}{\partial t} &= -\left(\nabla\cdot\mathbf{V}\,\theta_m\right)_\zeta + F_{\Theta_m} \\
+\frac{\partial \tilde\rho_d}{\partial t} &= -\left(\nabla\cdot\mathbf{V}\right)_\zeta \\
+\frac{\partial Q_j}{\partial t} &= -\left(\nabla\cdot\mathbf{V}\,q_j\right)_\zeta + F_{Q_j}
+\end{aligned}
+$$
+
+† Skamarock et al. (2012), *Mon. Wea. Rev.* 140, 3090–3105, eqs. (3)–(7), without the curvature and cos-latitude Coriolis terms.
+
+::: {.notes}
+Nonhydrostatic, fully compressible equations in flux form on the
+terrain-following height coordinate $\zeta$. $\tilde\rho_d = \rho_d/\zeta_z$;
+the prognostic fluxes are $\mathbf{V} = \tilde\rho_d\,\mathbf{v}$ (horizontal
+part $\mathbf{V}_H$, vertical $W$), $\Theta_m = \tilde\rho_d\,\theta_m$ and
+$Q_j = \tilde\rho_d\,q_j$. $\theta_m = \theta\,(1 + (R_v/R_d)\,q_v)$, $\eta$
+is the absolute vertical vorticity, $K = |\mathbf{v}_H|^2/2$ the horizontal
+kinetic energy, $\Omega$ the vertical mass flux through $\zeta$ surfaces,
+$\rho_m$ the density of moist air and $\mathbf{z}_H = -\nabla_H\zeta/\zeta_z$.
+The $F$ terms are physics, subgrid mixing and filters. The slide leaves out
+the curvature terms ($1/r_e$) and the Coriolis terms in $e = 2\Omega_e\cos\psi$.
+
+The math is ordinary LaTeX between `$$`: OMML equations in pptx, MathJax in
+HTML, a serif math font beside Poppins in the PDF.
+:::
+
+## Code, static and live {scale="1.15"}
+
+```bash
+#!/usr/bin/env bash
+#PBS -l select=4:ncpus=128:mpiprocs=128
+mpiexec ./atmosphere_model
+```
+
+```{bash}
+#| echo: true
+awk 'BEGIN { for (p = 1; p <= 512; p *= 8)
+  printf "%4d ranks: speedup %5.1f\n",
+         p, 1 / (0.05 + 0.95 / p) }'
+```
+
+::: {.notes}
+The first block is highlighted only. The second is a `{bash}` cell: it runs
+at render time on the build host and its output is baked into every format.
+The deck opts in with `engine: jupyter` and `jupyter: bash` in its front
+matter.
+:::
+
+# Diagrams and layout
+
+Diagrams are drawn at build time; photo, closing and short slides
+are a class away.
+
+## How a deck is built
+
+::: {.notes}
+A `{mermaid}` cell: a PNG in pptx and PDF, drawn live in the HTML deck in the
+brand colors. `%%| fig-width` sets its size. Text after a diagram would split
+the pptx slide, so the explanation lives in these notes.
+:::
+
+```{mermaid}
+%%| fig-width: 10
+flowchart LR
+    QMD["deck.qmd"] --> Q["quarto render"]
+    Q --> P["pptx + post-processing"]
+    Q --> H["revealjs HTML"]
+    Q --> B["beamer PDF"]
+    P --> OUT["one NCAR look"]
+    H --> OUT
+    B --> OUT
+```
+
+## A full-bleed photo slide {.feature background-image="images/example.jpg"}
+
+### Photo slides
+
+`{.feature background-image="images/example.jpg"}` on the heading fills the
+slide with the photo; a `###` block puts the text on a panel.
+
+## A short slide, centered and scaled {.center scale="1.4"}
+
+| Target | Builds |
+|---|---|
+| `make pptx` | `quickstart.pptx` |
+| `make html` | `quickstart.html` |
+| `make pdf` | `quickstart.pdf` |
+| `make qa` | all three, then checks them |
+
+::: {.notes}
+`{.center scale="1.4"}` on the heading centers the body and scales it up.
+:::
+
+## Thank you! {.closing}
+
+Copy this deck to start your own: `docs/quickstart/quickstart.qmd`
+
+The full cookbook: `docs/sample/sample.qmd`

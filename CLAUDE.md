@@ -9,9 +9,17 @@ An NCAR-branded [Quarto](https://quarto.org) framework for documentation decks
 (`.pptx` primary; `.html`/revealjs and `.pdf`/beamer secondary). Decks live
 under `docs/<deck>/` as a `.qmd` plus a 1-line Makefile; shared machinery is in
 `docs/common/` (branded `template.pptx`, `_quarto.yml`, Lua filter, post-render
-utilities) and `docs/Make.common`. `docs/sample/sample.qmd` is the cookbook —
-copy it for new decks; the README covers layout, template constraints, and font
+utilities) and `docs/Make.common`. `docs/quickstart/quickstart.qmd` is the
+short exemplar to copy for new decks; `docs/sample/sample.qmd` is the cookbook
+of every pattern. The README covers layout, template constraints, and font
 embedding.
+
+- **README images** are `docs/quickstart/screenshots/*.png`, committed. After
+  editing the quickstart deck run `make screenshots` there, look at them, and
+  commit them. Slides are found by title (`SLIDES` in `screenshots.py`), so a
+  renamed slide needs that list updated. Where the MathJax CDN is blocked, set
+  `MATHJAX` to a local MathJax 2.7 (the npm tarball from registry.npmjs.org),
+  or the equations shoot as raw TeX.
 
 Other repos can take the framework as a submodule and keep their decks in their
 own tree (README "Using the framework from another repo"); the deck Makefile

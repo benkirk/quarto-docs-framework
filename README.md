@@ -2,15 +2,21 @@
 
 NCAR-branded [Quarto](https://quarto.org) template for HPC-style
 documentation decks (`.pptx` / `.html` / `.pdf`). Clone, set up the conda
-env, copy the sample deck, write Markdown.
+env, copy the quickstart deck, write Markdown.
 
-The example deck under `docs/sample/` is a **cookbook** showing one
-example of every capability you're likely to need: text formatting, math,
-tables, two-column layouts, image embeds, syntax-highlighted code,
-auto-captured shell output, mermaid diagrams, speaker notes, and the
-`{{< include >}}` shortcode. `docs/sample/old.qmd` is preserved as a
-richer real-world example (database schema / REST API / deployment
-diagrams).
+![Four slides of the quickstart deck: the title slide, the MPAS-A governing equations, a two-column slide with a table, and a mermaid diagram](docs/quickstart/screenshots/hero.png)
+
+Two example decks ship with the framework:
+
+- **`docs/quickstart/`** is eleven slides, one of each headline feature. It is the deck to
+  copy when you start your own (see "What you get" below).
+- **`docs/sample/`** is a **cookbook** showing one
+  example of every capability you're likely to need: text formatting, math,
+  tables, two-column layouts, image embeds, syntax-highlighted code,
+  auto-captured shell output, mermaid diagrams, speaker notes, and the
+  `{{< include >}}` shortcode. `docs/sample/old.qmd` is preserved as a
+  richer real-world example (database schema / REST API / deployment
+  diagrams).
 
 ## Quick start
 
@@ -23,16 +29,49 @@ cd quarto-docs-framework
 make conda-env
 conda activate ./conda-env
 
-# 2. Render the sample deck.
-cd docs/sample
-make pptx              # → sample.pptx (NCAR-branded, fonts embedded)
-make html              # → sample.html (revealjs, NCAR web theme)
-make pdf               # → sample.pdf  (beamer, NCAR beamer theme; needs TeX)
+# 2. Render the quickstart deck.
+cd docs/quickstart
+make pptx              # → quickstart.pptx (NCAR-branded, fonts embedded)
+make html              # → quickstart.html (revealjs, NCAR web theme)
+make pdf               # → quickstart.pdf  (beamer, NCAR beamer theme; needs TeX)
 ```
 
-Open `sample.pptx` to see what each cookbook slide looks like, then start
-editing `sample.qmd` (or copy it to a new deck — see "Adding a new deck"
-below).
+Open `quickstart.pptx` (or `quickstart.html` in a browser), then copy
+`quickstart.qmd` into a new deck directory and edit it (see "Adding a new deck"
+below). When you need a pattern the quickstart deck lacks, `docs/sample/sample.qmd`
+probably has it.
+
+**Behind a restrictive proxy** (some cloud containers): if `quarto install
+tinytex` cannot download, a system TeX Live works instead (`apt-get install
+texlive-xetex texlive-latex-extra texlive-fonts-extra`). If `quarto install
+chrome-headless-shell` cannot download, point Quarto at any Chromium with
+`export QUARTO_CHROMIUM=/path/to/chrome`, and `make qa` at it with `CHROME`.
+
+## What you get
+
+Every slide of `docs/quickstart/quickstart.qmd`, in the HTML deck:
+
+![All eleven slides of the quickstart deck in the HTML format](docs/quickstart/screenshots/overview.png)
+
+| Slide | The Markdown behind it |
+|---|---|
+| [Section divider](docs/quickstart/screenshots/02-divider.png) | `# Write Markdown`, then a paragraph: the subtitle |
+| [Bullets and a footnote](docs/quickstart/screenshots/03-text.png) | a list, then a paragraph starting with `†`; `{.vcenter scale="1.2"}` on the heading |
+| [Columns](docs/quickstart/screenshots/04-columns.png) | `:::: {.columns}` with a list in one `.column` and a table in the other |
+| [Equations](docs/quickstart/screenshots/05-math.png) | LaTeX between `$$`: OMML in pptx, MathJax in HTML, real TeX in the PDF |
+| [Code, static and live](docs/quickstart/screenshots/06-code.png) | a ` ```bash ` block, and a ` ```{bash} ` cell run at render time |
+| [Diagram](docs/quickstart/screenshots/07-mermaid.png) | a ` ```{mermaid} ` cell (Graphviz ` ```{dot} ` works the same way) |
+| [Photo slide](docs/quickstart/screenshots/08-feature.png) | `{.feature background-image="..."}`, the text in a `###` block |
+| [Short slide](docs/quickstart/screenshots/09-short.png) | `{.center scale="1.4"}` on the heading |
+| [Closing](docs/quickstart/screenshots/10-closing.png) | `## Thank you! {.closing}` |
+
+The same source as a beamer PDF (`make pdf`):
+
+![Four pages of the quickstart deck as a beamer PDF](docs/quickstart/screenshots/pdf.png)
+
+The pptx is the same deck again, on the NCAR PowerPoint template. To refresh these
+images after editing the deck, run `make screenshots` in `docs/quickstart/`; it needs
+everything `make qa` does (see "Checking a deck").
 
 ## Layout
 
@@ -50,6 +89,10 @@ quarto-docs-framework/
 │   │   └── utils/
 │   │       ├── embed_poppins.py    # post-render font embedder
 │   │       └── enable_autofit.py   # primes "Shrink text on overflow"
+│   ├── quickstart/                 # the short exemplar deck: copy this one
+│   │   ├── quickstart.qmd
+│   │   ├── screenshots.py  (make screenshots: the README images)
+│   │   └── screenshots/    (those images, committed)
 │   └── sample/                     # the cookbook deck
 │       ├── Makefile        (3-line include of ../Make.common)
 │       ├── _quarto.yml     (symlink → ../common/_quarto.yml)
