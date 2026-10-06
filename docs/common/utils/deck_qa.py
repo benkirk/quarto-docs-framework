@@ -26,6 +26,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import unicodedata
 import zipfile
 
 SHORT_USE = 0.65      # a text slide using less of its body than this is "short"
@@ -175,8 +176,10 @@ def pdf_problems(w, h, words, lines, slide=None):
                 continue
             if wd[0] < n[2] + 6 or wd[3] > n[3] + TOL:   # meets the number, or below the footline
                 out.append(("into the footer", repr(wd[4])))
-    for i, a in enumerate(words):
-        for b in words[i + 1:]:
+    # a math accent (the tilde of a typeset \tilde\rho) is a word of its own, set over its base
+    solid = [wd for wd in words if not all(unicodedata.combining(c) for c in wd[4])]
+    for i, a in enumerate(solid):
+        for b in solid[i + 1:]:
             vo = min(a[3], b[3]) - max(a[1], b[1])
             ho = min(a[2], b[2]) - max(a[0], b[0])
             if ho > 1.0 and vo > 0.5 * min(a[3] - a[1], b[3] - b[1]):
