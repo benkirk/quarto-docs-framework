@@ -172,7 +172,7 @@ and fits all three.
 
 ### Centering and scaling a short slide
 
-Five per-slide controls on the heading, each independent, act on the body
+Six per-slide controls on the heading, each independent, act on the body
 (everything but the title, speaker notes and footnotes). They come from the
 vendored theme (>= 2.5.0); pptx gets them through step 7.
 
@@ -188,6 +188,7 @@ vendored theme (>= 2.5.0); pptx gets them through step 7.
 | `.center`: both (the theme's, not Quarto's) | yes | yes | as `.vcenter` |
 | `scale="S"`: text, tables and code × S | yes (autofit still shrinks an overshoot) | yes (no autofit: check the page) | yes |
 | `.fill`: grow until it just fits, up to 3× | yes | no; add `scale=` | no; add `scale=` |
+| `.caution`: the body on a soft yellow field with a brand-yellow bar, for warning slides (theme >= 2.8.0) | yes | yes | yes; the box cut to an estimate of its text, footnotes inside it |
 
 ### PDF (beamer)
 

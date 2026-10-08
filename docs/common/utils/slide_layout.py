@@ -10,6 +10,8 @@ This step removes the line and applies what pptx can express:
             sizes table rows itself, so the height is rows x line height)
   scale=S   every body and table run at S times its inherited size
   hcenter, fill   nothing: a text box cannot shrink-wrap, and nothing measures
+  caution   the body text box on a soft yellow field with a brand-yellow bar at
+            its left (pptx cannot move the footnotes out, so they sit inside it)
   full      the one picture fills the slide, keeping its shape; no title and no
             master art (logo, tab, rule, waves); pandoc's caption box becomes a
             centered muted line under it; the slide number stays
@@ -23,7 +25,7 @@ from pathlib import Path
 from lxml import etree
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.enum.shapes import MSO_SHAPE_TYPE, PP_PLACEHOLDER
+from pptx.enum.shapes import MSO_SHAPE, MSO_SHAPE_TYPE, PP_PLACEHOLDER
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Pt
@@ -39,6 +41,9 @@ FULL_FLOOR = 0.075        # full: the footline (slide number), a fraction of the
 FULL_CAP   = 0.06         # full: the caption line, a fraction of the height
 CAP_SIZE   = Pt(13)       # style_footnotes.py's size and color: the theme's muted text
 CAP_COLOR  = RGBColor(0x6B, 0x7C, 0x99)
+CAUTION_FILL = RGBColor(0xFF, 0xF9, 0xDA)   # brand Yellow at 18% on white, as in the theme
+CAUTION_BAR  = RGBColor(0xFF, 0xDD, 0x31)   # brand Yellow
+CAUTION_W    = Pt(6)
 
 
 def _take_marker(slide):
@@ -103,6 +108,44 @@ def _is_body(shape):
             and shape.placeholder_format.type not in NOT_BODY)
 
 
+def _text_height(shape, slide):
+    """An estimate of the text's height: characters per line from the font size (half an em
+    each), one LINE per line plus a little paragraph spacing."""
+    tf = shape.text_frame
+    width = shape.width - tf.margin_left - tf.margin_right - Pt(18)   # less the bullet indent
+    total = tf.margin_top + tf.margin_bottom
+    for p in tf.paragraphs:
+        sized = [r.font.size for r in p.runs if r.font.size]
+        size = sized[0] if sized else Pt(_inherited(shape, slide, p.level) / 100)
+        per_line = max(1, int(width / (size * 0.5)))
+        lines = max(1, -(-len(p.text) // per_line))
+        total += int(lines * size * LINE) + Pt(6)
+    return total
+
+
+def caution_box(slide, shape, vcenter):
+    """The body text box on the soft yellow field, a brand-yellow bar at its left, cut down to
+    about its text (pandoc gives it the whole content area); 10% slack keeps autofit idle."""
+    tf = shape.text_frame
+    tf.margin_left = tf.margin_right = Pt(14)
+    tf.margin_top = tf.margin_bottom = Pt(8)
+    left, top, width, height = shape.left, shape.top, shape.width, shape.height
+    est = int(_text_height(shape, slide) * 1.1)
+    if est < height:
+        if vcenter:
+            top += (height - est) // 2
+        height = est
+    # all four: a placeholder inherits its frame, and setting one leaves the rest at 0
+    shape.left, shape.top, shape.width, shape.height = left, top, width, height
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = CAUTION_FILL
+    bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, shape.left, shape.top, CAUTION_W, shape.height)
+    bar.fill.solid()
+    bar.fill.fore_color.rgb = CAUTION_BAR
+    bar.line.fill.background()
+    bar.shadow.inherit = False
+
+
 def lay_out(slide, words):
     scale = 1.0
     for w in words:
@@ -112,6 +155,9 @@ def lay_out(slide, words):
             except ValueError:
                 pass
     vcenter = "vcenter" in words
+    if "caution" in words:
+        for shape in [sh for sh in slide.shapes if _is_body(sh)]:
+            caution_box(slide, shape, vcenter)
     for shape in slide.shapes:
         if _is_body(shape):
             if scale != 1.0:
