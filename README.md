@@ -8,7 +8,7 @@ env, copy the quickstart deck, write Markdown.
 
 Two example decks ship with the framework:
 
-- **`docs/quickstart/`** is eleven slides, one of each headline feature. It is the deck to
+- **`docs/quickstart/`** is twelve slides, one of each headline feature. It is the deck to
   copy when you start your own (see "What you get" below).
 - **`docs/sample/`** is a **cookbook** showing one
   example of every capability you're likely to need: text formatting, math,
@@ -51,7 +51,7 @@ chrome-headless-shell` cannot download, point Quarto at any Chromium with
 
 Every slide of `docs/quickstart/quickstart.qmd`, in the HTML deck:
 
-![All eleven slides of the quickstart deck in the HTML format](docs/quickstart/screenshots/overview.png)
+![All twelve slides of the quickstart deck in the HTML format](docs/quickstart/screenshots/overview.png)
 
 | Slide | The Markdown behind it |
 |---|---|
@@ -62,8 +62,9 @@ Every slide of `docs/quickstart/quickstart.qmd`, in the HTML deck:
 | [Code, static and live](docs/quickstart/screenshots/06-code.png) | a ` ```bash ` block, and a ` ```{bash} ` cell run at render time |
 | [Diagram](docs/quickstart/screenshots/07-mermaid.png) | a ` ```{mermaid} ` cell (Graphviz ` ```{dot} ` works the same way) |
 | [Photo slide](docs/quickstart/screenshots/08-feature.png) | `{.feature background-image="..."}`, the text in a `###` block |
-| [Short slide](docs/quickstart/screenshots/09-short.png) | `{.center scale="1.4"}` on the heading |
-| [Closing](docs/quickstart/screenshots/10-closing.png) | `## Thank you! {.closing}` |
+| [Full-slide diagram](docs/quickstart/screenshots/09-full.png) | `{.full}` on the heading: one diagram or image, then an optional caption paragraph |
+| [Short slide](docs/quickstart/screenshots/10-short.png) | `{.center scale="1.4"}` on the heading |
+| [Closing](docs/quickstart/screenshots/11-closing.png) | `## Thank you! {.closing}` |
 
 The same source as a beamer PDF (`make pdf`):
 
@@ -222,6 +223,10 @@ which is vendored in `docs/common/_extensions/benkirk/ncar/`. Make symlinks
   - `## Title {.feature background-image="images/photo.jpg"}` makes a
     full-bleed photo slide (`background=` also works; `background-image=`
     doubles as the revealjs background).
+  - `## Title {.full}` gives one diagram or image the whole slide: no title,
+    logo or rule, and the paragraph after it becomes a one-line caption. The
+    title stays in the source for navigation and `make qa`. pptx gets it
+    from `slide_layout.py`.
   - `## Thank you! {.closing}` makes a closing slide.
   - `### Heading {.example}` / `{.alert}` give block variants.
   - `[text]{.alert}` emphasizes text.

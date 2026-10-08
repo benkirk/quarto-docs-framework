@@ -1,5 +1,5 @@
 -- pptx only. The theme's per-slide layout controls (.hcenter, .vcenter,
--- .center, scale="S", .fill; see the vendored ncar-revealjs.lua) mean nothing
+-- .center, scale="S", .fill, .full; see the vendored ncar-revealjs.lua) mean nothing
 -- to pandoc's pptx writer, which drops slide classes. Carry them to
 -- utils/slide_layout.py as one speaker-notes line,
 --   ncar-layout: hcenter vcenter scale=1.4
@@ -10,16 +10,17 @@ if not quarto.doc.is_format("pptx") then
   return {}
 end
 
-local CLASSES = { hcenter = true, vcenter = true, center = true, fill = true }
+local CLASSES = { hcenter = true, vcenter = true, center = true, fill = true, full = true }
 
 local function take_layout(blk)
   local words, kept = {}, pandoc.List({})
-  local h, v, fill = false, false, false
+  local h, v, fill, full = false, false, false, false
   for _, c in ipairs(blk.classes) do
     if CLASSES[c] then
       h = h or c == "hcenter" or c == "center"
       v = v or c == "vcenter" or c == "center"
       fill = fill or c == "fill"
+      full = full or c == "full"
     else
       kept:insert(c)
     end
@@ -27,6 +28,7 @@ local function take_layout(blk)
   if h then table.insert(words, "hcenter") end
   if v then table.insert(words, "vcenter") end
   if fill then table.insert(words, "fill") end
+  if full then table.insert(words, "full") end
   local scale = blk.attributes["scale"]
   if scale then
     blk.attributes["scale"] = nil

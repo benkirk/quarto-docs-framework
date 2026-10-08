@@ -41,6 +41,7 @@ slide". Don't restate them; use them.
 | pptx count one higher, with a list or code after a table or diagram | `single-body.lua` folds only paragraphs into the caption. Make the remark a paragraph (a † footnote), or move the list before the table |
 | `source ... bare <tag>` | put the placeholder in backticks. Unquoted, revealjs reads it as a tag, and `<code>` swallows every slide after it |
 | a diagram that is a thin strip | reshape toward 2–3:1. A wide chain becomes a snake or a grid: Graphviz `layout=neato` with pinned `pos="x,y!"` (clusters are lost under neato). A column holding a diagram wants one taller than wide |
+| a diagram too detailed for the room under a title | `{.full}` on the heading: it gets the whole slide, and a paragraph after it is a one-line caption (`make qa` fails one that wraps) |
 
 ## Rules
 

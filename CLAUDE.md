@@ -61,6 +61,13 @@ Make creates in each deck directory. `ci-consumer.yaml` builds a deck that way.
   `slide_layout.py` applies and deletes; it can't do `hcenter` or `fill`, and
   centers a table by an estimated height. `.center` is the theme's, not
   Quarto's (which moves the title). README "Centering and scaling a short slide".
+- **Full-slide figures** (`{.full}`, theme >= 2.7.0): one diagram or image fills
+  the slide, the paragraph after it is a one-line caption. HTML and PDF are the
+  theme's (PDF frame key `ncarfull=`). pptx: `slide-layout.lua` writes
+  `ncar-layout: full`, and `slide_layout.py` sets the slide's `showMasterSp="0"`
+  (hiding the master's logo, tab, rule and waves), deletes the title, fits the
+  one picture to the slide and centers pandoc's caption box under it. Any other
+  body is left alone with a warning. `make qa` fails a caption that wraps.
 - **PDF** is `--to ncar-beamer`: the NCAR beamer theme, vendored from
   `benkirk/NCAR_beamer_template` into `docs/common/_extensions/benkirk/ncar/`.
   Don't edit the vendored copy. Change the theme repo, then re-vendor with
