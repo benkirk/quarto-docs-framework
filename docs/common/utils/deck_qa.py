@@ -40,6 +40,24 @@ MEASURE_JS = r"""
   const h = s.querySelector(':scope > h2');
   if (!s.classList.contains('level2') || !h) return {level2: false};
   const cls = [...s.classList];
+  if (s.classList.contains('full')) {
+    // use: the drawn figure's share of its box (it keeps its shape, so one axis is full)
+    const box = s.querySelector(':scope > .ncar-full-figure');
+    const cap = s.querySelector(':scope > .ncar-full-caption');
+    const fig = box && box.querySelector('svg:not(svg *), img');
+    let use = 0;
+    if (fig) {
+      const r = fig.getBoundingClientRect(), b = box.getBoundingClientRect();
+      const vb = fig.tagName.toLowerCase() === 'img'
+        ? {width: fig.naturalWidth, height: fig.naturalHeight} : fig.viewBox && fig.viewBox.baseVal;
+      const aw = vb && vb.width ? vb.width : r.width, ah = vb && vb.height ? vb.height : r.height;
+      const k = Math.min(r.width / aw, r.height / ah);
+      use = (aw * k) * (ah * k) / (b.width * b.height);
+    }
+    return {level2: true, title: h.textContent.trim(), cls: cls.join(' '), kind: 'full',
+            columns: false, use, fit: 1, scale: 1, overRight: false,
+            capOver: !!cap && cap.scrollHeight > cap.clientHeight + 1, noFigure: !fig};
+  }
   const sr = s.getBoundingClientRect(), cs = getComputedStyle(s);
   const shift = parseFloat(s.style.getPropertyValue('--ncar-shift')) || 0;
   const fit = parseFloat(s.style.getPropertyValue('--ncar-fit')) || 1;
@@ -284,6 +302,10 @@ def html_findings(slides):
         tag = 's%d "%s"' % (n, s["title"])
         if s["overRight"]:
             fails.append("%s: content past the right edge" % tag)
+        if s.get("capOver"):
+            fails.append("%s: the {.full} caption runs past its line; shorten it" % tag)
+        if s.get("noFigure"):
+            fails.append("%s: {.full} slide without a drawn figure" % tag)
         if "smaller" in cls and "ncar-fill" not in cls:
             hints.append("%s: .smaller without .fill shrinks the HTML text; drop it, or add "
                          ".fill with a PDF scale=" % tag)

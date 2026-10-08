@@ -113,6 +113,17 @@ screenshot recipe; it fits all three.
 The `.feature` class makes the PDF and HTML decks a full-bleed photo slide
 with the text on a translucent panel; pptx shows a plain title slide.
 
+## Full-slide image {.full}
+
+![](images/example.jpg)
+
+`{.full}`: the whole picture, uncropped, in every format; `.feature` crops a photo to cover.
+
+::: {.notes}
+`{.full}` takes one image or diagram cell, then an optional caption paragraph.
+No title, logo or rule is drawn; the title stays in the source.
+:::
+
 ## Dark slide, step by step {.brand-dark}
 
 `{.brand-dark}` sets an HTML slide on Space with white text; pptx and PDF

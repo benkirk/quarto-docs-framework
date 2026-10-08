@@ -36,8 +36,9 @@ SLIDES = [
     ("06-code", "Code, static and live"),
     ("07-mermaid", "How a deck is built"),
     ("08-feature", "A full-bleed photo slide"),
-    ("09-short", "A short slide"),
-    ("10-closing", "Thank you!"),
+    ("09-full", "A full-slide diagram"),
+    ("10-short", "A short slide"),
+    ("11-closing", "Thank you!"),
 ]
 HERO = ["01-title", "05-math", "04-columns", "07-mermaid"]
 PDF_SLIDES = ["One Markdown file", "MPAS-A", "Columns: a list", "How a deck is built"]

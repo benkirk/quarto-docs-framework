@@ -10,6 +10,9 @@ This step removes the line and applies what pptx can express:
             sizes table rows itself, so the height is rows x line height)
   scale=S   every body and table run at S times its inherited size
   hcenter, fill   nothing: a text box cannot shrink-wrap, and nothing measures
+  full      the one picture fills the slide, keeping its shape; no title and no
+            master art (logo, tab, rule, waves); pandoc's caption box becomes a
+            centered muted line under it; the slide number stays
 
 Footnote paragraphs (style_footnotes.py) keep their size. Idempotent: the
 marker is gone after the first pass."""
@@ -19,7 +22,9 @@ from pathlib import Path
 
 from lxml import etree
 from pptx import Presentation
-from pptx.enum.shapes import PP_PLACEHOLDER
+from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE_TYPE, PP_PLACEHOLDER
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Pt
 
@@ -29,6 +34,11 @@ NOT_BODY  = {PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE, PP_PLACEHOLDER.D
              PP_PLACEHOLDER.FOOTER, PP_PLACEHOLDER.SLIDE_NUMBER}
 LINE      = 1.2           # line height / font size, for the table estimate
 CELL_PAD  = Pt(7.2)       # a cell's default top + bottom margins (0.05 in each)
+FULL_PAD   = 0.025        # full: margin round the figure, a fraction of the width
+FULL_FLOOR = 0.075        # full: the footline (slide number), a fraction of the height
+FULL_CAP   = 0.06         # full: the caption line, a fraction of the height
+CAP_SIZE   = Pt(13)       # style_footnotes.py's size and color: the theme's muted text
+CAP_COLOR  = RGBColor(0x6B, 0x7C, 0x99)
 
 
 def _take_marker(slide):
@@ -135,6 +145,38 @@ def lay_out(slide, words):
                     shape.height = est
 
 
+def full_slide(slide, width, height):
+    """One picture over the whole slide; False (slide untouched) for any other body."""
+    pics = [sh for sh in slide.shapes if sh.shape_type == MSO_SHAPE_TYPE.PICTURE]
+    texts = [sh for sh in slide.shapes if _is_body(sh)]
+    if len(pics) != 1 or len(texts) > 1:
+        return False
+    pic, caption = pics[0], (texts[0] if texts else None)
+    slide._element.set("showMasterSp", "0")
+    title = slide.shapes.title
+    if title is not None:
+        title._element.getparent().remove(title._element)
+    pad, floor = int(FULL_PAD * width), int(FULL_FLOOR * height)
+    if caption is not None:
+        cap = int(FULL_CAP * height)
+        caption.left, caption.width = pad, width - 2 * pad
+        caption.top, caption.height = height - floor - cap, cap
+        tf = caption.text_frame
+        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        for p in tf.paragraphs:
+            p.alignment = PP_ALIGN.CENTER
+            for r in p.runs:
+                r.font.size, r.font.color.rgb = CAP_SIZE, CAP_COLOR
+        floor += cap
+    box_w, box_h = width - 2 * pad, height - pad - floor
+    iw, ih = pic.image.size
+    k = min(box_w / iw, box_h / ih)
+    pic.width, pic.height = int(iw * k), int(ih * k)
+    pic.left = pad + (box_w - pic.width) // 2
+    pic.top = pad + (box_h - pic.height) // 2
+    return True
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print("usage: slide_layout.py <file.pptx>", file=sys.stderr)
@@ -148,9 +190,17 @@ def main() -> int:
     done = 0
     for slide in prs.slides:
         words = _take_marker(slide)
-        if words is not None:
+        if words is None:
+            continue
+        if "full" in words:
+            if not full_slide(slide, prs.slide_width, prs.slide_height):
+                title = slide.shapes.title
+                print("slide_layout: WARNING: {.full} slide %r needs one picture and at most a "
+                      "caption; left as it is" % (title.text_frame.text if title else ""),
+                      file=sys.stderr)
+        else:
             lay_out(slide, words)
-            done += 1
+        done += 1
     prs.save(str(pptx))
     print(f"slide_layout: laid out {done} slide(s) → {pptx.name}")
     return 0
