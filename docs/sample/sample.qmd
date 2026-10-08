@@ -135,6 +135,14 @@ draw an ordinary slide.
 - pptx shows the whole list at once
 :::
 
+## ⚠︎ A warning slide {.caution .vcenter scale="1.15"}
+
+- `{.caution}` on the heading sets the body on a soft yellow field, with a brand-yellow bar.
+- Keep it for the slides that warn: the brand asks for accents in small amounts.
+- It combines with the other layout controls, here `.vcenter` and `scale=`.
+
+*† Footnotes stay below the box (in pptx, inside it).*
+
 ## A short table, centered and scaled {.center scale="1.4"}
 
 | Control | Moves |

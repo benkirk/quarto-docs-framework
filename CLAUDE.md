@@ -61,6 +61,12 @@ Make creates in each deck directory. `ci-consumer.yaml` builds a deck that way.
   `slide_layout.py` applies and deletes; it can't do `hcenter` or `fill`, and
   centers a table by an estimated height. `.center` is the theme's, not
   Quarto's (which moves the title). README "Centering and scaling a short slide".
+- **Warning slides** (`{.caution}`, theme >= 2.8.0): the body on a soft yellow
+  field with a brand-yellow bar; footnotes stay below it in HTML and PDF. pptx:
+  `slide_layout.py` fills the body text box, adds the bar, and cuts the box to an
+  estimate of its text (pandoc gives it the whole content area). Set all four of
+  a placeholder's left/top/width/height together: it inherits its frame, and
+  setting one leaves the others at 0 (the text vanishes).
 - **Full-slide figures** (`{.full}`, theme >= 2.7.0): one diagram or image fills
   the slide, the paragraph after it is a one-line caption. HTML and PDF are the
   theme's (PDF frame key `ncarfull=`). pptx: `slide-layout.lua` writes
