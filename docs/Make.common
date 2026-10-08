@@ -5,9 +5,11 @@
 # repo"). Include it; a symlink to it would point PRESENTATIONS_ROOT at the
 # link's own directory. One deck per directory by default, named after the
 # directory (OUT); a directory holding several decks lists them in DECKS (each
-# <name>.qmd builds <name>.{pptx,html,pdf}).
+# <name>.qmd builds <name>.{pptx,html,pdf}). `site` gathers the HTML decks into
+# one static site and `publish` pushes it to a GitHub Pages branch (README
+# "Publishing the HTML decks").
 
-.PHONY: pptx html pdf all qa clean distclean
+.PHONY: pptx html pdf all qa site publish clean distclean
 
 # Every deck in a directory shares one .quarto/ project cache.
 .NOTPARALLEL:
@@ -23,6 +25,7 @@ LINK_CAPTIONS      := $(PRESENTATIONS_ROOT)common/utils/link_captions.py
 SLIDE_LAYOUT       := $(PRESENTATIONS_ROOT)common/utils/slide_layout.py
 STYLE_TABLES       := $(PRESENTATIONS_ROOT)common/utils/style_tables.py
 DECK_QA            := $(PRESENTATIONS_ROOT)common/utils/deck_qa.py
+SITE_INDEX         := $(PRESENTATIONS_ROOT)common/utils/site_index.py
 SHARED_QUARTO_YML  := $(PRESENTATIONS_ROOT)common/_quarto.yml
 SHARED_EXTENSIONS  := $(PRESENTATIONS_ROOT)common/_extensions
 SHARED_COMMON      := $(PRESENTATIONS_ROOT)common
@@ -31,11 +34,22 @@ OUT   ?= $(notdir $(CURDIR))
 DECKS ?= $(OUT)
 QFILE ?= $(OUT).qmd
 
-# Included fragments, frozen data, images and deck-local Lua filters: {{< include >}},
-# ![](...) and filters: are invisible to make, so an edit to any of them rebuilds
-# every deck in the directory.
+# The static site (`site`) and where `publish` pushes it. SITE_EXTRA lists
+# directories of hand-written pages to ship beside the decks; SITE_NOINDEX (any
+# value) marks every page noindex for search engines; PUBLISH_PREFIX is the
+# site's path under the Pages root (empty: the root itself).
+SITE           ?= _site
+SITE_EXTRA     ?=
+SITE_NOINDEX   ?=
+PUBLISH_BRANCH ?= gh-pages
+PUBLISH_REMOTE ?= origin
+PUBLISH_PREFIX ?=
+
+# Included fragments, frozen data, images, deck-local Lua filters and directory
+# metadata: {{< include >}}, ![](...), filters: and _metadata.yml are invisible to
+# make, so an edit to any of them rebuilds every deck in the directory.
 FRAGMENTS := $(wildcard _*.qmd) $(wildcard data/*) $(wildcard images/*) $(wildcard *.lua)
-DEPS      := $(FRAGMENTS) _quarto.yml _extensions _ncar
+DEPS      := $(FRAGMENTS) $(wildcard _metadata.yml) _quarto.yml _extensions _ncar
 
 pptx: $(DECKS:=.pptx)
 html: $(DECKS:=.html)
@@ -46,6 +60,44 @@ all:  pptx html pdf
 # sheets in _qa/ (deck_qa.py). `make qa DECKS=name` checks one deck of a directory.
 qa: all
 	python3 $(DECK_QA) $(DECKS)
+
+# One static site of the HTML decks, servable as is (`python3 -m http.server -d _site`).
+# Every deck's <deck>_files/libs/ is a subset of one union, so the site keeps a single
+# libs/ and rewrites the references; images/ and SITE_EXTRA ship verbatim; index.html
+# lists the decks by their front matter.
+site: html
+	rm -rf $(SITE)
+	mkdir -p $(SITE)/libs
+	for d in $(DECKS); do \
+	  rsync -a $${d}_files/libs/ $(SITE)/libs/ && \
+	  rsync -a --exclude libs --prune-empty-dirs $${d}_files/ $(SITE)/$${d}_files/ && \
+	  sed -e "s#$${d}_files/libs/#libs/#g" $(NOINDEX_SED) $$d.html > $(SITE)/$$d.html || exit 1; \
+	done
+	find $(SITE) -type d -empty -delete
+	test ! -d images || rsync -a images/ $(SITE)/images/
+	for x in $(SITE_EXTRA); do rsync -a $$x/ $(SITE)/$$x/ || exit 1; done
+	python3 $(SITE_INDEX) --out $(SITE) $(if $(SITE_NOINDEX),--noindex) \
+	  $(foreach x,$(SITE_EXTRA),--extra $(x)) $(DECKS)
+
+NOINDEX_SED = $(if $(SITE_NOINDEX),-e 's#<head>#<head><meta name="robots" content="noindex">#')
+
+# Push the site as the ONE commit on PUBLISH_BRANCH. The branch is a build artifact,
+# not a record: every publish replaces it, so nothing accumulates. A parentless commit
+# gives git no edge to delta against, so each publish uploads the whole site (the
+# shared libs/ plus ~1 MB per deck); fetching the old tip first does not change that.
+publish: site
+	set -e; tmp=$$(mktemp -d); url=$$(git remote get-url $(PUBLISH_REMOTE)); \
+	git -C $$tmp init -q; \
+	mkdir -p $$tmp/$(PUBLISH_PREFIX); rsync -a $(SITE)/ $$tmp/$(PUBLISH_PREFIX)/; \
+	touch $$tmp/.nojekyll; \
+	git config user.email >/dev/null || ident="-c user.name=make-publish -c user.email=publish@localhost"; \
+	git -C $$tmp add -A; \
+	git -C $$tmp $$ident commit -q -m "Publish $(OUT) $$(date -u +%Y-%m-%dT%H:%MZ)"; \
+	git -C $$tmp push -q --force $$url HEAD:refs/heads/$(PUBLISH_BRANCH); \
+	rm -rf $$tmp; \
+	echo "pushed $(PUBLISH_BRANCH) to $$url"; \
+	echo "$$url" | sed -n -E -e 's#\.git$$##' \
+	  -e 's#^(git@github\.com:|https://github\.com/)([^/]+)/(.+)$$#https://\2.github.io/\3/$(if $(PUBLISH_PREFIX),$(PUBLISH_PREFIX)/)#p'
 
 # Auto-symlink the shared _quarto.yml into the deck dir. A deck that
 # needs custom config can commit a real _quarto.yml; make will see the
@@ -107,7 +159,7 @@ endif
 
 clean:
 	rm -f $(foreach d,$(DECKS),$(d).pptx $(d).html $(d).pdf)
-	rm -rf $(DECKS:=_files)
+	rm -rf $(DECKS:=_files) $(SITE)
 
 distclean:
 	git clean --exclude=.env -xdf .

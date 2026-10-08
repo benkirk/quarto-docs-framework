@@ -94,6 +94,18 @@ jobs:
           unzip -p hello.pptx 'ppt/slides/*.xml' | grep -q 'ncar-section-label'
           grep -q 'ncar-revealjs.css' hello.html
 
+      # the static site: one shared libs/, references rewritten, an index
+      - name: Build the site
+        run: |
+          set -e
+          make -C "$DECK" site SITE_NOINDEX=1
+          cd "$DECK/_site"
+          test -d libs/revealjs
+          grep -q 'libs/revealjs' hello.html
+          test "$(grep -c '_files/libs' hello.html)" -eq 0
+          grep -q 'content="noindex"' hello.html
+          grep -q 'hello.html' index.html
+
       - name: Install TinyTeX (beamer PDF)
         run: quarto install tinytex --no-prompt
 
