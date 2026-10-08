@@ -286,6 +286,41 @@ The checks need poppler, Pillow and Playwright, which are all in `conda-env.yaml
 build. Without Playwright the HTML checks are skipped and the rest still run. For Claude
 Code, the `deck-polish` skill (`.claude/skills/`) covers what to do with the findings.
 
+## Publishing the HTML decks
+
+`make site` gathers the HTML decks of a directory into `_site/` (gitignored), a static
+site that works as is: `python3 -m http.server -d _site`. Every deck's `<deck>_files/libs/`
+is a subset of one union, so the site keeps a single `libs/` and rewrites the references
+(a 13-deck directory goes from ~140 MB to ~16 MB); `images/` ships beside the decks, and
+`index.html` lists them by their front matter, first deck first.
+
+`make publish` pushes `_site/` to a GitHub Pages branch. The branch is a build artifact,
+not a record: each publish replaces it with **one** parentless commit, so nothing
+accumulates however often you publish (Pages serves the branch tip and keeps no versions
+of its own). The price is that every publish uploads the whole site, since a commit with
+no parent gives git nothing to delta against. Enable Pages once, from the branch:
+
+```bash
+gh api -X POST repos/<owner>/<repo>/pages \
+  -f build_type=legacy -f 'source[branch]=gh-pages' -f 'source[path]=/'
+```
+
+Settings go in the deck Makefile, before the include:
+
+```make
+DECKS          := samuel 1-overview 2-concepts
+SITE_EXTRA     := companion                # directories of hand-written pages, listed on the index
+SITE_NOINDEX   := 1                        # <meta name="robots" content="noindex"> on every page
+PUBLISH_PREFIX := presentations/samuel     # path under the Pages root (default: the root)
+PUBLISH_BRANCH := gh-pages                 # default
+PUBLISH_REMOTE := origin                   # default
+include ../framework/docs/Make.common
+```
+
+Two things to know: branch-based Pages is soft-limited to 10 builds an hour, and each push
+shows in the repo's Actions tab as GitHub's own `pages-build-deployment` run. A public repo
+publishes to a public URL; `SITE_NOINDEX` keeps it out of search engines, nothing more.
+
 ## Adding a new deck
 
 ```bash

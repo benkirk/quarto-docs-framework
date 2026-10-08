@@ -39,6 +39,11 @@ Make creates in each deck directory. `ci-consumer.yaml` builds a deck that way.
   `section_subtitle.py`, `enable_autofit.py`, `embed_poppins.py`,
   `style_footnotes.py`, `link_captions.py`, `slide_layout.py`, and
   `style_tables.py` (tables drawn as in the HTML theme).
+- **Publishing**: `make site` gathers the HTML decks into `_site/` (one shared
+  `libs/`, `images/`, `SITE_EXTRA` directories, an index from `site_index.py`;
+  `SITE_NOINDEX=1` marks every page noindex) and `make publish` force-pushes it
+  as the one commit on `PUBLISH_BRANCH` (gh-pages) under `PUBLISH_PREFIX`.
+  README "Publishing the HTML decks".
 - **Slide footnotes** (a paragraph starting with `†`, or `‡` for a second): the
   theme (>= 2.4.0) lifts every one on a slide, columns included, to the slide's
   foot in HTML and PDF, under a short muted rule with the marker in the accent
