@@ -12,7 +12,9 @@ under `docs/<deck>/` as a `.qmd` plus a 1-line Makefile; shared machinery is in
 utilities) and `docs/Make.common`. `docs/quickstart/quickstart.qmd` is the
 short exemplar to copy for new decks; `docs/sample/sample.qmd` is the cookbook
 of every pattern. The README covers layout, template constraints, and font
-embedding.
+embedding. `docs/design/engine-and-liveries.md` is the design for a multi-brand
+successor (a generalized engine plus per-brand "liveries"), intended for two forked
+repos; nothing in this repo implements it yet.
 
 - **README images** are `docs/quickstart/screenshots/*.png`, committed. After
   editing the quickstart deck run `make screenshots` there, look at them, and
