@@ -72,27 +72,27 @@ they are for the people who use `\usetheme{NCAR}` from LaTeX and for the NCAR de
 built here.
 
 ```
-benkirk/NCAR_beamer_template ──fork──▶ deck-chassis      engine + reference liveries (ncar, ucar, ncarucar)
+benkirk/NCAR_beamer_template ──fork──▶ beamer-livery-theme   engine + reference liveries (ncar, ucar, ncarucar)
                                            │ vendored into the framework (quarto add / quarto update)
-benkirk/quarto-docs-framework ─fork──▶ chassis-decks     framework: Make.common, post-processors, QA,
+benkirk/quarto-docs-framework ─fork──▶ quarto-livery-decks   framework: Make.common, post-processors, QA,
                                            │             liveries/ for cu, nasa, nasa/<program>
                                            │ git submodule
                                         <customer>-decks  the customer's .qmd decks; each deck Makefile
                                                           includes ../framework/docs/Make.common and sets LIVERY
                               optional: <customer>-liveries  a customer's liveries in their own repo, vendored
-                                                          into chassis-decks, only when logo license, privacy
+                                                          into quarto-livery-decks, only when logo license, privacy
                                                           or ownership require a separate home
 ```
 
-Names are a proposal, to be settled before the forks exist:
+Names, settled 2026-10-16 before the forks were created:
 
-| What | Proposed | Plainer alternative |
-|---|---|---|
-| engine repo | `deck-chassis` | `beamer-livery-theme` |
-| Quarto extension directory, hence format names | `chassis` → `chassis-beamer`, `chassis-revealjs` | `engine-beamer`, `engine-revealjs` |
-| LaTeX theme and brand package | `\usetheme[livery=<dir>]{Chassis}`, `chassis_livery.sty` | `Engine`, `engine_livery.sty` |
-| framework repo | `chassis-decks` | `quarto-livery-decks` |
-| links Make creates in a deck directory | `_chassis` (today `_ncar`) and `_livery` | `_engine`, `_livery` |
+| What | Name |
+|---|---|
+| engine repo | `beamer-livery-theme` |
+| Quarto extension directory, hence format names | `engine` → `engine-beamer`, `engine-revealjs` |
+| LaTeX theme and brand package | `\usetheme[livery=<dir>]{Engine}`, `engine_livery.sty` |
+| framework repo | `quarto-livery-decks` |
+| links Make creates in a deck directory | `_engine` (today `_ncar`) and `_livery` |
 
 With the rename, every `ncar@` macro, `ncar-*` CSS class and HTML id, `--ncar-*` custom
 property, `ncar-layout:` notes line, and `ncar-beamer:` warning prefix takes the new
@@ -108,12 +108,12 @@ the general names a clean start and the NCAR names an undisturbed home.
 decks, and byte-level parity of its output with today's is the acceptance test of the
 whole refactor (section 8). Once that holds, two optional moves end the double
 maintenance: `beamerthemeNCAR.sty` upstream becomes a shim
-(`\usetheme[livery=ncar]{Chassis}` behind the old option names), and this repo becomes a
-thin consumer of `chassis-decks` with `LIVERY=ncar`. Neither is required by this design.
+(`\usetheme[livery=ncar]{Engine}` behind the old option names), and this repo becomes a
+thin consumer of `quarto-livery-decks` with `LIVERY=ncar`. Neither is required by this design.
 
 **Where liveries live** is a licensing and ownership question, not a code one. The
 reference liveries ship with the engine (they are its test fixtures). New liveries
-start in `chassis-decks/docs/common/liveries/`. A customer's set moves to its own repo
+start in `quarto-livery-decks/docs/common/liveries/`. A customer's set moves to its own repo
 only when the assets demand it: NASA insignia and program lockups may well. The contract
 is per directory, so a repo can hold one livery or ten; this is deliberately neither one
 repo per customer per style nor one per customer.
@@ -164,7 +164,7 @@ liveries/<name>/
                                 Lua (quarto.json) and Python both read it
                   livery.sty    \definecolor palette, \colorlet roles, logo, font and
                                 geometry macros: what \usetheme[livery=...] inputs
-                  livery.css    @font-face, logo and art url()s, :root{--chassis-*} values
+                  livery.css    @font-face, logo and art url()s, :root{--engine-*} values
                   livery.theme  the pandoc highlight theme in the palette
 ```
 
@@ -205,28 +205,28 @@ number boxes, the divider's field and label box, the body size ladder (today
 
 ## 5. The engine contract
 
-For `deck-chassis`:
+For `beamer-livery-theme`:
 
-- `\usetheme[livery=<absolute dir>]{Chassis}` inputs `<dir>/build/livery.sty` and the
+- `\usetheme[livery=<absolute dir>]{Engine}` inputs `<dir>/build/livery.sty` and the
   optional `overrides/livery-extra.sty`. The color, inner and outer themes read only
   roles and geometry macros; the leaks listed in section 1 move to roles, with new
   roles `BrandMuted`, `BrandSurface`, `BrandWarning`, `BrandDark` for what the six
   cannot express. Page backgrounds per style (title, content, section, closing, feature)
   come from `art/` as PDF includes instead of TikZ.
-- `chassis-beamer.lua` reads the metadata key `livery:`, resolves it to an absolute path
+- `engine-beamer.lua` reads the metadata key `livery:`, resolves it to an absolute path
   (the `\input@path` trick stays), and passes `livery=`. Absent, the engine's bundled
   ncar reference livery applies, so an old framework and a new engine still build.
-- `chassis-revealjs.lua` reads `livery:` → `build/livery.json`. `add_dependency()`
+- `engine-revealjs.lua` reads `livery:` → `build/livery.json`. `add_dependency()`
   attaches `build/livery.css` plus the livery's fonts, logos and art as dependency
-  resources, and injects a `:root{--chassis-*}` style block. The scss expresses every
-  color and length as `var(--chassis-*)` with the ncar values as defaults, so one
+  resources, and injects a `:root{--engine-*}` style block. The scss expresses every
+  color and length as `var(--engine-*)` with the ncar values as defaults, so one
   compiled theme serves every livery. Backgrounds are the livery's SVGs.
 - `highlight-style` is overridable by the project (`_livery/build/livery.theme`).
 - The reference liveries live under `liveries/` in the engine repo; vendoring brings
   them along under the extension directory, and the framework's `liveries/ncar` becomes a
   link to the vendored copy.
 
-For `chassis-decks`:
+For `quarto-livery-decks`:
 
 - The post-processors keep their jobs and lose their constants, parameterized by
   `livery.json` and scheme slots: `embed_fonts.py` (was `embed_poppins.py`; typeface
@@ -239,8 +239,8 @@ For `chassis-decks`:
 - `Make.common`: `LIVERY ?= ncar`; `LIVERY_DIR ?= $(SHARED_COMMON)/liveries/$(LIVERY)`;
   a `.livery` stamp whose content is `$(LIVERY)` and an `ln -sfn` rule for the `_livery`
   link (a missing-only rule, like today's three, would silently keep the old livery
-  after `make LIVERY=cu`); `DEPS += _livery`; `FORMAT_HTML ?= chassis-revealjs` and
-  `FORMAT_PDF ?= chassis-beamer`; `LIVERY_DIR` exported for the scripts.
+  after `make LIVERY=cu`); `DEPS += _livery`; `FORMAT_HTML ?= engine-revealjs` and
+  `FORMAT_PDF ?= engine-beamer`; `LIVERY_DIR` exported for the scripts.
 - The shared `_quarto.yml`: `reference-doc: _livery/template.pptx` and a top-level
   `livery: _livery`, the key by which both Lua filters find the livery. No `brand:`.
 - CI: `livery_build.py --check` over every livery; a matrix over liveries rendering the
@@ -296,12 +296,12 @@ decoding; the customer supplies the TTFs), and vectorizing bitmap art.
 ## 7. Phasing
 
 0. This document, copied into both forks as their founding design; nouns settled.
-1. `chassis-decks`: de-brand the framework with the ncar livery as the migration proof.
+1. `quarto-livery-decks`: de-brand the framework with the ncar livery as the migration proof.
    Move `branding/ncar/` to `liveries/ncar/`, write its `_brand.yml` and `livery.yml`
    from `ncar_branding.sty`, add `livery_build.py` and the `livery.py` loader,
    parameterize the post-processors one per commit, add `LIVERY` to Make, and wire CI.
    Every step is parity-checked (section 8).
-2. `deck-chassis`: the engine refactor of section 5 (rename, roles only, geometry from
+2. `beamer-livery-theme`: the engine refactor of section 5 (rename, roles only, geometry from
    the livery, art files, `livery=`); re-vendor into the framework; `liveries/ncar`
    becomes a link to the vendored reference livery.
 3. CU Boulder: the first foreign livery and the first run of the onboarding tools (no
@@ -335,5 +335,5 @@ decoding; the customer supplies the TTFs), and vectorizing bitmap art.
 - Body size ladders: a brand face far from Poppins' x-height may need its own ladder to
   keep autofit quiet. It is a livery value, so this is a per-brand tuning, not an
   engine change.
-- Naming is a proposal (section 2). Pick the nouns before the forks are created, since
+- Naming is settled (section 2). The nouns were picked before the forks were created, since
   they end up in format names, macro namespaces and CSS classes.
